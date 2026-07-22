@@ -442,14 +442,20 @@ function saveConfig(){ LS.set('sq_config', JSON.stringify(CONFIG)); }
 /* =====================================================================
    ストレージ層（Firebase / localStorage 自動切替）
    ===================================================================== */
+/* 一定時間で あきらめる安全装置（クラウドが遅くても画面を固めない） */
+function withTimeout(promise, ms){
+  return Promise.race([ promise,
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')), ms)) ]);
+}
+
 const Store = {
   mode:'local', fdb:null, fns:null, ready:false,
   async init(){
     const fc = CONFIG.firebase;
     if(fc && fc.apiKey && fc.projectId){
       try{
-        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
-        const m = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+        const { initializeApp } = await withTimeout(import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'), 10000);
+        const m = await withTimeout(import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js'), 10000);
         const app = initializeApp({
           apiKey:fc.apiKey, authDomain:fc.authDomain||(fc.projectId+'.firebaseapp.com'),
           projectId:fc.projectId, appId:fc.appId||undefined
@@ -469,29 +475,39 @@ const Store = {
     if(this.mode==='firebase'){
       try{
         const {collection,getDocs}=this.fns;
-        const snap = await getDocs(collection(this.fdb,'reports'));
-        const out={}; snap.forEach(d=>out[d.id]=d.data()); return out;
-      }catch(e){ console.warn(e); return this._localAll(); }
+        const snap = await withTimeout(getDocs(collection(this.fdb,'reports')), 8000);
+        const cloud={}; snap.forEach(d=>cloud[d.id]=d.data());
+        // クラウド優先で端末の内容とあわせる（未アップ分も消えない）
+        const merged=Object.assign({}, this._localAll(), cloud);
+        LS.set('sq_reports',JSON.stringify(merged));
+        this.cloudOk=true;
+        return merged;
+      }catch(e){ console.warn('クラウド読み込み失敗→端末を使用',e); this.cloudOk=false; return this._localAll(); }
     }
     return this._localAll();
   },
   _localAll(){ try{ return JSON.parse(LS.get('sq_reports')||'{}'); }catch(e){ return {}; } },
   async get(date){ const all=await this.getAll(); return all[date]||null; },
   async save(date,data){
+    // ① まず端末に即保存（ぜったいに失敗しない・固まらない）
+    const all=this._localAll(); all[date]=data; LS.set('sq_reports',JSON.stringify(all));
+    // ② クラウドは裏で同期（待たないので画面が止まらない）
     if(this.mode==='firebase'){
       try{
         const {doc,setDoc}=this.fns;
-        await setDoc(doc(this.fdb,'reports',date), data);
-        return true;
-      }catch(e){ console.warn('クラウド保存失敗→端末保存',e); }
+        withTimeout(setDoc(doc(this.fdb,'reports',date), data), 8000)
+          .then(()=>{this.cloudOk=true;})
+          .catch(e=>{this.cloudOk=false; console.warn('クラウド同期はあとで再試行',e);});
+      }catch(e){ console.warn(e); }
     }
-    const all=this._localAll(); all[date]=data; LS.set('sq_reports',JSON.stringify(all)); return true;
+    return true;
   },
   async remove(date){
+    const all=this._localAll(); delete all[date]; LS.set('sq_reports',JSON.stringify(all));
     if(this.mode==='firebase'){
-      try{ const {doc,deleteDoc}=this.fns; await deleteDoc(doc(this.fdb,'reports',date)); }catch(e){console.warn(e);}
+      try{ const {doc,deleteDoc}=this.fns; withTimeout(deleteDoc(doc(this.fdb,'reports',date)),8000).catch(e=>console.warn(e)); }catch(e){console.warn(e);}
     }
-    const all=this._localAll(); delete all[date]; LS.set('sq_reports',JSON.stringify(all)); return true;
+    return true;
   },
   async importAll(obj){
     if(this.mode==='firebase'){
@@ -503,17 +519,17 @@ const Store = {
   /* メタ情報（写真など） */
   async getMeta(){
     if(this.mode==='firebase'){
-      try{ const {doc,getDoc}=this.fns; const s=await getDoc(doc(this.fdb,'meta','profile'));
-        const m=s.exists()?s.data():{}; LS.set('sq_meta',JSON.stringify(m)); return m; }
-      catch(e){ console.warn(e); }
+      try{ const {doc,getDoc}=this.fns; const s=await withTimeout(getDoc(doc(this.fdb,'meta','profile')),8000);
+        if(s.exists()){ const m=s.data(); LS.set('sq_meta',JSON.stringify(m)); return m; } }
+      catch(e){ console.warn('メタ読み込みは端末を使用',e); }
     }
     try{ return JSON.parse(LS.get('sq_meta')||'{}'); }catch(e){ return {}; }
   },
   async setMeta(obj){
-    LS.set('sq_meta',JSON.stringify(obj));
+    LS.set('sq_meta',JSON.stringify(obj));   // 端末に即保存
     if(this.mode==='firebase'){
-      try{ const {doc,setDoc}=this.fns; await setDoc(doc(this.fdb,'meta','profile'),obj); }
-      catch(e){ console.warn('メタ保存失敗（端末には保存済み）',e); }
+      try{ const {doc,setDoc}=this.fns; withTimeout(setDoc(doc(this.fdb,'meta','profile'),obj),8000).catch(e=>console.warn('メタ同期はあとで',e)); }
+      catch(e){ console.warn(e); }
     }
     return true;
   }
@@ -905,7 +921,7 @@ function renderReport(){
       </div>
 
       <button class="btn" id="saveReport">💾 この日を きろくする！</button>
-      ${REPORTS[editingDate]?'<button class="btn ghost" id="delReport" style="margin-top:10px">この日の きろくを けす</button>':''}
+      ${(REPORTS[editingDate] && ROLE==='parent')?'<button class="btn ghost" id="delReport" style="margin-top:10px">この日の きろくを けす</button>':''}
     </div>
   `;
   // 行リストの生成（勉強＝ページ / 運動・ゲーム＝分）を共通化
@@ -1139,8 +1155,10 @@ function renderSettings(){
 
     <div class="panel"><h2><span class="tag">CLOUD</span>クラウド保存（Firebase）</h2>
       <div class="small-note" style="margin:0 0 12px">
-        いまの 保存さき：<b style="color:var(--accent)">${Store.mode==='firebase'?'クラウド（Firebase）':'この端末（ブラウザ）'}</b><br>
-        Firebaseの じょうほうを 入れて 保存すると、クラウドに データが たまり、ほかの パソコンでも 見られます。
+        いまの じょうたい：<b style="color:var(--accent)">${Store.mode!=='firebase' ? 'この端末（ブラウザ）に保存' : (Store.cloudOk===false ? '⚠️ クラウド設定ずみ・ただし接続できていません' : (Store.cloudOk===true ? '✅ クラウド（Firebase）接続OK' : 'クラウド（Firebase）設定ずみ'))}</b><br>
+        ${Store.mode==='firebase' && Store.cloudOk===false ? 'Firestoreの「ルール」で読み書きが きょかされているか、値の打ち間ちがいが ないか かくにんしてください。<br>' : ''}
+        ほぞんは まず この端末に、そのあと クラウドにも 同期されます（クラウドが 遅くても 画面は 止まりません）。
+        <button class="btn ghost small" id="btnCloudTest" style="margin-top:8px">🔌 せつぞくテスト</button>
       </div>
       <div class="field"><label>apiKey</label><input type="text" id="fbKey" value="${esc(f.apiKey)}"/></div>
       <div class="field"><label>projectId</label><input type="text" id="fbProj" value="${esc(f.projectId)}"/></div>
@@ -1175,7 +1193,19 @@ function renderSettings(){
     toast('せってい 保存OK！');
     renderSettings();
   };
-  $('#logout').onclick=()=>{ LS.del('sq_auth'); location.reload(); };
+  $('#logout').onclick=()=>{ LS.del('sq_auth'); LS.del('sq_role'); location.reload(); };
+  if($('#btnCloudTest')) $('#btnCloudTest').onclick=async()=>{
+    if(Store.mode!=='firebase'){ toast('先に Firebaseの値を 入れて 保存してね'); return; }
+    toast('せつぞく テスト中…');
+    try{
+      const {doc,setDoc,getDoc}=Store.fns;
+      await withTimeout(setDoc(doc(Store.fdb,'meta','_conntest'),{t:Date.now()}),8000);
+      await withTimeout(getDoc(doc(Store.fdb,'meta','_conntest')),8000);
+      Store.cloudOk=true; toast('✅ クラウド せつぞく OK！');
+    }catch(e){ Store.cloudOk=false; console.warn(e);
+      toast('⚠️ つながりませんでした（ルール/値を かくにん）'); }
+    renderSettings();
+  };
   $('#btnExport').onclick=()=>{
     const blob=new Blob([JSON.stringify({config:CONFIG,reports:REPORTS,meta:META},null,2)],{type:'application/json'});
     const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
