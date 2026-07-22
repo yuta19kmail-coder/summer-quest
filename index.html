@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SUMMER QUEST</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#05070c;
+  --bg2:#0a0f1a;
+  --panel:#0e1524;
+  --panel2:#111a2c;
+  --line:#1e2b45;
+  --silver:#d8dee9;
+  --silver-dim:#8b97ad;
+  --silver-bright:#f2f5fb;
+  --accent:#00e5ff;
+  --accent2:#7af5c8;
+  --glow:0 0 18px rgba(0,229,255,.35);
+  --warn:#ffd23f;
+  --danger:#ff3b5c;
+  --radius:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Noto Sans JP',sans-serif;
+  color:var(--silver);
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(0,229,255,.08), transparent 60%),
+    radial-gradient(900px 500px at 10% 110%, rgba(122,245,200,.06), transparent 60%),
+    linear-gradient(180deg,var(--bg),var(--bg2));
+  background-attachment:fixed;
+  min-height:100vh;
+  overflow-x:hidden;
+  transition:background .6s ease;
+}
+/* moving grid */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(120,160,220,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(120,160,220,.05) 1px,transparent 1px);
+  background-size:44px 44px;
+  mask-image:radial-gradient(circle at 50% 30%,#000 30%,transparent 85%);
+}
+/* ===== warning theme states ===== */
+body.warn1{
+  background:
+    radial-gradient(1000px 600px at 80% -10%, rgba(255,210,63,.14), transparent 60%),
+    linear-gradient(180deg,#0d0c05,#161305);
+}
+body.warn2{
+  background:
+    radial-gradient(1000px 600px at 80% -10%, rgba(255,59,92,.18), transparent 55%),
+    linear-gradient(180deg,#0e0508,#1a070c);
+  animation:dangerPulse 2.2s ease-in-out infinite;
+}
+@keyframes dangerPulse{0%,100%{filter:none}50%{filter:brightness(1.08)}}
+body.warn1{--accent:#ffd23f;--glow:0 0 18px rgba(255,210,63,.4)}
+body.warn2{--accent:#ff3b5c;--glow:0 0 22px rgba(255,59,92,.5)}
+
+a{color:var(--accent)}
+button{font-family:inherit;cursor:pointer}
+.hidden{display:none !important}
+
+/* ===== APP SHELL ===== */
+#app{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:0 16px 120px}
+.topbar{
+  position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
+  padding:16px 4px;background:linear-gradient(180deg,rgba(5,7,12,.95),rgba(5,7,12,.6) 70%,transparent);
+  backdrop-filter:blur(6px);
+}
+.brand{display:flex;align-items:center;gap:12px}
+.brand .logo{
+  width:40px;height:40px;border-radius:10px;display:grid;place-items:center;
+  background:linear-gradient(135deg,#26344f,#0c1322);
+  border:1px solid var(--line);box-shadow:var(--glow);font-size:20px
+}
+.brand h1{font-family:'Orbitron',sans-serif;font-size:20px;letter-spacing:2px;
+  color:var(--silver-bright);text-shadow:var(--glow)}
+.brand small{display:block;font-size:10px;letter-spacing:3px;color:var(--silver-dim)}
+.user-chip{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--silver-dim);
+  border:1px solid var(--line);padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.02)}
+.user-chip b{color:var(--accent)}
+
+/* ===== NAV ===== */
+.nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:30;display:flex;justify-content:center;gap:6px;
+  padding:10px;background:linear-gradient(0deg,rgba(5,7,12,.98),rgba(5,7,12,.4));
+  backdrop-filter:blur(10px);border-top:1px solid var(--line)
+}
+.nav button{
+  flex:1;max-width:150px;background:transparent;border:1px solid transparent;color:var(--silver-dim);
+  padding:8px 4px;border-radius:12px;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:4px;
+  transition:.2s
+}
+.nav button .ic{font-size:20px}
+.nav button.active{color:var(--silver-bright);border-color:var(--line);
+  background:rgba(0,229,255,.08);box-shadow:var(--glow)}
+.nav button.active .ic{filter:drop-shadow(var(--glow))}
+
+/* ===== PANELS ===== */
+.panel{
+  background:linear-gradient(160deg,var(--panel),var(--panel2));
+  border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:16px;
+  position:relative;overflow:hidden
+}
+.panel::after{content:"";position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.5}
+.panel h2{font-size:15px;letter-spacing:1px;color:var(--silver-bright);margin-bottom:14px;
+  display:flex;align-items:center;gap:8px}
+.panel h2 .tag{font-family:'Orbitron';font-size:10px;color:var(--accent);border:1px solid var(--accent);
+  padding:2px 6px;border-radius:6px;letter-spacing:1px}
+
+/* ===== HERO / COUNTDOWN ===== */
+.hero{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+@media(max-width:560px){.hero{grid-template-columns:1fr 1fr}}
+.stat{
+  background:linear-gradient(160deg,var(--panel),var(--panel2));border:1px solid var(--line);
+  border-radius:var(--radius);padding:16px;position:relative;overflow:hidden
+}
+.stat .lbl{font-size:11px;color:var(--silver-dim);letter-spacing:1px}
+.stat .num{font-family:'Orbitron';font-size:40px;line-height:1;color:var(--silver-bright);
+  text-shadow:var(--glow);margin-top:6px}
+.stat .unit{font-size:12px;color:var(--silver-dim);margin-left:4px}
+.stat.big{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between}
+.stat .ring{width:64px;height:64px}
+.warnbar{
+  border-radius:var(--radius);padding:14px 18px;margin-bottom:16px;font-weight:700;
+  display:flex;align-items:center;gap:12px;font-size:14px;
+  border:1px solid var(--accent);background:rgba(0,229,255,.06);color:var(--silver-bright);
+  box-shadow:var(--glow)
+}
+body.warn1 .warnbar{border-color:var(--warn);background:rgba(255,210,63,.1)}
+body.warn2 .warnbar{border-color:var(--danger);background:rgba(255,59,92,.12);animation:dangerPulse 1.6s infinite}
+.warnbar .big{font-size:26px}
+
+/* ===== CALENDAR ===== */
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-head button{background:rgba(255,255,255,.03);border:1px solid var(--line);color:var(--silver);
+  width:38px;height:38px;border-radius:10px;font-size:18px}
+.cal-head .m{font-family:'Orbitron';font-size:18px;color:var(--silver-bright);letter-spacing:1px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-grid .dow{text-align:center;font-size:11px;color:var(--silver-dim);padding:4px 0}
+.cal-grid .dow.sun{color:#ff6b81}.cal-grid .dow.sat{color:#6bb6ff}
+.cell{
+  aspect-ratio:1/1;border:1px solid var(--line);border-radius:12px;position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  background:rgba(255,255,255,.015);transition:.15s;cursor:pointer;overflow:hidden
+}
+.cell:hover{border-color:var(--accent);box-shadow:var(--glow);transform:translateY(-2px)}
+.cell.empty{border:none;background:none;cursor:default}
+.cell.out{opacity:.28}
+.cell .dnum{font-size:14px;color:var(--silver)}
+.cell.sun .dnum{color:#ff6b81}.cell.sat .dnum{color:#6bb6ff}.cell.holi .dnum{color:#ff6b81}
+.cell.today{border-color:var(--accent);box-shadow:var(--glow)}
+.cell.today::before{content:"TODAY";position:absolute;top:3px;font-family:'Orbitron';font-size:7px;color:var(--accent);letter-spacing:1px}
+.cell .holi-name{font-size:7px;color:#ff6b81;line-height:1;text-align:center;padding:0 2px}
+.cell .maru{font-size:26px;color:var(--accent2);text-shadow:0 0 10px var(--accent2);line-height:1;
+  animation:pop .4s ease}
+.cell.done{background:rgba(122,245,200,.07);border-color:rgba(122,245,200,.4)}
+@keyframes pop{0%{transform:scale(0) rotate(-30deg)}70%{transform:scale(1.25)}100%{transform:scale(1)}}
+.cell .mini{position:absolute;bottom:3px;font-size:8px;color:var(--silver-dim)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;font-size:11px;color:var(--silver-dim)}
+.legend span{display:flex;align-items:center;gap:5px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+
+/* ===== FORMS ===== */
+.field{margin-bottom:16px}
+.field>label{display:block;font-size:13px;color:var(--silver-bright);margin-bottom:8px;font-weight:700}
+.field .hint{font-size:11px;color:var(--silver-dim);font-weight:400;margin-left:6px}
+input[type=text],input[type=number],input[type=password],textarea,select{
+  width:100%;background:#070c16;border:1px solid var(--line);color:var(--silver-bright);
+  padding:12px 14px;border-radius:12px;font-family:inherit;font-size:14px;transition:.15s
+}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:var(--glow)}
+textarea{resize:vertical;min-height:90px;line-height:1.7}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2300e5ff' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.row{display:flex;gap:10px;align-items:center}
+.row>*{flex:1}
+.row .grow2{flex:2}
+.study-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.study-row input{flex:2}.study-row select{flex:1;min-width:96px}
+.study-row .del{flex:0 0 auto;width:38px;height:44px;border-radius:10px;border:1px solid var(--line);
+  background:rgba(255,59,92,.08);color:#ff8199;font-size:16px}
+.addbtn{background:rgba(0,229,255,.06);border:1px dashed var(--accent);color:var(--accent);
+  padding:10px;border-radius:12px;width:100%;font-size:13px;font-weight:700}
+.btn{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#04121a;border:none;
+  padding:15px 22px;border-radius:14px;font-weight:900;font-size:15px;letter-spacing:1px;
+  box-shadow:var(--glow);width:100%
+}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--silver);box-shadow:none;font-weight:700}
+.btn.small{width:auto;padding:10px 16px;font-size:13px}
+.typing-link{display:inline-flex;align-items:center;gap:8px;background:rgba(0,229,255,.08);
+  border:1px solid var(--accent);color:var(--accent);padding:12px 16px;border-radius:12px;
+  text-decoration:none;font-weight:700;font-size:13px;box-shadow:var(--glow)}
+
+/* ===== LOGIN ===== */
+#login{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:20px;
+  background:radial-gradient(900px 600px at 50% 20%,rgba(0,229,255,.1),transparent 60%),linear-gradient(180deg,var(--bg),#020308)}
+.login-card{width:100%;max-width:380px;background:linear-gradient(160deg,var(--panel),#070c16);
+  border:1px solid var(--line);border-radius:22px;padding:34px 28px;box-shadow:0 0 60px rgba(0,229,255,.12);position:relative;overflow:hidden}
+.login-card::before{content:"";position:absolute;top:-40%;left:-40%;width:180%;height:80%;
+  background:conic-gradient(from 0deg,transparent,rgba(0,229,255,.12),transparent 40%);animation:spin 8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.login-card>*{position:relative;z-index:1}
+.login-logo{width:70px;height:70px;margin:0 auto 16px;border-radius:18px;display:grid;place-items:center;
+  font-size:34px;background:linear-gradient(135deg,#26344f,#0c1322);border:1px solid var(--line);box-shadow:var(--glow)}
+.login-card h2{font-family:'Orbitron';text-align:center;font-size:26px;letter-spacing:3px;color:var(--silver-bright);text-shadow:var(--glow)}
+.login-card .sub{text-align:center;font-size:11px;letter-spacing:4px;color:var(--silver-dim);margin:6px 0 24px}
+.login-card .field{margin-bottom:14px}
+.login-err{color:var(--danger);font-size:12px;text-align:center;min-height:18px;margin-top:6px;font-weight:700}
+.login-tip{font-size:11px;color:var(--silver-dim);text-align:center;margin-top:16px;line-height:1.7}
+
+/* ===== SUMMARY ===== */
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+@media(max-width:560px){.kpi{grid-template-columns:repeat(2,1fr)}}
+.kpi .stat .num{font-size:30px}
+.chart-wrap{position:relative;height:230px}
+/* status / radar / photo */
+.status-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+@media(max-width:560px){.status-grid{grid-template-columns:1fr}}
+.radar-wrap{position:relative;height:300px}
+.photo-frame{aspect-ratio:4/3;border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative;background:#070c16;display:grid;place-items:center}
+.photo-frame img{width:100%;height:100%;object-fit:cover}
+.photo-frame .ph-empty{color:var(--silver-dim);font-size:12px;text-align:center;padding:16px;line-height:1.8}
+.photo-actions{display:flex;gap:8px;margin-top:10px}
+.photo-actions .btn.small{flex:1}
+.stat-bars{margin-top:6px}
+.sbar{margin-bottom:11px}
+.sbar .lab{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;color:var(--silver)}
+.sbar .lab b{font-family:'Orbitron';color:var(--silver-bright);font-size:13px}
+.sbar .track{height:9px;background:rgba(255,255,255,.06);border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.sbar .fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));box-shadow:var(--glow);border-radius:6px;transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.sbar.lag .fill{background:linear-gradient(90deg,#ff9f43,#ffd23f)}
+.lvl-note{font-size:11px;color:var(--silver-dim);margin-top:6px;line-height:1.7}
+.empty-note{text-align:center;color:var(--silver-dim);font-size:13px;padding:30px 10px;line-height:1.9}
+
+/* toast */
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(30px);z-index:200;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#04121a;font-weight:900;
+  padding:14px 26px;border-radius:14px;box-shadow:var(--glow);opacity:0;transition:.35s;pointer-events:none;font-size:14px}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.view{animation:fade .4s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.section-title{font-size:12px;letter-spacing:2px;color:var(--silver-dim);margin:22px 4px 10px;text-transform:uppercase}
+.small-note{font-size:11px;color:var(--silver-dim);line-height:1.7;margin-top:8px}
+.badge-streak{display:inline-flex;align-items:center;gap:6px;font-family:'Orbitron';font-size:13px;color:var(--accent2)}
+/* やること / 気を付けること / よみもの */
+.todo-item{display:flex;align-items:center;gap:12px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;cursor:pointer;transition:.15s;background:rgba(255,255,255,.015)}
+.todo-item:hover{border-color:var(--accent)}
+.todo-item .chk{width:24px;height:24px;border-radius:7px;border:2px solid var(--silver-dim);display:grid;place-items:center;font-size:14px;color:#04121a;flex:0 0 auto;font-weight:900}
+.todo-item.done .chk{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:var(--accent);box-shadow:var(--glow)}
+.todo-item.done .tx{color:var(--silver-dim);text-decoration:line-through}
+.todo-item .tx{font-size:14px;color:var(--silver-bright)}
+.todo-progress{font-size:11px;color:var(--silver-dim);margin-top:2px}
+.goal-item{padding:9px 4px;font-size:15px;color:var(--silver-bright);line-height:1.7;border-bottom:1px dashed var(--line)}
+.goal-item:last-child{border-bottom:none}
+.care-item{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border-left:3px solid var(--accent);background:rgba(0,229,255,.05);border-radius:0 10px 10px 0;margin-bottom:8px;font-size:14px;color:var(--silver-bright);font-weight:700;line-height:1.7}
+body.warn1 .care-item{border-left-color:var(--warn)}body.warn2 .care-item{border-left-color:var(--danger)}
+.reading .reading-cat{font-size:12px;color:var(--accent);font-weight:700;margin-bottom:4px}
+.reading .reading-title{font-size:17px;color:var(--silver-bright);font-weight:900;margin-bottom:10px}
+.reading .reading-body{font-size:15px;line-height:2.05;color:var(--silver);background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:12px;padding:15px 16px}
+.reading .rd-nav{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.reading .rd-nav button{background:rgba(255,255,255,.03);border:1px solid var(--line);color:var(--silver);padding:8px 14px;border-radius:10px;font-size:12px}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="login">
+  <div class="login-card">
+    <div class="login-logo">🛡️</div>
+    <h2>SUMMER QUEST</h2>
+    <div class="sub">A C C E S S&nbsp;&nbsp;T E R M I N A L</div>
+    <div class="field">
+      <label>ID（あいでぃー）</label>
+      <input type="text" id="loginId" autocomplete="off" placeholder="IDをにゅうりょく" />
+    </div>
+    <div class="field">
+      <label>パスワード</label>
+      <input type="password" id="loginPw" autocomplete="off" placeholder="パスワードをにゅうりょく" />
+    </div>
+    <button class="btn" id="loginBtn">ログイン ▶</button>
+    <div class="login-err" id="loginErr"></div>
+    <div class="login-tip">キーボードで じぶんの ID と パスワードを うちこもう。<br>Enterキーでも ログインできるよ。<br><span style="opacity:.7">おうちのひとは IDを あけて パスワードだけ でOK。</span></div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" class="hidden">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">🛡️</div>
+      <div>
+        <h1>SUMMER QUEST</h1>
+        <small>DAILY MISSION SYSTEM</small>
+      </div>
+    </div>
+    <div class="user-chip" id="userChip" title="タップして ログアウト">👤 <b id="userName">びゃくれん</b> <span style="opacity:.5;font-size:10px">⏻</span></div>
+  </div>
+
+  <!-- ===== HOME ===== -->
+  <div id="view-home" class="view"></div>
+
+  <!-- ===== REPORT ===== -->
+  <div id="view-report" class="view hidden"></div>
+
+  <!-- ===== SUMMARY ===== -->
+  <div id="view-summary" class="view hidden"></div>
+
+  <!-- ===== SETTINGS ===== -->
+  <div id="view-settings" class="view hidden"></div>
+
+  <div class="nav">
+    <button data-view="home" class="active"><span class="ic">📅</span>カレンダー</button>
+    <button data-view="summary"><span class="ic">📈</span>せいせき</button>
+    <button data-view="settings"><span class="ic">⚙️</span>せってい</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* =====================================================================
+   SUMMER QUEST  —  子供の夏休みミッション記録アプリ
+   保存: Firebase(Firestore) 設定時はクラウド / 未設定時は端末(localStorage)
+   ===================================================================== */
+
+/* ---------- 定数・言葉づかい（小3基準） ---------- */
+const CHILD_ID = 'びゃくれん';   // 子アカ：ID + パスワード
+const CHILD_PW = '0228';
+const PARENT_PW = '0612';         // 親アカ：IDなし・パスワードのみ（設定はこちらだけ）
+const PAGE_OPTIONS = 60;      // ページ数プルダウン 0〜60
+const MIN_OPTIONS = [0,5,10,15,20,30,45,60,90,120,150,180]; // 時間(分)プルダウン
+
+/* ---------- TOP：やること / 気を付けること ---------- */
+const TODO_ITEMS = [
+  {emoji:'📚', text:'夏休みの しゅくだい'},
+  {emoji:'✏️', text:'ついかドリル'},
+  {emoji:'📄', text:'のこっていた プリントの 直し'},
+  {emoji:'💯', text:'のこっていた テストの 直し'},
+  {emoji:'📖', text:'読書'}
+];
+const CARE_ITEMS = [
+  '言いわけを しない。言いわけ ではなく「けっか」で しめそう。',
+  'かならず 毎日 べんきょうを する。'
+];
+
+/* ---------- 毎日の よみもの（小3向け・42話でループ） ---------- */
+const READ_EPOCH = '2026-07-21';
+const READINGS = [
+  {emoji:'🗡️',cat:'ゲーム × 科学',title:'ティアキンの ダイブと じゅうりょく',text:'空の 島から とび下りると、リンクは どんどん スピードを 上げて 落ちていくね。じつは 本ものの 世界でも 同じ。高い ところから 物を はなすと、地球が 引っぱる 力（じゅうりょく）で だんだん 速く 落ちるんだ。ティアキンの ダイブは、科学の ルールと おなじなんだよ。'},
+  {emoji:'🛡️',cat:'ゲーム × からだ',title:'ブレワイの あつさ・さむさ',text:'ハイラルの 雪山では さむさで やられ、火山では あつさで やられちゃう。人の 体も 同じで、さむいと ふるえて 体を あたため、あついと あせを かいて 体を ひやす。リンクの 服そうびは、体を まもる「ちえ」なんだ。'},
+  {emoji:'⛏️',cat:'ゲーム × 電気',title:'マイクラの レッドストーン',text:'レッドストーンで スイッチや ドアを 動かせるよね。あれは 本ものの 電気に そっくり。電気も 線の 中を 流れて、明かりを つけたり きかいを 動かしたり する。マイクラで 回ろを 作ると、電気の しくみが 自ぜんに わかっちゃうんだ。'},
+  {emoji:'🏎️',cat:'ゲーム × 車',title:'マリカーの ドリフト',text:'カーブで ドリフトすると 速く まがれるね。本ものの 車も、タイヤと 道の「まさつ」で ふんばって まがる。すべると あぶないから、タイヤには みぞが あって 雨の 日でも ふんばれる。マリカーの テクは、車の 科学と つながっているよ。'},
+  {emoji:'👾',cat:'ゲーム × チーム',title:'地球ぼうえい軍と 協力',text:'たくさんの 敵を たおすには、味方と 力を あわせるのが 大じ。会社や スポーツの チームも 同じで、ひとりより みんなで やくわりを 分けた ほうが、大きな ことが できる。「協力する 力」は、ゲームでも しごとでも つよい ぶきだよ。'},
+  {emoji:'🔥',cat:'アニメ × 科学',title:'鬼滅の「呼吸」と さんそ',text:'「全集中の 呼吸」で 力を 高めるね。じっさい、人は いきを すって「さんそ」を 体に とり入れ、それを つかって 力を 出している。ふかく ゆっくり 呼吸すると 気もちが おちつくのは 本とう。たんじろうの 呼吸には、科学の ヒントが あるんだ。'},
+  {emoji:'🐉',cat:'アニメ × 宇宙',title:'かめはめ波と 太陽',text:'かめはめ波は エネルギーの かたまり。じつは 太陽も、中で 小さな つぶが ぶつかって、ものすごい エネルギーを 出しつづける「天ねんの エネルギー工場」なんだ。地球の 光も あたたかさも、みんな 太陽の おかげだよ。'},
+  {emoji:'🎯',cat:'アニメ × 計画',title:'暗殺教室の さくせん',text:'大きな もくひょうに むかって、生とたちは さくせんを 立てるね。大きな ゆめも、小さな ステップに 分けて 一つずつ こなすと ちかづける。「計画を 立てる 力」は、大人に なっても すごく 役に立つんだ。'},
+  {emoji:'👊',cat:'アニメ × つみ重ね',title:'ワンパンマンの トレーニング',text:'サイタマは 毎日 うでたてと ランニングを つづけて 強くなった。地みちな れんしゅうの つみ重ねは、うらぎらない。きみの べんきょうや タイピングも 同じで、毎日 ちょっとずつ つづけると、気づけば すごい 力に なっているんだ。'},
+  {emoji:'🌍',cat:'宇宙',title:'地球は まわっている',text:'わたしたちは 止まって いるようで、地球は こまのように くるくる まわっている。1日で 1回 まわるから、朝と 夜が できるんだ。スピードは とても 速いのに、みんな いっしょに 動くから 気づかないんだね。'},
+  {emoji:'🌙',cat:'宇宙',title:'月が 光る わけ',text:'月は 自分では 光っていない。太陽の 光を はね返して 光って 見えるんだ。月の 形が 毎日 かわるのは、太陽・地球・月の いちが 動くから。まん月や 三日月は、その いちが 見せる「えいが」なんだよ。'},
+  {emoji:'☀️',cat:'宇宙',title:'太陽って どれくらい 大きい？',text:'太陽は、地球が 100万こ 入るくらい 大きい。でも とても 遠いから、空では 小さく 見える。太陽の 光が 地球に とどくまで やく 8分。今 見ている 光は、8分 前に 出た 光なんだ。'},
+  {emoji:'🚀',cat:'宇宙',title:'ロケットが とぶ わけ',text:'ロケットは ガスを 下に 強く ふき出して、その はんたいの 力で 上に とぶ。ふうせんの 口を はなすと とんでいくのと 同じ。「おした ぶんだけ おし返される」——この ルールで、宇宙まで 行けるんだ。'},
+  {emoji:'🌌',cat:'宇宙',title:'宇宙は しずか',text:'宇宙には 空気が ほとんど ない。音は 空気を ふるわせて つたわるから、空気の ない 宇宙では 音が 聞こえない。えいがの「ドカーン」は えんしゅつ。本とうの 宇宙は、しーんと しずかなんだ。'},
+  {emoji:'🕳️',cat:'宇宙',title:'ブラックホールの なぞ',text:'光さえ にげられない、ものすごく 強い 力を もつ「ほしの あと」が ブラックホール。近づいた ものは すいこまれて 出られない。まだ なぞが 多くて、世界中の 科学者が しらべている ふしぎな そんざいだよ。'},
+  {emoji:'🛰️',cat:'宇宙',title:'宇宙ステーション',text:'地球の まわりを、人が すむ きちが まわっている。中は むじゅうりょくで、体も 物も ふわふわ うかぶ。宇宙ひこうしは そこで じっけんを したり、地球を 見まもったり しているんだ。'},
+  {emoji:'🚗',cat:'車',title:'エンジンの しくみ',text:'ガソリンの 車は、ねんりょうを 小さく ばくはつさせ、その 力で タイヤを まわす。1びょうに 何十回も ばくはつして いるんだ。たくさんの ぶひんが きれいに 動いて 前に すすむ。まるで 金ぞくの「きんにく」だね。'},
+  {emoji:'🔋',cat:'車',title:'電気じどう車（EV）',text:'さいきん ふえている EVは、ガソリンを つかわず 電気で モーターを まわす。走っても はい気ガスを 出さないから、空気に やさしい。しずかで、じゅう電すれば また 走れる。未らいの 車の かたちの ひとつだよ。'},
+  {emoji:'🛑',cat:'車 × 科学',title:'ブレーキの 科学',text:'車を 止めるのは ブレーキ。うごく エネルギーを、タイヤを おさえて「ねつ」に かえて 止まるんだ。だから レースの ブレーキは 火のように あつくなる。じつは「止まる」のも、すごい ぎじゅつなんだよ。'},
+  {emoji:'🏁',cat:'車 × 科学',title:'F1が 速い ひみつ',text:'F1の 車は 時そく300キロ いじょう。体を ひくく して 空気を きれいに ながす かたちに して いる。空気を うまく つかうと、車が 地めんに おしつけられて、カーブでも すべりにくく なるんだ。'},
+  {emoji:'🌈',cat:'科学の しくみ',title:'空は なぜ 青い？',text:'太陽の 光には いろんな 色が まざっている。青い 光は 空気の つぶに ぶつかって あちこちに ちらばりやすい。だから 昼の 空は 青い。夕方は 光が ななめに 進むので、赤が のこって 空が オレンジに なるんだ。'},
+  {emoji:'🌦️',cat:'科学の しくみ',title:'にじの できかた',text:'雨の あとの 空気には 水の つぶが いっぱい。太陽の 光が その つぶの 中で まがって、7色に 分かれると にじが できる。光は もともと たくさんの 色の あつまり。にじは、その 色を 見せて くれるんだ。'},
+  {emoji:'🧲',cat:'科学の しくみ',title:'じしゃくの ふしぎ',text:'じしゃくには Nと Sの きょくが ある。同じ きょくは しりぞけあい、ちがう きょくは 引きあう。じつは 地球ぜんたいも 大きな じしゃく。だから ほういじしんの はりは、いつも 北を さすんだよ。'},
+  {emoji:'🔊',cat:'科学の しくみ',title:'音って なに？',text:'音は 空気の ふるえ。太こを たたくと 空気が ふるえて、その ゆれが 耳に とどいて 音に 聞こえる。近くの 音は 大きく、遠くの 音は 小さい。じつは きみの 声も、空気の ふるえなんだ。'},
+  {emoji:'💧',cat:'科学の しくみ',title:'水の たび',text:'うみの 水は あたためられて 空へ のぼり、くもに なる。くもは 雨に なって 山や 川に おち、また うみへ もどる。水は ぐるぐる 世界を 旅している。きみが のむ 水も、その 旅の とちゅうなんだ。'},
+  {emoji:'💡',cat:'科学の しくみ',title:'電気は どこから？',text:'いえの 電気は、はつでんしょで 作られ、線を とおって とどく。水や 風、太陽の 光で きかいを まわして 電気を 作るんだ。スイッチを おすと ぱっと つくのは、電気が 光の 速さで 走ってくるから。'},
+  {emoji:'🍎',cat:'科学の しくみ',title:'なぜ 物は 下に おちる？',text:'地球は まわりの 物を まん中へ 引っぱる 力（じゅうりょく）を もっている。だから 手を はなすと 物は 下に おちる。ジャンプしても もどってくるのも この 力。月では 力が よわいから、ふわっと 高く とべるんだ。'},
+  {emoji:'🧊',cat:'科学の しくみ',title:'こおりが うく わけ',text:'水は こおると すこし かさが ふえて、かるくなる。だから こおりは 水に うかぶ。コップの ジュースで 氷が ぷかぷか うくのは この せい。ふゆの 池も、上だけ こおって 下は 水の ままなんだ。'},
+  {emoji:'🍚',cat:'科学 × からだ',title:'なぜ おなかが すく？',text:'体は うごくと エネルギーを つかう。足りなく なると、のうが「ごはんを たべて」と あいずを 出す。それが「おなかが すいた」かんかく。ごはんは 体の ねんりょう。しっかり 食べると、元気に 動けるんだ。'},
+  {emoji:'😴',cat:'科学 × からだ',title:'ねむりの 力',text:'ねている あいだに 体と のうは しゅうりされ、おぼえた ことも せいりされる。だから ねぶそくだと あたまが うまく はたらかない。よく ねる ことは、べんきょうを 力に かえる「ひみつの じかん」なんだ。'},
+  {emoji:'💰',cat:'ビジネス',title:'お金って なに？',text:'むかしは 物と 物を こうかんして いた。でも つりあわない ことも 多い。そこで だれもが つかえる「お金」が 生まれた。お金は、「ありがとう」を かたちに した 引きかえけんの ようなものなんだ。'},
+  {emoji:'🏷️',cat:'ビジネス',title:'ねだんの きまりかた',text:'ほしい 人が 多くて 品ものが 少ないと、ねだんは 上がる。ぎゃくに あまっていると 下がる。げんていグッズが 高いのは、ほしい 人が 多いから。ねだんは「ほしさ」と「数」の バランスで きまるんだ。'},
+  {emoji:'🐷',cat:'ビジネス',title:'ちょきんの 力',text:'おこづかいを 少しずつ ためると、大きな 物が 買える。すぐ つかわず とっておくのが ちょきん。ゆめや ひつような ときの ために そなえる 力。ちょっとの がまんが、あとで 大きな よろこびに かわるんだ。'},
+  {emoji:'🏢',cat:'ビジネス',title:'会社って なに？',text:'ひとりでは できない 大きな 仕事を、たくさんの 人が 力を あわせて する あつまりが 会社。作る 人、うる 人、かんがえる 人。やくわりを 分けて、世の中に 役立つ 物や サービスを とどけて いるんだ。'},
+  {emoji:'🧑‍🔧',cat:'ビジネス',title:'しごとと きゅうりょう',text:'人は だれかの こまりごとを「たすける」と、そのお礼として お金（きゅうりょう）を もらう。ゲームを 作る 人、車を 直す 人、りょうりを 作る 人。しごとは「だれかの 役に立つ こと」。きみは 何で 人を たすけたい？'},
+  {emoji:'📺',cat:'ビジネス',title:'こうこく（CM）の しごと',text:'「これ いいよ！」と 多くの 人に しらせるのが こうこく。テレビや ネットの CMは、品ものを 知って もらう ための くふう。おもしろい CMだと 気に なって、買いたく なるよね。つたえかたも、りっぱな しごとだよ。'},
+  {emoji:'💡',cat:'ビジネス',title:'はつめいと とっきょ',text:'あたらしい べんりな しくみを 考え出す ことを「はつめい」と いう。作った 人の アイデアを まもる ルールが「とっきょ」。ゲームや 車の 新ぎじゅつも、はつめいの つみ重ね。「あったら いいな」から 世かいは かわるんだ。'},
+  {emoji:'🚀',cat:'ビジネス',title:'自分で 始める（きぎょう）',text:'自分で 会社や お店を 始める ことを「きぎょう」と いう。「こんな もの あったら いいな」を かたちに して、人に とどける。アイデアと ゆうき、やりつづける 力が いる。大きな ゲーム会社も、さいしょは 小さな ゆめだったんだ。'},
+  {emoji:'🚢',cat:'ビジネス',title:'ぼうえきと 世かい',text:'日本は 車や ゲームを 外国に うって、石ゆや くだものを 買っている。国どうしで 品ものを こうかんする ことを「ぼうえき」と いう。世かいは、それぞれ「とくいな もの」を 出しあって、ささえあって いるんだ。'},
+  {emoji:'🌱',cat:'ビジネス × 心',title:'しっぱいは たからもの',text:'どんな 会社も、はじめは しっぱいだらけ。でも しっぱいの 中に「つぎは こうしよう」の ヒントが ある。言いわけを せず、けっかを 見て 直す 人が、さいごに うまく いく。しっぱいは、せいちょうの もとなんだ。'},
+  {emoji:'⏰',cat:'心 × 生活',title:'じかんの つかいかた',text:'1日は だれでも 24じかん。同じ じかんでも、だらだら つかうか、めあてを 決めて つかうかで 大きく かわる。先に「やる こと」を 決めて とりかかると、あそぶ じかんも ふえる。じかんは いちばん 大じな たからだよ。'},
+  {emoji:'🏔️',cat:'心 × つみ重ね',title:'「つづける」が さいきょう',text:'どんな 力も 1日では つかない。でも 毎日 少しずつ つづけると、山のように つみ重なる。べんきょうも うんどうも タイピングも 同じ。今日の きみの 1ページが、みらいの きみを 作って いるんだ。'}
+];
+
+/* よみもの：日付から その日の 話を えらぶ（毎日ちがう・42日でループ） */
+function readingIndexFor(dateStr){
+  const n=READINGS.length;
+  return ((diffDays(dateStr,READ_EPOCH))%n+n)%n;
+}
+/* やること：日付ごとの チェック状態（ローカル保存・〇には影響しない） */
+function getTodoState(date){ try{ return (JSON.parse(LS.get('sq_todos')||'{}'))[date]||{}; }catch(e){ return {}; } }
+function setTodoState(date,obj){ let all={}; try{ all=JSON.parse(LS.get('sq_todos')||'{}'); }catch(e){} all[date]=obj; LS.set('sq_todos',JSON.stringify(all)); }
+
+/* ---------- 設定（localStorageに保存） ---------- */
+const DEFAULT_CONFIG = {
+  vacStart:'2026-07-21',
+  vacEnd:'2026-08-31',
+  typingUrl:'https://typing.twi1.me/game/3880',   // こどもタイピング（マイタイピング）
+  typingName:'こどもタイピング',
+  typingRule:'まいかい さいごまで やって、でた スコアを 入力しよう',
+  firebase:{ apiKey:'',authDomain:'',projectId:'',appId:'' }
+};
+
+/* ---------- 安全な localStorage ラッパ ---------- */
+const mem = {};
+const LS = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return mem[k]??null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){ mem[k]=v; } },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){ delete mem[k]; } }
+};
+
+let CONFIG = loadConfig();
+function loadConfig(){
+  try{
+    const cfg=Object.assign({}, DEFAULT_CONFIG, JSON.parse(LS.get('sq_config')||'{}'));
+    if(!cfg.typingUrl){ cfg.typingUrl=DEFAULT_CONFIG.typingUrl; cfg.typingName=cfg.typingName||DEFAULT_CONFIG.typingName; } // 未設定なら既定のゲームを使う
+    return cfg;
+  }catch(e){ return {...DEFAULT_CONFIG}; }
+}
+function saveConfig(){ LS.set('sq_config', JSON.stringify(CONFIG)); }
+
+/* =====================================================================
+   ストレージ層（Firebase / localStorage 自動切替）
+   ===================================================================== */
+const Store = {
+  mode:'local', fdb:null, fns:null, ready:false,
+  async init(){
+    const fc = CONFIG.firebase;
+    if(fc && fc.apiKey && fc.projectId){
+      try{
+        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+        const m = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+        const app = initializeApp({
+          apiKey:fc.apiKey, authDomain:fc.authDomain||(fc.projectId+'.firebaseapp.com'),
+          projectId:fc.projectId, appId:fc.appId||undefined
+        });
+        this.fdb = m.getFirestore(app);
+        this.fns = m;
+        this.mode='firebase';
+      }catch(e){
+        console.warn('Firebase初期化に失敗。端末保存に切替:',e);
+        this.mode='local';
+      }
+    }
+    this.ready = true;
+    return this.mode;
+  },
+  async getAll(){
+    if(this.mode==='firebase'){
+      try{
+        const {collection,getDocs}=this.fns;
+        const snap = await getDocs(collection(this.fdb,'reports'));
+        const out={}; snap.forEach(d=>out[d.id]=d.data()); return out;
+      }catch(e){ console.warn(e); return this._localAll(); }
+    }
+    return this._localAll();
+  },
+  _localAll(){ try{ return JSON.parse(LS.get('sq_reports')||'{}'); }catch(e){ return {}; } },
+  async get(date){ const all=await this.getAll(); return all[date]||null; },
+  async save(date,data){
+    if(this.mode==='firebase'){
+      try{
+        const {doc,setDoc}=this.fns;
+        await setDoc(doc(this.fdb,'reports',date), data);
+        return true;
+      }catch(e){ console.warn('クラウド保存失敗→端末保存',e); }
+    }
+    const all=this._localAll(); all[date]=data; LS.set('sq_reports',JSON.stringify(all)); return true;
+  },
+  async remove(date){
+    if(this.mode==='firebase'){
+      try{ const {doc,deleteDoc}=this.fns; await deleteDoc(doc(this.fdb,'reports',date)); }catch(e){console.warn(e);}
+    }
+    const all=this._localAll(); delete all[date]; LS.set('sq_reports',JSON.stringify(all)); return true;
+  },
+  async importAll(obj){
+    if(this.mode==='firebase'){
+      const {doc,setDoc}=this.fns;
+      for(const [d,v] of Object.entries(obj)){ try{await setDoc(doc(this.fdb,'reports',d),v);}catch(e){console.warn(e);} }
+    }
+    const all=this._localAll(); Object.assign(all,obj); LS.set('sq_reports',JSON.stringify(all));
+  },
+  /* メタ情報（写真など） */
+  async getMeta(){
+    if(this.mode==='firebase'){
+      try{ const {doc,getDoc}=this.fns; const s=await getDoc(doc(this.fdb,'meta','profile'));
+        const m=s.exists()?s.data():{}; LS.set('sq_meta',JSON.stringify(m)); return m; }
+      catch(e){ console.warn(e); }
+    }
+    try{ return JSON.parse(LS.get('sq_meta')||'{}'); }catch(e){ return {}; }
+  },
+  async setMeta(obj){
+    LS.set('sq_meta',JSON.stringify(obj));
+    if(this.mode==='firebase'){
+      try{ const {doc,setDoc}=this.fns; await setDoc(doc(this.fdb,'meta','profile'),obj); }
+      catch(e){ console.warn('メタ保存失敗（端末には保存済み）',e); }
+    }
+    return true;
+  }
+};
+
+/* =====================================================================
+   日付ユーティリティ
+   ===================================================================== */
+function ymd(d){ const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),da=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${da}`; }
+function parseYmd(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+function todayDate(){ const n=new Date(); return new Date(n.getFullYear(),n.getMonth(),n.getDate()); }
+function todayStr(){ return ymd(todayDate()); }
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+function diffDays(a,b){ return Math.round((parseYmd(a)-parseYmd(b))/86400000); }
+const WEEK=['にち','げつ','か','すい','もく','きん','ど'];
+
+/* =====================================================================
+   祝日 API（holidays-jp）取得＋キャッシュ
+   ===================================================================== */
+const Holidays = { data:{}, loaded:new Set(),
+  async loadYear(y){
+    if(this.loaded.has(y)) return;
+    this.loaded.add(y);
+    try{
+      const res = await fetch(`https://holidays-jp.github.io/api/v1/${y}/date.json`);
+      if(res.ok){ const j=await res.json(); Object.assign(this.data,j); }
+    }catch(e){ console.warn('祝日API取得失敗',e); }
+  },
+  name(dateStr){ return this.data[dateStr]||null; }
+};
+
+/* =====================================================================
+   遅れ判定 → UIテーマ
+   「昨日」まで連続で未記録の日数を数える。1日=黄, 2日以上=赤
+   ===================================================================== */
+function computeDelay(reports){
+  const t = todayDate();
+  const start = parseYmd(CONFIG.vacStart);
+  const end = parseYmd(CONFIG.vacEnd);
+  if(t < start || t > addDays(end,1)) return 0;      // 期間外は警告しない
+  let missing=0;
+  let d = addDays(t,-1); // 昨日から後ろへ
+  while(d >= start){
+    if(reports[ymd(d)]) break;   // 記録があれば連続ストップ
+    missing++;
+    if(missing>=2) break;
+    d = addDays(d,-1);
+  }
+  return missing; // 0/1/2
+}
+function applyTheme(delay){
+  document.body.classList.remove('warn1','warn2');
+  if(delay===1) document.body.classList.add('warn1');
+  else if(delay>=2) document.body.classList.add('warn2');
+}
+
+/* =====================================================================
+   グローバル状態
+   ===================================================================== */
+let REPORTS = {};              // {date:data}
+let calYear, calMonth;         // 表示中の年月
+let editingDate = null;
+let charts = [];
+let ROLE = 'child';   // 'child' or 'parent'
+let META = {};        // 写真など
+
+/* ---- 日報データの正規化（旧形式 object も配列として読む） ---- */
+function toArr(v){
+  if(!v) return [];
+  if(Array.isArray(v)) return v.filter(x=>x && (x.name || x.minutes!=='' && x.minutes!=null));
+  if(v.text || v.minutes) return [{name:v.text||'', minutes:v.minutes}]; // 旧: {text,minutes}
+  return [];
+}
+const exArr   = r => toArr(r && r.exercise);
+const gameArr = r => toArr(r && r.game);
+const poolMin = r => Number(r && r.pool) || 0;
+
+/* =====================================================================
+   ステータス算出（六角形レーダー）
+   計測がむずかしいので、記録日数に応じて徐々に上昇するアルゴリズム。
+   ゲーム・算数は伸びやすく（係数大）、漢字は後追い（係数小＋抑えめ）。
+   実際の記録があれば少しだけボーナス（responsive）。0〜100。
+   ===================================================================== */
+function computeStats(reports){
+  const dates=Object.keys(reports).filter(d=>d>=CONFIG.vacStart&&d<=CONFIG.vacEnd).sort();
+  const d=dates.length; // 記録した日数がのびるほど成長
+  let mathPages=0,kanjiPages=0,gameMin=0,exMin=0,poolTotal=0,naraiDays=0,bestType=0;
+  dates.forEach(dt=>{
+    const r=reports[dt];
+    (r.study||[]).forEach(s=>{
+      const nm=String(s.name||''); const p=Number(s.pages)||0;
+      if(/算|さんすう|けいさん|計算|数/.test(nm)) mathPages+=p;
+      else if(/漢|かんじ|国語|こくご|字|よみ/.test(nm)) kanjiPages+=p;
+      else { mathPages+=p*0.5; kanjiPages+=p*0.5; } // ふりわけ不明は半々
+    });
+    gameArr(r).forEach(g=>gameMin+=Number(g.minutes)||0);
+    exArr(r).forEach(e=>exMin+=Number(e.minutes)||0);
+    poolTotal+=poolMin(r);
+    if(r.narai&&r.narai.text) naraiDays++;
+    const ts=Number(r.typing&&r.typing.score)||0; if(ts>bestType) bestType=ts;
+  });
+  const clamp=x=>Math.max(0,Math.min(100,Math.round(x)));
+  const curve=(k,cap)=>cap*(1-Math.exp(-k*d));
+  return {
+    kanji:    clamp(curve(0.028,92)*0.85 + Math.min(kanjiPages*0.4,12)), // 後追い（ゆっくり）
+    math:     clamp(curve(0.10 ,96)      + Math.min(mathPages *0.3,10)), // 伸びやすい
+    game:     clamp(curve(0.12 ,94)      + Math.min(gameMin   *0.05,8)), // 伸びやすい
+    exercise: clamp(curve(0.05 ,90)      + Math.min((exMin+poolTotal)*0.03,10)),
+    narai:    clamp(curve(0.045,88)      + Math.min(naraiDays *1.5,12)),
+    typing:   clamp(curve(0.055,90)      + Math.min(bestType  /30,15))
+  };
+}
+
+/* =====================================================================
+   ログイン
+   ===================================================================== */
+const $ = s=>document.querySelector(s);
+function initLogin(){
+  const go = ()=>{
+    const id=$('#loginId').value.trim(), pw=$('#loginPw').value;
+    let role=null;
+    if(pw===PARENT_PW){ role='parent'; }              // 親アカ：IDなし・パスワードのみ
+    else if(id===CHILD_ID && pw===CHILD_PW){ role='child'; } // 子アカ
+    if(role){
+      LS.set('sq_auth','1');
+      LS.set('sq_role',role);
+      startApp();
+    }else{
+      $('#loginErr').textContent = 'IDかパスワードが ちがうよ。もういちど ためしてね。';
+      $('#loginPw').value='';
+    }
+  };
+  $('#loginBtn').addEventListener('click',go);
+  ['#loginId','#loginPw'].forEach(sel=>$(sel).addEventListener('keydown',e=>{ if(e.key==='Enter') go(); }));
+  if(LS.get('sq_auth')==='1'){ startApp(); }
+}
+
+async function startApp(){
+  $('#login').classList.add('hidden');
+  $('#app').classList.remove('hidden');
+  ROLE = LS.get('sq_role')||'child';
+  // アカウントに合わせて表示を切替
+  $('#userName').textContent = ROLE==='parent' ? 'おうちのひと' : CHILD_ID;
+  const settingsBtn = document.querySelector('.nav button[data-view="settings"]');
+  if(settingsBtn) settingsBtn.style.display = (ROLE==='parent') ? '' : 'none';
+  const chip = $('#userChip');
+  if(chip) chip.onclick = ()=>{ LS.del('sq_auth'); LS.del('sq_role'); location.reload(); };
+  const now=todayDate(); calYear=now.getFullYear(); calMonth=now.getMonth();
+  await Store.init();
+  await refresh();
+  // ナビ
+  document.querySelectorAll('.nav button').forEach(b=>{
+    b.addEventListener('click',()=>switchView(b.dataset.view));
+  });
+  switchView('home');   // 初期表示
+}
+
+async function refresh(){
+  REPORTS = await Store.getAll();
+  META = await Store.getMeta();
+  applyTheme(computeDelay(REPORTS));
+}
+
+/* =====================================================================
+   ビュー切替
+   ===================================================================== */
+function switchView(v){
+  if(v==='settings' && ROLE!=='parent') v='home';  // 子アカは設定に入れない
+  ['home','report','summary','settings'].forEach(x=>{
+    $('#view-'+x).classList.toggle('hidden', x!==v);
+  });
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active', b.dataset.view===v));
+  if(v==='home') renderHome();
+  if(v==='summary') renderSummary();
+  if(v==='settings') renderSettings();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* =====================================================================
+   HOME（カレンダー＋カウントダウン）
+   ===================================================================== */
+async function renderHome(){
+  await Holidays.loadYear(calYear);
+  const el=$('#view-home');
+  const t=todayDate();
+  const start=parseYmd(CONFIG.vacStart), end=parseYmd(CONFIG.vacEnd);
+  const total=diffDays(CONFIG.vacEnd,CONFIG.vacStart)+1;
+  let passed = diffDays(todayStr(),CONFIG.vacStart)+1;
+  passed = Math.max(0, Math.min(passed,total));
+  let remain = diffDays(CONFIG.vacEnd,todayStr());
+  remain = Math.max(0, remain);
+  const doneCount = Object.keys(REPORTS).filter(d=>d>=CONFIG.vacStart&&d<=CONFIG.vacEnd).length;
+  const pct = total>0? Math.round(passed/total*100):0;
+  const delay=computeDelay(REPORTS);
+  const streak=currentStreak();
+
+  let warnHtml='';
+  if(delay===1) warnHtml=`<div class="warnbar"><span class="big">⚠️</span><div>きのうの きろくが まだだよ！<br>いまのうちに かいて、〇を つなげよう。</div></div>`;
+  else if(delay>=2) warnHtml=`<div class="warnbar"><span class="big">🚨</span><div>２日いじょう きろくが とまってるよ！<br>がめんが あかく なってる。きょう ばんかいしよう！</div></div>`;
+  else if(delay===0 && passed>0) warnHtml=`<div class="warnbar"><span class="big">✨</span><div>ちょうしバッチリ！このまま つづけよう。</div></div>`;
+
+  const todoPanel=`<div class="panel"><h2><span class="tag">GOAL</span>やること（もくひょう）</h2>${TODO_ITEMS.map(it=>`<div class="goal-item">${it.emoji} ${it.text}</div>`).join('')}</div>`;
+  const carePanel=`<div class="panel"><h2><span class="tag">RULE</span>気を つけること</h2>${CARE_ITEMS.map(c=>`<div class="care-item">❗ ${c}</div>`).join('')}</div>`;
+
+  el.innerHTML = `
+    ${warnHtml}
+    <div class="hero">
+      <div class="stat">
+        <div class="lbl">なつやすみ しゅうりょうまで</div>
+        <div class="num">${remain}<span class="unit">日</span></div>
+      </div>
+      <div class="stat">
+        <div class="lbl">スタートから</div>
+        <div class="num">${passed<0?0:passed}<span class="unit">日目</span></div>
+      </div>
+      <div class="stat big">
+        <div>
+          <div class="lbl">きろくした日</div>
+          <div class="num">${doneCount}<span class="unit">/ ${total}日</span></div>
+          <div class="badge-streak" style="margin-top:8px">🔥 れんぞく ${streak}日</div>
+        </div>
+        <svg class="ring" viewBox="0 0 36 36">
+          <path d="M18 2a16 16 0 1 1 0 32 16 16 0 1 1 0-32" fill="none" stroke="#1e2b45" stroke-width="3"/>
+          <path d="M18 2a16 16 0 1 1 0 32 16 16 0 1 1 0-32" fill="none" stroke="var(--accent)" stroke-width="3"
+            stroke-dasharray="${pct},100" stroke-linecap="round" style="filter:drop-shadow(var(--glow))"/>
+          <text x="18" y="20" text-anchor="middle" font-size="9" fill="#f2f5fb" font-family="Orbitron">${pct}%</text>
+        </svg>
+      </div>
+    </div>
+
+    ${todoPanel}
+    ${carePanel}
+
+    <div class="panel">
+      <div class="cal-head">
+        <button id="prevM">‹</button>
+        <div class="m" id="calLabel"></div>
+        <button id="nextM">›</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--accent2)"></span>きろく できた日（〇）</span>
+        <span><span class="dot" style="background:var(--accent)"></span>きょう</span>
+        <span><span class="dot" style="background:#ff6b81"></span>おやすみ・しゅくじつ</span>
+      </div>
+      <div class="small-note">日づけを タップすると その日の ミッションを かけるよ。夏休みの きかんは「せってい」で かえられます。</div>
+    </div>
+  `;
+  $('#prevM').onclick=()=>{ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderHome(); };
+  $('#nextM').onclick=()=>{ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderHome(); };
+  drawCalendar();
+}
+
+function drawCalendar(){
+  const label=$('#calLabel'); const grid=$('#calGrid');
+  label.textContent = `${calYear} . ${String(calMonth+1).padStart(2,'0')}`;
+  const first=new Date(calYear,calMonth,1);
+  const startDow=first.getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const tStr=todayStr();
+  let html='';
+  ['日','月','火','水','木','金','土'].forEach((d,i)=>{
+    html+=`<div class="dow ${i===0?'sun':''} ${i===6?'sat':''}">${d}</div>`;
+  });
+  for(let i=0;i<startDow;i++) html+=`<div class="cell empty"></div>`;
+  for(let day=1;day<=daysInMonth;day++){
+    const ds=ymd(new Date(calYear,calMonth,day));
+    const dow=new Date(calYear,calMonth,day).getDay();
+    const holi=Holidays.name(ds);
+    const done=!!REPORTS[ds];
+    const inVac = ds>=CONFIG.vacStart && ds<=CONFIG.vacEnd;
+    let cls='cell';
+    if(dow===0) cls+=' sun'; if(dow===6) cls+=' sat';
+    if(holi) cls+=' holi';
+    if(done) cls+=' done';
+    if(ds===tStr) cls+=' today';
+    if(!inVac) cls+=' out';
+    html+=`<div class="${cls}" data-date="${ds}">
+      <div class="dnum">${day}</div>
+      ${done?'<div class="maru">〇</div>':''}
+      ${holi&&!done?`<div class="holi-name">${holi.length>5?holi.slice(0,4)+'…':holi}</div>`:''}
+    </div>`;
+  }
+  grid.innerHTML=html;
+  grid.querySelectorAll('.cell[data-date]').forEach(c=>{
+    c.addEventListener('click',()=>openReport(c.dataset.date));
+  });
+}
+
+function currentStreak(){
+  // 今日 or 昨日から さかのぼって連続記録日数
+  let n=0; let d=todayDate();
+  if(!REPORTS[ymd(d)]) d=addDays(d,-1); // 今日未記録なら昨日基準
+  while(REPORTS[ymd(d)]){ n++; d=addDays(d,-1); }
+  return n;
+}
+
+/* =====================================================================
+   REPORT（日報入力）
+   ===================================================================== */
+function openReport(date){
+  editingDate=date;
+  switchView('report');
+  renderReport();
+}
+function pageOptions(sel){
+  let o='<option value="">-</option>';
+  for(let i=0;i<=PAGE_OPTIONS;i++) o+=`<option value="${i}" ${String(sel)===String(i)?'selected':''}>${i}</option>`;
+  return o;
+}
+function minOptions(sel){
+  let o='<option value="">-</option>';
+  for(const m of MIN_OPTIONS) o+=`<option value="${m}" ${String(sel)===String(m)?'selected':''}>${m}分</option>`;
+  return o;
+}
+
+function renderReport(){
+  const el=$('#view-report');
+  const data=REPORTS[editingDate]||{};
+  const d=parseYmd(editingDate);
+  const dowName=['にちようび','げつようび','かようび','すいようび','もくようび','きんようび','どようび'][d.getDay()];
+  const holi=Holidays.name(editingDate);
+  const study=(data.study&&data.study.length)?data.study:[{name:'',pages:''}];
+
+  el.innerHTML=`
+    <div class="topbar" style="position:static;padding:8px 4px 0">
+      <button class="btn ghost small" id="backHome">‹ もどる</button>
+      <div style="text-align:right">
+        <div style="font-family:Orbitron;font-size:18px;color:var(--silver-bright)">${editingDate.replace(/-/g,'.')}</div>
+        <div style="font-size:11px;color:var(--silver-dim)">${dowName}${holi?' ・ '+holi:''}</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2><span class="tag">MISSION</span>きょうの ミッション記録</h2>
+
+      <div class="field">
+        <label>📖 べんきょう <span class="hint">おわった ページ数を えらぼう</span></label>
+        <div id="studyList"></div>
+        <button class="addbtn" id="addStudy">＋ きょうかを ふやす</button>
+      </div>
+
+      <div class="field">
+        <label>🏃 うんどう <span class="hint">なにを 何分やった？ ふやせるよ</span></label>
+        <div id="exList"></div>
+        <button class="addbtn" id="addEx">＋ うんどうを ふやす</button>
+      </div>
+
+      <div class="field">
+        <label>🏊 プール <span class="hint">プールに はいった じかん（分）</span></label>
+        <div class="row">
+          <input type="number" id="poolMin" inputmode="numeric" placeholder="れい：60" value="${data.pool??''}"/>
+          <div style="flex:1;font-size:12px;color:var(--silver-dim)">分</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>⌨️ タイピング <span class="hint">おなじ じょうけんで スコアを ためそう</span></label>
+        <div style="margin-bottom:10px">
+          ${CONFIG.typingUrl
+            ? `<a class="typing-link" href="${esc(CONFIG.typingUrl)}" target="_blank" rel="noopener">▶ ${esc(CONFIG.typingName)}で あそぶ</a>`
+            : `<div class="small-note" style="margin:0">タイピングゲームの リンクは「せってい」で とうろく できます。</div>`}
+          <div class="small-note">じょうけん：${esc(CONFIG.typingRule)}</div>
+        </div>
+        <div class="row">
+          <div class="grow2">
+            <input type="number" id="typeScore" inputmode="numeric" placeholder="スコア（すうじ）" value="${data.typing?.score??''}"/>
+          </div>
+          <div style="flex:1;font-size:11px;color:var(--silver-dim)">てん / WPM など</div>
+        </div>
+        <input type="text" id="typeMemo" style="margin-top:8px" placeholder="ひとことメモ（れい：ミスが へった！）" value="${esc(data.typing?.memo)}"/>
+      </div>
+
+      <div class="field">
+        <label>🎮 ゲーム <span class="hint">なにを 何分あそんだ？ ふやせるよ</span></label>
+        <div id="gameList"></div>
+        <button class="addbtn" id="addGame">＋ ゲームを ふやす</button>
+      </div>
+
+      <div class="field">
+        <label>🎨 ならいごと・そのほか <span class="hint">じゆうに かこう</span></label>
+        <input type="text" id="naraiText" placeholder="れい：ピアノ、スイミング、おてつだい" value="${esc(data.narai?.text)}"/>
+      </div>
+
+      <div class="field">
+        <label>✍️ きょうを ふりかえって <span class="hint">ぶんしょうで かいて、タイピングの れんしゅう！</span></label>
+        <textarea id="reflection" placeholder="きょう がんばったこと、たのしかったこと、あしたの もくひょうを かこう。">${esc(data.reflection)}</textarea>
+        <div class="small-note">くわしく かくほど、日本語の ちからと タイピングが うまくなるよ。</div>
+      </div>
+
+      <button class="btn" id="saveReport">💾 この日を きろくする！</button>
+      ${REPORTS[editingDate]?'<button class="btn ghost" id="delReport" style="margin-top:10px">この日の きろくを けす</button>':''}
+    </div>
+  `;
+  // 行リストの生成（勉強＝ページ / 運動・ゲーム＝分）を共通化
+  function buildList(container, items, optFn, placeholder){
+    function add(v={name:'',val:''}){
+      const row=document.createElement('div'); row.className='study-row';
+      row.innerHTML=`<input type="text" placeholder="${placeholder}" value="${esc(v.name)}"/>
+        <select>${optFn(v.val)}</select><button class="del">✕</button>`;
+      row.querySelector('.del').onclick=()=>{ if(container.children.length>1) row.remove(); };
+      container.appendChild(row);
+    }
+    (items.length?items:[{name:'',val:''}]).forEach(add);
+    return add;
+  }
+  const addStudy=buildList($('#studyList'),
+    study.map(s=>({name:s.name,val:s.pages})), pageOptions, 'きょうか（れい：さんすう）');
+  const addEx=buildList($('#exList'),
+    exArr(data).map(e=>({name:e.name,val:e.minutes})), minOptions, 'れい：なわとび、たいそう');
+  const addGame=buildList($('#gameList'),
+    gameArr(data).map(g=>({name:g.name,val:g.minutes})), minOptions, 'れい：マイクラ、スプラ');
+  $('#addStudy').onclick=()=>addStudy();
+  $('#addEx').onclick=()=>addEx();
+  $('#addGame').onclick=()=>addGame();
+  $('#backHome').onclick=()=>switchView('home');
+  $('#saveReport').onclick=saveReportForm;
+  if($('#delReport')) $('#delReport').onclick=async()=>{
+    await Store.remove(editingDate); await refresh(); toast('きろくを けしたよ'); switchView('home');
+  };
+}
+
+async function saveReportForm(){
+  const readList=(sel,key)=>[...document.querySelectorAll(sel+' .study-row')].map(r=>({
+    name:r.querySelector('input').value.trim(),
+    [key]:r.querySelector('select').value===''?'':Number(r.querySelector('select').value)
+  })).filter(o=>o.name || o[key]!=='');
+
+  const data={
+    date:editingDate,
+    study:readList('#studyList','pages'),
+    exercise:readList('#exList','minutes'),
+    pool:$('#poolMin').value===''?'':Number($('#poolMin').value),
+    typing:{ score:$('#typeScore').value===''?'':Number($('#typeScore').value), memo:$('#typeMemo').value.trim() },
+    game:readList('#gameList','minutes'),
+    narai:{ text:$('#naraiText').value.trim() },
+    reflection:$('#reflection').value.trim(),
+    updatedAt:new Date().toISOString()
+  };
+  await Store.save(editingDate,data);
+  await refresh();
+  toast('🎉 ミッション かんりょう！〇を ゲット！');
+  switchView('home');
+}
+
+/* =====================================================================
+   SUMMARY（グラフ）
+   ===================================================================== */
+function renderSummary(){
+  const el=$('#view-summary');
+  charts.forEach(c=>{try{c.destroy()}catch(e){}}); charts=[];
+  const dates=Object.keys(REPORTS).filter(d=>d>=CONFIG.vacStart&&d<=CONFIG.vacEnd).sort();
+  const stats=computeStats(REPORTS);
+
+  // ---- メイン：六角形ステータス＋写真 ----
+  const axes=[
+    {key:'kanji',label:'漢字',lag:true},
+    {key:'math',label:'算数'},
+    {key:'game',label:'ゲーム'},
+    {key:'exercise',label:'運動'},
+    {key:'narai',label:'習い事'},
+    {key:'typing',label:'タイピング'}
+  ];
+  const barsHtml=axes.map(a=>`
+    <div class="sbar ${a.lag?'lag':''}">
+      <div class="lab"><span>${a.label}</span><b>Lv ${stats[a.key]}</b></div>
+      <div class="track"><div class="fill" style="width:${stats[a.key]}%"></div></div>
+    </div>`).join('');
+  const photoHtml = META.photo
+    ? `<div class="photo-frame"><img src="${META.photo}" alt="がんばりショット"></div>
+       <div class="photo-actions">
+         <button class="btn ghost small" id="btnPhoto">📷 かえる</button>
+         <button class="btn ghost small" id="btnPhotoDel">けす</button>
+       </div>`
+    : `<div class="photo-frame"><div class="ph-empty">📷<br>がんばっている しゃしんを<br>いれてみよう！<br><span style="opacity:.7">（作品・じゆうけんきゅう・けしき など）</span></div></div>
+       <div class="photo-actions"><button class="btn ghost small" id="btnPhoto">📷 しゃしんを えらぶ</button></div>`;
+  const statusPanel=`
+    <div class="panel"><h2><span class="tag">STATUS</span>ステータス</h2>
+      <div class="status-grid">
+        <div><div class="radar-wrap"><canvas id="c_radar"></canvas></div></div>
+        <div>${photoHtml}<input type="file" id="photoInput" accept="image/*" class="hidden"/></div>
+      </div>
+      <div class="stat-bars">${barsHtml}</div>
+    </div>`;
+
+  if(dates.length===0){
+    el.innerHTML=statusPanel+`<div class="panel"><h2><span class="tag">STATS</span>せいせき</h2>
+      <div class="empty-note">まだ きろくが ないよ。<br>カレンダーから 日を えらんで、さいしょの ミッションを かいてみよう！</div></div>`;
+    wireStatus(); drawRadar(stats); return;
+  }
+
+  // ---- 集計（運動・ゲームは配列、プールは分） ----
+  let totalPages=0,bestType=0,exDays=0,gameMin=0,exMin=0,poolTotal=0,refChars=0;
+  const dayPages=[],dayType=[],dayExMin=[],dayGameMin=[],dayPool=[]; let cum=0; const cumPages=[];
+  dates.forEach(d=>{
+    const r=REPORTS[d];
+    const p=(r.study||[]).reduce((s,x)=>s+(Number(x.pages)||0),0);
+    totalPages+=p; cum+=p; dayPages.push(p); cumPages.push(cum);
+    const ts=Number(r.typing?.score)||0; if(ts>bestType) bestType=ts; dayType.push(ts||null);
+    const em=exArr(r).reduce((s,x)=>s+(Number(x.minutes)||0),0); exMin+=em; dayExMin.push(em);
+    const gm=gameArr(r).reduce((s,x)=>s+(Number(x.minutes)||0),0); gameMin+=gm; dayGameMin.push(gm);
+    const pm=poolMin(r); poolTotal+=pm; dayPool.push(pm);
+    if(exArr(r).length||pm) exDays++;
+    refChars+=(r.reflection||'').length;
+  });
+  const labels=dates.map(d=>d.slice(5).replace('-','/'));
+  const kpiHtml=`<div class="kpi">
+      <div class="stat"><div class="lbl">べんきょう</div><div class="num">${totalPages}<span class="unit">ページ</span></div></div>
+      <div class="stat"><div class="lbl">タイピング さいこう</div><div class="num">${bestType||'-'}</div></div>
+      <div class="stat"><div class="lbl">うんどうした日</div><div class="num">${exDays}<span class="unit">日</span></div></div>
+      <div class="stat"><div class="lbl">プール ごうけい</div><div class="num">${poolTotal}<span class="unit">分</span></div></div>
+      <div class="stat"><div class="lbl">ゲーム ごうけい</div><div class="num">${gameMin}<span class="unit">分</span></div></div>
+      <div class="stat"><div class="lbl">かいた文字</div><div class="num">${refChars}<span class="unit">字</span></div></div>
+    </div>`;
+
+  if(typeof Chart==='undefined'){
+    el.innerHTML=statusPanel+`<div class="panel"><h2><span class="tag">STATS</span>これまでの せいせき</h2>${kpiHtml}
+      <div class="empty-note">グラフの よみこみに インターネットが ひつようです。<br>ネットに つないで もういちど ひらいてね。</div></div>`;
+    wireStatus(); return;
+  }
+
+  el.innerHTML=statusPanel+`
+    <div class="panel"><h2><span class="tag">STATS</span>これまでの せいせき</h2>${kpiHtml}</div>
+    <div class="panel"><h2><span class="tag">01</span>べんきょうページ すいい</h2>
+      <div class="chart-wrap"><canvas id="c_pages"></canvas></div>
+      <div class="small-note">ぼう＝その日／せん＝つみあげ。どんどん のびると たのしいね！</div></div>
+    <div class="panel"><h2><span class="tag">02</span>タイピング スコアの せいちょう</h2>
+      <div class="chart-wrap"><canvas id="c_type"></canvas></div>
+      <div class="small-note">おなじ じょうけんで やると、じぶんの せいちょうが よくわかるよ。</div></div>
+    <div class="panel"><h2><span class="tag">03</span>うんどう・プール・ゲームの じかん（分）</h2>
+      <div class="chart-wrap"><canvas id="c_time"></canvas></div></div>
+  `;
+  wireStatus();
+  drawRadar(stats);
+  const grid={color:'rgba(120,160,220,.08)'}, tick={color:'#8b97ad',font:{family:'Noto Sans JP',size:10}};
+  const baseOpts=(extra={})=>({responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#d8dee9',font:{size:11}}}},
+    scales:{x:{grid,ticks:tick},y:{grid,ticks:tick,beginAtZero:true}},...extra});
+
+  charts.push(new Chart($('#c_pages'),{data:{labels,datasets:[
+    {type:'bar',label:'その日のページ',data:dayPages,backgroundColor:'rgba(0,229,255,.45)',borderRadius:5,yAxisID:'y'},
+    {type:'line',label:'つみあげ',data:cumPages,borderColor:'#7af5c8',backgroundColor:'rgba(122,245,200,.15)',
+      fill:true,tension:.35,pointRadius:2,yAxisID:'y1'}
+  ]},options:baseOpts({scales:{x:{grid,ticks:tick},
+    y:{position:'left',grid,ticks:tick,beginAtZero:true},
+    y1:{position:'right',grid:{drawOnChartArea:false},ticks:tick,beginAtZero:true}}})}));
+
+  charts.push(new Chart($('#c_type'),{type:'line',data:{labels,datasets:[
+    {label:'スコア',data:dayType,borderColor:'#00e5ff',backgroundColor:'rgba(0,229,255,.15)',
+      fill:true,tension:.35,pointRadius:3,spanGaps:true}
+  ]},options:baseOpts()}));
+
+  charts.push(new Chart($('#c_time'),{type:'line',data:{labels,datasets:[
+    {label:'うんどう(分)',data:dayExMin,borderColor:'#7af5c8',tension:.35,pointRadius:2},
+    {label:'プール(分)',data:dayPool,borderColor:'#00e5ff',tension:.35,pointRadius:2},
+    {label:'ゲーム(分)',data:dayGameMin,borderColor:'#ff9f43',tension:.35,pointRadius:2}
+  ]},options:baseOpts()}));
+}
+
+/* 六角形レーダー描画 */
+function drawRadar(stats){
+  if(typeof Chart==='undefined') return;
+  const cv=$('#c_radar'); if(!cv) return;
+  charts.push(new Chart(cv,{type:'radar',
+    data:{labels:['漢字','算数','ゲーム','運動','習い事','タイピング'],
+      datasets:[{data:[stats.kanji,stats.math,stats.game,stats.exercise,stats.narai,stats.typing],
+        backgroundColor:'rgba(0,229,255,.18)',borderColor:'#00e5ff',borderWidth:2,
+        pointBackgroundColor:'#7af5c8',pointBorderColor:'#7af5c8',pointRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:c=>' Lv '+c.raw}}},
+      scales:{r:{suggestedMin:0,suggestedMax:100,
+        grid:{color:'rgba(120,160,220,.18)'},angleLines:{color:'rgba(120,160,220,.18)'},
+        pointLabels:{color:'#e5eaf3',font:{size:13,family:'Noto Sans JP',weight:'700'}},
+        ticks:{display:false,stepSize:20}}}}}));
+}
+
+/* 写真アップロードの配線 */
+function wireStatus(){
+  const input=$('#photoInput'); if(!input) return;
+  const pick=$('#btnPhoto'); if(pick) pick.onclick=()=>input.click();
+  const del=$('#btnPhotoDel'); if(del) del.onclick=async()=>{ delete META.photo; await Store.setMeta(META); renderSummary(); toast('しゃしんを けしたよ'); };
+  input.onchange=e=>{ const f=e.target.files[0]; if(f) handlePhoto(f); };
+}
+function handlePhoto(file){
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=async()=>{
+      const max=720; let w=img.width,h=img.height;
+      if(w>h && w>max){ h=Math.round(h*max/w); w=max; }
+      else if(h>=w && h>max){ w=Math.round(w*max/h); h=max; }
+      const c=document.createElement('canvas'); c.width=w; c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      let url; try{ url=c.toDataURL('image/jpeg',0.72); }catch(err){ url=ev.target.result; }
+      META.photo=url; await Store.setMeta(META); renderSummary(); toast('しゃしんを ほぞんしたよ！');
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+/* =====================================================================
+   SETTINGS（設定・バックアップ）
+   ===================================================================== */
+function renderSettings(){
+  const el=$('#view-settings');
+  const f=CONFIG.firebase||{};
+  el.innerHTML=`
+    <div class="panel"><h2><span class="tag">CONFIG</span>なつやすみの きかん</h2>
+      <div class="row" style="align-items:flex-end">
+        <div class="field" style="margin:0"><label>はじまり</label><input type="text" id="setStart" value="${esc(CONFIG.vacStart)}" placeholder="2026-07-21"/></div>
+        <div class="field" style="margin:0"><label>おわり</label><input type="text" id="setEnd" value="${esc(CONFIG.vacEnd)}" placeholder="2026-08-31"/></div>
+      </div>
+      <div class="small-note">「2026-08-31」のように 年-月-日 で かいてね。</div>
+    </div>
+
+    <div class="panel"><h2><span class="tag">TYPING</span>タイピングゲームの せってい</h2>
+      <div class="field"><label>ゲームの なまえ</label><input type="text" id="setTypeName" value="${esc(CONFIG.typingName)}"/></div>
+      <div class="field"><label>ゲームの リンク（URL）</label><input type="text" id="setTypeUrl" value="${esc(CONFIG.typingUrl)}" placeholder="https://..."/></div>
+      <div class="field"><label>じょうけん（まいかい おなじに するため）</label><input type="text" id="setTypeRule" value="${esc(CONFIG.typingRule)}"/></div>
+      <div class="small-note">スコアを ちゃんと くらべるため、コースや せいげんじかんを きめて かいておこう。</div>
+    </div>
+
+    <div class="panel"><h2><span class="tag">CLOUD</span>クラウド保存（Firebase）</h2>
+      <div class="small-note" style="margin:0 0 12px">
+        いまの 保存さき：<b style="color:var(--accent)">${Store.mode==='firebase'?'クラウド（Firebase）':'この端末（ブラウザ）'}</b><br>
+        Firebaseの じょうほうを 入れて 保存すると、クラウドに データが たまり、ほかの パソコンでも 見られます。
+      </div>
+      <div class="field"><label>apiKey</label><input type="text" id="fbKey" value="${esc(f.apiKey)}"/></div>
+      <div class="field"><label>projectId</label><input type="text" id="fbProj" value="${esc(f.projectId)}"/></div>
+      <div class="field"><label>appId <span class="hint">なくてもOK</span></label><input type="text" id="fbApp" value="${esc(f.appId)}"/></div>
+      <div class="field"><label>authDomain <span class="hint">なくてもOK</span></label><input type="text" id="fbAuth" value="${esc(f.authDomain)}"/></div>
+    </div>
+
+    <div class="panel"><h2><span class="tag">BACKUP</span>バックアップ</h2>
+      <div class="small-note" style="margin:0 0 12px">大切な きろくを ファイルに 書き出して とっておけます。パソコンを かえる ときにも あんしん。</div>
+      <div class="row">
+        <button class="btn ghost small" id="btnExport">⬇ 書き出す</button>
+        <button class="btn ghost small" id="btnImport">⬆ よみこむ</button>
+      </div>
+      <input type="file" id="fileImport" accept="application/json" class="hidden"/>
+    </div>
+
+    <button class="btn" id="saveSettings">💾 せっていを 保存する</button>
+    <button class="btn ghost" id="logout" style="margin-top:10px">ログアウト</button>
+    <div class="small-note" style="text-align:center;margin-top:14px">SUMMER QUEST</div>
+  `;
+  $('#saveSettings').onclick=async()=>{
+    CONFIG.vacStart=$('#setStart').value.trim()||DEFAULT_CONFIG.vacStart;
+    CONFIG.vacEnd=$('#setEnd').value.trim()||DEFAULT_CONFIG.vacEnd;
+    CONFIG.typingName=$('#setTypeName').value.trim()||'タイピングゲーム';
+    CONFIG.typingUrl=$('#setTypeUrl').value.trim();
+    CONFIG.typingRule=$('#setTypeRule').value.trim();
+    CONFIG.firebase={ apiKey:$('#fbKey').value.trim(), projectId:$('#fbProj').value.trim(),
+      appId:$('#fbApp').value.trim(), authDomain:$('#fbAuth').value.trim() };
+    saveConfig();
+    Store.mode='local'; Store.ready=false; await Store.init();
+    await refresh();
+    toast('せってい 保存OK！');
+    renderSettings();
+  };
+  $('#logout').onclick=()=>{ LS.del('sq_auth'); location.reload(); };
+  $('#btnExport').onclick=()=>{
+    const blob=new Blob([JSON.stringify({config:CONFIG,reports:REPORTS,meta:META},null,2)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download='summer-quest-backup-'+todayStr()+'.json'; a.click();
+  };
+  $('#btnImport').onclick=()=>$('#fileImport').click();
+  $('#fileImport').onchange=async(e)=>{
+    const file=e.target.files[0]; if(!file) return;
+    try{
+      const txt=await file.text(); const j=JSON.parse(txt);
+      if(j.reports) await Store.importAll(j.reports);
+      if(j.meta) await Store.setMeta(j.meta);
+      if(j.config){ CONFIG=Object.assign({},DEFAULT_CONFIG,j.config); saveConfig(); }
+      await refresh(); toast('よみこみ かんりょう！'); renderSettings();
+    }catch(err){ toast('ファイルを よみこめなかったよ'); }
+  };
+}
+
+/* =====================================================================
+   小物
+   ===================================================================== */
+function esc(s){ if(s===undefined||s===null) return ''; return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+let toastT;
+function toast(msg){
+  const t=$('#toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+/* ---------- 起動 ---------- */
+initLogin();
+</script>
+</body>
+</html>
