@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="app-version" content="v1.3" />
+<meta name="app-version" content="v1.4" />
 <title>SUMMER QUEST</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -447,9 +447,10 @@ const CHILD_PW = '0228';
 /* --- hangar中継（Claudeせんせいの返信）--- */
 const SQ_REPLY_URL   = 'https://asia-northeast1-carflow-9d500.cloudfunctions.net/sqReply';
 const SQ_REPLY_TOKEN = 'Py0AUy_8K4JIXnJ0lOaHrBIu8VHuNHgc'; // 合言葉（公開クライアントに載る=完全秘密ではない。守りは$5上限＋CORS）
-let lastReply = '';  // いま画面に出ている せんせいの返信（保存時に一緒に記録）
+let lastReply = '';  // いま画面に出ている AIコメント（保存時に一緒に記録）
+let aiRound = 0;     // その日にAIを叩いた回数（1日2回まで）
 const PARENT_PW = '0612';         // 親アカ：IDなし・パスワードのみ（設定はこちらだけ）
-const APP_VERSION = 'v1.3';       // バージョン表記（更新時はここと head の meta を上げる）
+const APP_VERSION = 'v1.4';       // バージョン表記（更新時はここと head の meta を上げる）
 const PAGE_OPTIONS = 60;      // ページ数プルダウン 0〜60
 const MIN_OPTIONS = [0,5,10,15,20,30,45,60,90,120,150,180]; // 時間(分)プルダウン
 
@@ -1091,7 +1092,7 @@ function renderReport(){
         <textarea id="reflection" placeholder="今日 がんばったこと、楽しかったこと、あしたの 目あてを 書こう。">${esc(data.reflection)}</textarea>
         <div class="small-note">くわしく 書くほど、日本語の 力と タイピングが うまく なります。</div>
         <button class="btn ai" id="getReply" type="button">🤖 AIに みてもらう</button>
-        <div class="small-note" style="margin-top:10px">AIコーチが 各コーナーの 下に コメントを くれます。アドバイスを 見て 直したら、何回でも おしてOK。</div>
+        <div class="small-note" style="margin-top:10px">AIコーチが 各コーナーの 下に コメントを くれます。アドバイスを 見て 直したら、もう一回 みてもらおう（1日 2回まで）。</div>
         <div id="refReplyBox" class="ref-reply" style="display:none">
           <span class="rr-head">✍️ ふりかえり</span>
           <div class="rr-text" id="refReplyText"></div>
@@ -1156,7 +1157,9 @@ function renderReport(){
   if(lastReply){
     showAiComments(typeof lastReply==='string' ? {overall:lastReply} : lastReply);
   }
+  aiRound = 0;
   $('#getReply').onclick = fetchReflectionReply;
+  $('#getReply').disabled = false; $('#getReply').textContent = '🤖 AIに みてもらう';
   if($('#delReport')) $('#delReport').onclick=async()=>{
     await Store.remove(editingDate); await refresh(); toast('きろくを けしたよ'); switchView('home');
   };
@@ -1211,6 +1214,8 @@ async function fetchReflectionReply(){
   const btn  = $('#getReply');
   const boxes = ['aiStudy','aiActivity','refReplyBox'].map(id=>$('#'+id));
   if(!text){ toast('先に ふりかえりを 書いてね'); return; }
+  if(aiRound>=2){ toast('今日は もう 2回 みてもらったよ。じゅうぶん！'); return; }
+  const thisRound = aiRound + 1;
   boxes.forEach(b=>{ b.classList.remove('err'); b.classList.add('loading'); b.style.display='block'; b.querySelector('.rr-text').textContent='AIが 読んでいます…⏳'; });
   btn.disabled = true; const orig = btn.textContent; btn.textContent = 'かんがえ中…';
 
@@ -1242,19 +1247,22 @@ async function fetchReflectionReply(){
     const res = await fetch(SQ_REPLY_URL, {
       method:'POST',
       headers:{ 'Content-Type':'application/json', 'X-SQ-Token':SQ_REPLY_TOKEN },
-      body: JSON.stringify({ name:(ROLE==='child'?CHILD_ID:''), remainingDays, study, exercise, pool, game, typing, lessons, reflection:text })
+      body: JSON.stringify({ name:(ROLE==='child'?CHILD_ID:''), round:thisRound, remainingDays, study, exercise, pool, game, typing, lessons, reflection:text })
     });
     let d = {}; try{ d = await res.json(); }catch(e){}
     if(!res.ok){ throw new Error((d && d.error) || ('エラー ' + res.status)); }
     const c = d.comments || { study:'', activity:'', overall:(d.reply||'') };
     lastReply = c;
+    aiRound = thisRound;
     showAiComments(c);
   }catch(e){
     $('#aiStudy').style.display='none'; $('#aiActivity').style.display='none';
     const ov=$('#refReplyBox'); ov.classList.remove('loading'); ov.classList.add('err'); ov.style.display='block';
     ov.querySelector('.rr-text').textContent = 'ごめんね、いま おへんじが もらえませんでした。すこし まってから、もう一ど おしてね。';
   }finally{
-    btn.disabled = false; btn.textContent = orig;
+    if(aiRound>=2){ btn.disabled=true; btn.textContent='✅ AIチェック ずみ'; }
+    else if(aiRound===1){ btn.disabled=false; btn.textContent='🤖 直したら もう一回 みてもらう'; }
+    else { btn.disabled=false; btn.textContent='🤖 AIに みてもらう'; }
   }
 }
 
@@ -1471,7 +1479,7 @@ function renderSettings(){
   // やること（もくひょう）の 編集行
   function goalRow(g={emoji:'',name:'',unit:'',total:'',desc:''}){
     const row=document.createElement('div'); row.className='goal-edit';
-    row.innerHTML=`<input class="ge-emoji" maxlength="2" placeholder="😀" value="${esc(g.emoji||'')}">`
+    row.innerHTML=`<input class="ge-emoji" placeholder="😀" value="${esc(g.emoji||'')}">`
       +`<input class="ge-name" type="text" placeholder="名前（例：らくらくノート）" value="${esc(g.name||'')}">`
       +`<input class="ge-desc" type="text" placeholder="内容＝AIが読む用（例：漢字の書き取りドリル）" value="${esc(g.desc||'')}">`
       +`<input class="ge-unit" type="text" placeholder="単位（例：ページ）" value="${esc(g.unit||'')}">`
