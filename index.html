@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="app-version" content="v1.2" />
+<meta name="app-version" content="v1.3" />
 <title>SUMMER QUEST</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -92,6 +92,8 @@ button{font-family:inherit;cursor:pointer}
 .user-chip{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--silver-dim);white-space:nowrap;
   border:1px solid var(--line);padding:9px 15px;border-radius:999px;background:rgba(255,255,255,.02)}
 .user-chip b{color:var(--accent)}
+.chip-av{display:inline-flex;align-items:center}
+.chip-av img{width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;border:1px solid var(--line)}
 
 /* ===== NAV ===== */
 .nav{
@@ -295,6 +297,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .goal-edit{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;background:rgba(255,255,255,.015)}
 .goal-edit .ge-emoji{flex:0 0 auto;width:54px;text-align:center}
 .goal-edit .ge-name{flex:2 1 150px;min-width:120px}
+.goal-edit .ge-desc{flex:2 1 200px;min-width:150px}
 .goal-edit .ge-unit{flex:1 1 90px;min-width:80px}
 .goal-edit .ge-total{flex:1 1 90px;min-width:80px}
 .goal-edit .ge-del{flex:0 0 auto;width:44px;height:48px;border-radius:11px;border:1px solid var(--line);background:rgba(255,59,92,.08);color:#ff8199;font-size:16px}
@@ -407,7 +410,7 @@ body.warn1 .care-item{border-left-color:var(--warn)}body.warn2 .care-item{border
         <small>DAILY MISSION SYSTEM · <span id="topVer" style="opacity:.75"></span></small>
       </div>
     </div>
-    <div class="user-chip" id="userChip" title="タップして ログアウト">👤 <b id="userName">びゃくれん</b> <span style="opacity:.5;font-size:10px">⏻</span></div>
+    <div class="user-chip" id="userChip" title="タップして ログアウト"><span id="chipAvatar" class="chip-av">👤</span> <b id="userName">びゃくれん</b> <span style="opacity:.5;font-size:10px">⏻</span></div>
   </div>
 
   <!-- ===== HOME ===== -->
@@ -446,7 +449,7 @@ const SQ_REPLY_URL   = 'https://asia-northeast1-carflow-9d500.cloudfunctions.net
 const SQ_REPLY_TOKEN = 'Py0AUy_8K4JIXnJ0lOaHrBIu8VHuNHgc'; // 合言葉（公開クライアントに載る=完全秘密ではない。守りは$5上限＋CORS）
 let lastReply = '';  // いま画面に出ている せんせいの返信（保存時に一緒に記録）
 const PARENT_PW = '0612';         // 親アカ：IDなし・パスワードのみ（設定はこちらだけ）
-const APP_VERSION = 'v1.2';       // バージョン表記（更新時はここと head の meta を上げる）
+const APP_VERSION = 'v1.3';       // バージョン表記（更新時はここと head の meta を上げる）
 const PAGE_OPTIONS = 60;      // ページ数プルダウン 0〜60
 const MIN_OPTIONS = [0,5,10,15,20,30,45,60,90,120,150,180]; // 時間(分)プルダウン
 
@@ -832,9 +835,11 @@ async function startApp(){
   switchView('home');   // 初期表示
 }
 
+function updateChipAvatar(){ const av=document.getElementById('chipAvatar'); if(av) av.innerHTML=(META&&META.photo)?('<img src="'+META.photo+'" alt="">'):'👤'; }
 async function refresh(){
   REPORTS = await Store.getAll();
   META = await Store.getMeta();
+  updateChipAvatar();
   const cc = await Store.getConfig();   // 親が設定した やること・期間 をクラウドから反映（子端末にも届く）
   if(cc){
     if(Array.isArray(cc.goals)) CONFIG.goals = cc.goals;
@@ -1035,6 +1040,7 @@ function renderReport(){
         <label>📖 べんきょう <span class="hint">やること から えらぶ／ないものは その他</span></label>
         <div id="studyList"></div>
         <button class="addbtn" id="addStudy">＋ 教科を ふやす</button>
+        <div id="aiStudy" class="ref-reply" style="display:none"><span class="rr-head">📖 勉強について</span><div class="rr-text"></div></div>
       </div>
 
       <div class="field">
@@ -1077,6 +1083,7 @@ function renderReport(){
       <div class="field">
         <label>🎨 ならいごと・そのほか <span class="hint">じゆうに 書こう</span></label>
         <input type="text" id="naraiText" placeholder="れい：ピアノ、スイミング、おてつだい" value="${esc(data.narai?.text)}"/>
+        <div id="aiActivity" class="ref-reply" style="display:none"><span class="rr-head">🔥 きょうの かつどう</span><div class="rr-text"></div></div>
       </div>
 
       <div class="field">
@@ -1084,9 +1091,9 @@ function renderReport(){
         <textarea id="reflection" placeholder="今日 がんばったこと、楽しかったこと、あしたの 目あてを 書こう。">${esc(data.reflection)}</textarea>
         <div class="small-note">くわしく 書くほど、日本語の 力と タイピングが うまく なります。</div>
         <button class="btn ai" id="getReply" type="button">🤖 AIに みてもらう</button>
-        <div class="small-note" style="margin-top:10px">今日の きろくと ふりかえりを AIコーチが 読んで、勉強・かつどう・ふりかえりに コメントを くれます。</div>
+        <div class="small-note" style="margin-top:10px">AIコーチが 各コーナーの 下に コメントを くれます。アドバイスを 見て 直したら、何回でも おしてOK。</div>
         <div id="refReplyBox" class="ref-reply" style="display:none">
-          <span class="rr-head">🤖 AIより</span>
+          <span class="rr-head">✍️ ふりかえり</span>
           <div class="rr-text" id="refReplyText"></div>
         </div>
       </div>
@@ -1147,8 +1154,7 @@ function renderReport(){
   // せんせいの返信 UI（保存済みがあれば復元）
   lastReply = data.reflectionReply || '';
   if(lastReply){
-    $('#refReplyText').textContent = lastReply;
-    $('#refReplyBox').style.display = 'block';
+    showAiComments(typeof lastReply==='string' ? {overall:lastReply} : lastReply);
   }
   $('#getReply').onclick = fetchReflectionReply;
   if($('#delReport')) $('#delReport').onclick=async()=>{
@@ -1192,18 +1198,23 @@ async function saveReportForm(){
 }
 
 /* きょうの ふりかえりを AI（Claudeせんせい）に みてもらう */
+// AIコメント（3つ）を 各ボックスに 表示。空は 隠す
+function showAiComments(c){
+  const set=(id,val)=>{ const b=$('#'+id); if(!b) return; const t=b.querySelector('.rr-text');
+    b.classList.remove('loading','err');
+    if(val && String(val).trim()){ t.textContent=val; b.style.display='block'; } else { b.style.display='none'; } };
+  set('aiStudy', c&&c.study); set('aiActivity', c&&c.activity); set('refReplyBox', c&&c.overall);
+}
+
 async function fetchReflectionReply(){
   const text = $('#reflection').value.trim();
-  const box  = $('#refReplyBox');
-  const txt  = $('#refReplyText');
   const btn  = $('#getReply');
+  const boxes = ['aiStudy','aiActivity','refReplyBox'].map(id=>$('#'+id));
   if(!text){ toast('先に ふりかえりを 書いてね'); return; }
-  box.classList.remove('err'); box.classList.add('loading');
-  box.style.display = 'block';
-  txt.textContent = 'AIが 読んでいます…⏳';
+  boxes.forEach(b=>{ b.classList.remove('err'); b.classList.add('loading'); b.style.display='block'; b.querySelector('.rr-text').textContent='AIが 読んでいます…⏳'; });
   btn.disabled = true; const orig = btn.textContent; btn.textContent = 'かんがえ中…';
 
-  // --- いまの日報の入力を すべて集める（勉強は 総数・合計・のこり日数つき）---
+  // --- いまの日報の入力を すべて集める（勉強は 総数・合計・のこり日数・内容つき）---
   const goals = CONFIG.goals||[];
   const study = [...document.querySelectorAll('#studyList .study-row')].map(r=>{
     const sel=r.querySelector('.s-sel')?r.querySelector('.s-sel').value:'';
@@ -1212,8 +1223,9 @@ async function fetchReflectionReply(){
     else if(sel!==''){ name=sel; const g=goals.find(x=>x.name===sel); unit=(g&&g.unit)?g.unit:''; }
     const amt=r.querySelector('.s-amt').value;
     const g=goals.find(x=>x.name===name);
-    const total=(g && g.total!=='' && g.total!=null)?Number(g.total):'';
-    return {name, unit, today: amt===''?'':Number(amt), total, done: name?goalProgress(name):0};
+    return {name, unit, today: amt===''?'':Number(amt),
+      total:(g&&g.total!==''&&g.total!=null)?Number(g.total):'', done: name?goalProgress(name):0,
+      desc:(g&&g.desc)?g.desc:''};
   }).filter(o=>o.name!=='');
   const readMin=(sel)=>[...document.querySelectorAll(sel+' .study-row')].map(r=>({
     name:r.querySelector('input').value.trim(),
@@ -1233,13 +1245,14 @@ async function fetchReflectionReply(){
       body: JSON.stringify({ name:(ROLE==='child'?CHILD_ID:''), remainingDays, study, exercise, pool, game, typing, lessons, reflection:text })
     });
     let d = {}; try{ d = await res.json(); }catch(e){}
-    if(!res.ok || !d.reply){ throw new Error((d && d.error) || ('エラー ' + res.status)); }
-    lastReply = d.reply;
-    box.classList.remove('loading');
-    txt.textContent = d.reply;
+    if(!res.ok){ throw new Error((d && d.error) || ('エラー ' + res.status)); }
+    const c = d.comments || { study:'', activity:'', overall:(d.reply||'') };
+    lastReply = c;
+    showAiComments(c);
   }catch(e){
-    box.classList.remove('loading'); box.classList.add('err');
-    txt.textContent = 'ごめんね、いま おへんじが もらえませんでした。すこし まってから、もう一ど おしてね。';
+    $('#aiStudy').style.display='none'; $('#aiActivity').style.display='none';
+    const ov=$('#refReplyBox'); ov.classList.remove('loading'); ov.classList.add('err'); ov.style.display='block';
+    ov.querySelector('.rr-text').textContent = 'ごめんね、いま おへんじが もらえませんでした。すこし まってから、もう一ど おしてね。';
   }finally{
     btn.disabled = false; btn.textContent = orig;
   }
@@ -1269,13 +1282,13 @@ function renderSummary(){
       <div class="track"><div class="fill" style="width:${stats[a.key]}%"></div></div>
     </div>`).join('');
   const photoHtml = META.photo
-    ? `<div class="photo-frame"><img src="${META.photo}" alt="がんばりショット"></div>
+    ? `<div class="photo-frame"><img src="${META.photo}" alt="プロフィール画像"></div>
        <div class="photo-actions">
          <button class="btn ghost small" id="btnPhoto">📷 かえる</button>
          <button class="btn ghost small" id="btnPhotoDel">けす</button>
        </div>`
-    : `<div class="photo-frame"><div class="ph-empty">📷<br>がんばっている しゃしんを<br>入れてみよう。<br><span style="opacity:.7">（作品・じゆうけんきゅう・けしき など）</span></div></div>
-       <div class="photo-actions"><button class="btn ghost small" id="btnPhoto">📷 しゃしんを えらぶ</button></div>`;
+    : `<div class="photo-frame"><div class="ph-empty">📷<br>プロフィール画像（アバター）を<br>入れてみよう。<br><span style="opacity:.7">（自分の 顔や すきな もの など）</span></div></div>
+       <div class="photo-actions"><button class="btn ghost small" id="btnPhoto">📷 アバターを えらぶ</button></div>`;
   const statusPanel=`
     <div class="panel"><h2><span class="tag">STATUS</span>ステータス</h2>
       <div class="status-grid">
@@ -1380,7 +1393,7 @@ function drawRadar(stats){
 function wireStatus(){
   const input=$('#photoInput'); if(!input) return;
   const pick=$('#btnPhoto'); if(pick) pick.onclick=()=>input.click();
-  const del=$('#btnPhotoDel'); if(del) del.onclick=async()=>{ delete META.photo; await Store.setMeta(META); renderSummary(); toast('しゃしんを けしたよ'); };
+  const del=$('#btnPhotoDel'); if(del) del.onclick=async()=>{ delete META.photo; await Store.setMeta(META); updateChipAvatar(); renderSummary(); toast('アバターを けしました'); };
   input.onchange=e=>{ const f=e.target.files[0]; if(f) handlePhoto(f); };
 }
 function handlePhoto(file){
@@ -1394,7 +1407,7 @@ function handlePhoto(file){
       const c=document.createElement('canvas'); c.width=w; c.height=h;
       c.getContext('2d').drawImage(img,0,0,w,h);
       let url; try{ url=c.toDataURL('image/jpeg',0.72); }catch(err){ url=ev.target.result; }
-      META.photo=url; await Store.setMeta(META); renderSummary(); toast('しゃしんを ほぞんしたよ！');
+      META.photo=url; await Store.setMeta(META); updateChipAvatar(); renderSummary(); toast('アバターを 保存しました');
     };
     img.src=ev.target.result;
   };
@@ -1456,10 +1469,11 @@ function renderSettings(){
     <div class="small-note" style="text-align:center;margin-top:14px">SUMMER QUEST <span style="opacity:.7">${APP_VERSION}</span></div>
   `;
   // やること（もくひょう）の 編集行
-  function goalRow(g={emoji:'',name:'',unit:'',total:''}){
+  function goalRow(g={emoji:'',name:'',unit:'',total:'',desc:''}){
     const row=document.createElement('div'); row.className='goal-edit';
     row.innerHTML=`<input class="ge-emoji" maxlength="2" placeholder="😀" value="${esc(g.emoji||'')}">`
-      +`<input class="ge-name" type="text" placeholder="名前（例：漢字ドリル）" value="${esc(g.name||'')}">`
+      +`<input class="ge-name" type="text" placeholder="名前（例：らくらくノート）" value="${esc(g.name||'')}">`
+      +`<input class="ge-desc" type="text" placeholder="内容＝AIが読む用（例：漢字の書き取りドリル）" value="${esc(g.desc||'')}">`
       +`<input class="ge-unit" type="text" placeholder="単位（例：ページ）" value="${esc(g.unit||'')}">`
       +`<input class="ge-total" type="number" inputmode="numeric" placeholder="総数（なくてもOK）" value="${g.total??''}">`
       +`<button class="del ge-del">✕</button>`;
@@ -1479,6 +1493,7 @@ function renderSettings(){
     CONFIG.goals = [...document.querySelectorAll('#goalEditList .goal-edit')].map(r=>({
       emoji:r.querySelector('.ge-emoji').value.trim(),
       name:r.querySelector('.ge-name').value.trim(),
+      desc:r.querySelector('.ge-desc').value.trim(),
       unit:r.querySelector('.ge-unit').value.trim(),
       total:r.querySelector('.ge-total').value.trim()===''?'':Number(r.querySelector('.ge-total').value)
     })).filter(g=>g.name);
