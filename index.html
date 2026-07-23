@@ -57,8 +57,13 @@ body.warn2{
   background:
     radial-gradient(1000px 600px at 80% -10%, rgba(255,59,92,.18), transparent 55%),
     linear-gradient(180deg,#0e0508,#1a070c);
-  animation:dangerPulse 2.2s ease-in-out infinite;
 }
+/* ⚠ 脈動を body の filter でやると position:fixed(下部ナビ)が body基準になって崩れる。
+   擬似要素の赤オーバーレイの opacity で脈動させる（ナビの固定を壊さない） */
+body.warn2::after{content:"";position:fixed;inset:0;z-index:25;pointer-events:none;
+  background:radial-gradient(1100px 700px at 80% -10%, rgba(255,59,92,.13), transparent 55%);
+  animation:dangerVeil 2.4s ease-in-out infinite}
+@keyframes dangerVeil{0%,100%{opacity:.3}50%{opacity:.75}}
 @keyframes dangerPulse{0%,100%{filter:none}50%{filter:brightness(1.08)}}
 body.warn1{--accent:#ffd23f;--glow:0 0 18px rgba(255,210,63,.4)}
 body.warn2{--accent:#ff3b5c;--glow:0 0 22px rgba(255,59,92,.5)}
@@ -279,6 +284,25 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .todo-progress{font-size:12px;color:var(--silver-dim);margin-top:2px}
 .goal-item{padding:12px 4px;font-size:16px;color:var(--silver-bright);line-height:1.75;border-bottom:1px dashed var(--line)}
 .goal-item:last-child{border-bottom:none}
+.goal-line{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.goal-line b{font-family:'Orbitron';color:var(--accent2);font-size:15px;white-space:nowrap}
+.goal-item.is-clear .goal-line span{color:var(--silver-dim)}
+.goal-bar{height:8px;margin-top:9px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.goal-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));box-shadow:var(--glow);border-radius:6px;transition:width .8s cubic-bezier(.2,.8,.2,1)}
+/* 設定：やること編集の1行 */
+.goal-edit{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;background:rgba(255,255,255,.015)}
+.goal-edit .ge-emoji{flex:0 0 auto;width:54px;text-align:center}
+.goal-edit .ge-name{flex:2 1 150px;min-width:120px}
+.goal-edit .ge-unit{flex:1 1 90px;min-width:80px}
+.goal-edit .ge-total{flex:1 1 90px;min-width:80px}
+.goal-edit .ge-del{flex:0 0 auto;width:44px;height:48px;border-radius:11px;border:1px solid var(--line);background:rgba(255,59,92,.08);color:#ff8199;font-size:16px}
+/* 日報：勉強の1行（やること選択＋数＋単位） */
+.study-row{flex-wrap:wrap}
+.study-row .s-sel{flex:2 1 140px;min-width:120px}
+.study-row .s-name{flex:2 1 120px;min-width:100px}
+.study-row .s-amt{flex:1 1 70px;min-width:64px}
+.study-row .s-unit{flex:0 0 auto;font-size:14px;color:var(--silver-dim);min-width:16px}
+.study-row .s-unit-in{flex:1 1 80px;min-width:64px}
 .care-item{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-left:3px solid var(--accent);background:rgba(0,229,255,.05);border-radius:0 10px 10px 0;margin-bottom:10px;font-size:15px;color:var(--silver-bright);font-weight:700;line-height:1.75}
 body.warn1 .care-item{border-left-color:var(--warn)}body.warn2 .care-item{border-left-color:var(--danger)}
 .reading .reading-cat{font-size:13px;color:var(--accent);font-weight:700;margin-bottom:4px}
@@ -423,12 +447,13 @@ const PAGE_OPTIONS = 60;      // ページ数プルダウン 0〜60
 const MIN_OPTIONS = [0,5,10,15,20,30,45,60,90,120,150,180]; // 時間(分)プルダウン
 
 /* ---------- TOP：やること / 気を付けること ---------- */
-const TODO_ITEMS = [
-  {emoji:'📚', text:'夏休みの しゅくだい'},
-  {emoji:'✏️', text:'ついかドリル'},
-  {emoji:'📄', text:'のこっていた プリントの 直し'},
-  {emoji:'💯', text:'のこっていた テストの 直し'},
-  {emoji:'📖', text:'読書'}
+/* やること（もくひょう）の 既定。設定画面で 編集できる（読書は 外した）。
+   name=なまえ / unit=たんい / total=総数（空なら カウントダウンなし＝ただの項目） */
+const DEFAULT_GOALS = [
+  {emoji:'📚', name:'夏休みの しゅくだい',          unit:'', total:''},
+  {emoji:'✏️', name:'ついかドリル',                unit:'', total:''},
+  {emoji:'📄', name:'のこっていた プリントの 直し', unit:'', total:''},
+  {emoji:'💯', name:'のこっていた テストの 直し',   unit:'', total:''}
 ];
 const CARE_ITEMS = [
   '言いわけを しない。言いわけ ではなく「けっか」で しめそう。',
@@ -491,6 +516,17 @@ function readingIndexFor(dateStr){
 function getTodoState(date){ try{ return (JSON.parse(LS.get('sq_todos')||'{}'))[date]||{}; }catch(e){ return {}; } }
 function setTodoState(date,obj){ let all={}; try{ all=JSON.parse(LS.get('sq_todos')||'{}'); }catch(e){} all[date]=obj; LS.set('sq_todos',JSON.stringify(all)); }
 
+/* やること：これまでの 合計＝勉強の記録から その名前の 数(pages)を ぜんぶ たす */
+function goalProgress(name){
+  if(!name) return 0;
+  let sum=0;
+  for(const dt in REPORTS){
+    const st=(REPORTS[dt]&&REPORTS[dt].study)||[];
+    for(const s of st){ if(s && s.name===name){ const v=Number(s.pages); if(!isNaN(v)) sum+=v; } }
+  }
+  return sum;
+}
+
 /* ---------- 設定（localStorageに保存） ---------- */
 const DEFAULT_CONFIG = {
   vacStart:'2026-07-21',
@@ -498,7 +534,8 @@ const DEFAULT_CONFIG = {
   typingUrl:'https://typing.twi1.me/game/3880',   // こどもタイピング（マイタイピング）
   typingName:'こどもタイピング',
   typingRule:'まいかい さいごまで やって、でた スコアを 入力しよう',
-  firebase:{ apiKey:'',authDomain:'',projectId:'',appId:'' }
+  firebase:{ apiKey:'',authDomain:'',projectId:'',appId:'' },
+  goals: DEFAULT_GOALS
 };
 
 /* ---------- 安全な localStorage ラッパ ---------- */
@@ -514,6 +551,7 @@ function loadConfig(){
   try{
     const cfg=Object.assign({}, DEFAULT_CONFIG, JSON.parse(LS.get('sq_config')||'{}'));
     if(!cfg.typingUrl){ cfg.typingUrl=DEFAULT_CONFIG.typingUrl; cfg.typingName=cfg.typingName||DEFAULT_CONFIG.typingName; } // 未設定なら既定のゲームを使う
+    if(!Array.isArray(cfg.goals)) cfg.goals = JSON.parse(JSON.stringify(DEFAULT_GOALS)); // やること未設定なら既定を入れる
     return cfg;
   }catch(e){ return {...DEFAULT_CONFIG}; }
 }
@@ -811,7 +849,21 @@ async function renderHome(){
   else if(delay>=2) warnHtml=`<div class="warnbar"><span class="big">🚨</span><div>２日いじょう きろくが とまってるよ！<br>がめんが あかく なってる。きょう ばんかいしよう！</div></div>`;
   else if(delay===0 && passed>0) warnHtml=`<div class="warnbar"><span class="big">✨</span><div>ちょうしバッチリ！このまま つづけよう。</div></div>`;
 
-  const todoPanel=`<div class="panel"><h2><span class="tag">GOAL</span>やること（もくひょう）</h2>${TODO_ITEMS.map(it=>`<div class="goal-item">${it.emoji} ${it.text}</div>`).join('')}</div>`;
+  const goals = CONFIG.goals||[];
+  const goalRows = goals.map(g=>{
+    const hasTotal = g.total!=='' && g.total!=null && Number(g.total)>0;
+    if(!hasTotal){
+      return `<div class="goal-item"><div class="goal-line"><span>${esc(g.emoji||'')} ${esc(g.name)}</span></div></div>`;
+    }
+    const total=Number(g.total), done=goalProgress(g.name), remain=Math.max(0,total-done);
+    const pct=Math.min(100, total>0?Math.round(done/total*100):0);
+    const right = remain<=0 ? `<b class="goal-clear">✅ かんりょう！</b>` : `<b>あと ${remain}${esc(g.unit||'')}</b>`;
+    return `<div class="goal-item ${remain<=0?'is-clear':''}">
+        <div class="goal-line"><span>${esc(g.emoji||'')} ${esc(g.name)}</span>${right}</div>
+        <div class="goal-bar"><div class="goal-fill" style="width:${pct}%"></div></div>
+      </div>`;
+  }).join('');
+  const todoPanel = goals.length ? `<div class="panel"><h2><span class="tag">GOAL</span>やること（もくひょう）</h2>${goalRows}</div>` : '';
   const carePanel=`<div class="panel"><h2><span class="tag">RULE</span>気を つけること</h2>${CARE_ITEMS.map(c=>`<div class="care-item">❗ ${c}</div>`).join('')}</div>`;
 
   el.innerHTML = `
@@ -947,7 +999,7 @@ function renderReport(){
       <h2><span class="tag">MISSION</span>きょうの ミッション記録</h2>
 
       <div class="field">
-        <label>📖 べんきょう <span class="hint">おわった ページ数を えらぼう</span></label>
+        <label>📖 べんきょう <span class="hint">やること から えらぶ／ないものは その他</span></label>
         <div id="studyList"></div>
         <button class="addbtn" id="addStudy">＋ きょうかを ふやす</button>
       </div>
@@ -1022,13 +1074,39 @@ function renderReport(){
     (items.length?items:[{name:'',val:''}]).forEach(add);
     return add;
   }
-  const addStudy=buildList($('#studyList'),
-    study.map(s=>({name:s.name,val:s.pages})), pageOptions, 'きょうか（れい：さんすう）');
+  // 勉強＝やること選択＋数(＋単位)。一覧に無いものは「その他」でフリー入力
+  const gGoals = CONFIG.goals||[];
+  function studyRow(v={name:'',pages:'',unit:''}){
+    const cont=$('#studyList');
+    const isGoal = !!v.name && gGoals.some(g=>g.name===v.name);
+    const opts = ['<option value="">きょうかを えらぶ</option>']
+      .concat(gGoals.map(g=>`<option value="${esc(g.name)}" ${g.name===v.name?'selected':''}>${esc(g.name)}${g.unit?`（${esc(g.unit)}）`:''}</option>`))
+      .concat([`<option value="__other" ${(v.name&&!isGoal)?'selected':''}>その他（じゆう）</option>`]).join('');
+    const row=document.createElement('div'); row.className='study-row';
+    row.innerHTML=`<select class="s-sel">${opts}</select>`
+      +`<input class="s-name" type="text" placeholder="なまえ" value="${esc(isGoal?'':v.name)}">`
+      +`<input class="s-amt" type="number" inputmode="numeric" placeholder="数" value="${v.pages??''}">`
+      +`<span class="s-unit"></span>`
+      +`<input class="s-unit-in" type="text" placeholder="たんい" value="${esc(isGoal?'':(v.unit||''))}">`
+      +`<button class="del">✕</button>`;
+    const sel=row.querySelector('.s-sel'), nameI=row.querySelector('.s-name'),
+          unitSpan=row.querySelector('.s-unit'), unitIn=row.querySelector('.s-unit-in');
+    function sync(){
+      const val=sel.value;
+      if(val==='__other'){ nameI.hidden=false; unitIn.hidden=false; unitSpan.textContent=''; }
+      else if(val===''){ nameI.hidden=true; unitIn.hidden=true; unitSpan.textContent=''; }
+      else { nameI.hidden=true; unitIn.hidden=true; const g=gGoals.find(x=>x.name===val); unitSpan.textContent=(g&&g.unit)?g.unit:''; }
+    }
+    sel.onchange=sync; sync();
+    row.querySelector('.del').onclick=()=>{ if(cont.children.length>1) row.remove(); };
+    cont.appendChild(row);
+  }
+  (study.length?study:[{name:'',pages:'',unit:''}]).forEach(studyRow);
   const addEx=buildList($('#exList'),
     exArr(data).map(e=>({name:e.name,val:e.minutes})), minOptions, 'れい：なわとび、たいそう');
   const addGame=buildList($('#gameList'),
     gameArr(data).map(g=>({name:g.name,val:g.minutes})), minOptions, 'れい：マイクラ、スプラ');
-  $('#addStudy').onclick=()=>addStudy();
+  $('#addStudy').onclick=()=>studyRow();
   $('#addEx').onclick=()=>addEx();
   $('#addGame').onclick=()=>addGame();
   $('#backHome').onclick=()=>switchView('home');
@@ -1051,9 +1129,20 @@ async function saveReportForm(){
     [key]:r.querySelector('select').value===''?'':Number(r.querySelector('select').value)
   })).filter(o=>o.name || o[key]!=='');
 
+  // 勉強：やること選択 or その他 の行を読む（名前・数(pages)・単位）
+  const readStudy=()=>[...document.querySelectorAll('#studyList .study-row')].map(r=>{
+    const sel=r.querySelector('.s-sel')?r.querySelector('.s-sel').value:'';
+    let name='', unit='';
+    if(sel==='__other'){ name=r.querySelector('.s-name').value.trim(); unit=r.querySelector('.s-unit-in').value.trim(); }
+    else if(sel!==''){ name=sel; const g=(CONFIG.goals||[]).find(x=>x.name===sel); unit=(g&&g.unit)?g.unit:''; }
+    const amtRaw=r.querySelector('.s-amt').value;
+    const pages = amtRaw===''?'':Number(amtRaw);
+    return {name, pages, unit};
+  }).filter(o=> o.name!=='');
+
   const data={
     date:editingDate,
-    study:readList('#studyList','pages'),
+    study:readStudy(),
     exercise:readList('#exList','minutes'),
     pool:$('#poolMin').value===''?'':Number($('#poolMin').value),
     typing:{ score:$('#typeScore').value===''?'':Number($('#typeScore').value), memo:$('#typeMemo').value.trim() },
@@ -1270,6 +1359,12 @@ function renderSettings(){
       <div class="small-note">「2026-08-31」のように 年-月-日 で かいてね。</div>
     </div>
 
+    <div class="panel"><h2><span class="tag">GOAL</span>やること（もくひょう）の せってい</h2>
+      <div class="small-note" style="margin:0 0 12px">なまえ・たんい・総数を きめると、TOP画面で「あと〇〇」と へっていきます。総数を くうらんに すると、ただの もくひょう ひょうじに なります。（れい：漢字ドリル／ページ／50）</div>
+      <div id="goalEditList"></div>
+      <button class="addbtn" id="addGoal" style="margin-top:4px">＋ やることを ふやす</button>
+    </div>
+
     <div class="panel"><h2><span class="tag">TYPING</span>タイピングゲームの せってい</h2>
       <div class="field"><label>ゲームの なまえ</label><input type="text" id="setTypeName" value="${esc(CONFIG.typingName)}"/></div>
       <div class="field"><label>ゲームの リンク（URL）</label><input type="text" id="setTypeUrl" value="${esc(CONFIG.typingUrl)}" placeholder="https://..."/></div>
@@ -1303,6 +1398,19 @@ function renderSettings(){
     <button class="btn ghost" id="logout" style="margin-top:10px">ログアウト</button>
     <div class="small-note" style="text-align:center;margin-top:14px">SUMMER QUEST</div>
   `;
+  // やること（もくひょう）の 編集行
+  function goalRow(g={emoji:'',name:'',unit:'',total:''}){
+    const row=document.createElement('div'); row.className='goal-edit';
+    row.innerHTML=`<input class="ge-emoji" maxlength="2" placeholder="😀" value="${esc(g.emoji||'')}">`
+      +`<input class="ge-name" type="text" placeholder="なまえ（れい：漢字ドリル）" value="${esc(g.name||'')}">`
+      +`<input class="ge-unit" type="text" placeholder="たんい（れい：ページ）" value="${esc(g.unit||'')}">`
+      +`<input class="ge-total" type="number" inputmode="numeric" placeholder="総数（なくてもOK）" value="${g.total??''}">`
+      +`<button class="del ge-del">✕</button>`;
+    row.querySelector('.ge-del').onclick=()=>row.remove();
+    $('#goalEditList').appendChild(row);
+  }
+  (CONFIG.goals||[]).forEach(goalRow);
+  $('#addGoal').onclick=()=>goalRow();
   $('#saveSettings').onclick=async()=>{
     CONFIG.vacStart=$('#setStart').value.trim()||DEFAULT_CONFIG.vacStart;
     CONFIG.vacEnd=$('#setEnd').value.trim()||DEFAULT_CONFIG.vacEnd;
@@ -1311,6 +1419,12 @@ function renderSettings(){
     CONFIG.typingRule=$('#setTypeRule').value.trim();
     CONFIG.firebase={ apiKey:$('#fbKey').value.trim(), projectId:$('#fbProj').value.trim(),
       appId:$('#fbApp').value.trim(), authDomain:$('#fbAuth').value.trim() };
+    CONFIG.goals = [...document.querySelectorAll('#goalEditList .goal-edit')].map(r=>({
+      emoji:r.querySelector('.ge-emoji').value.trim(),
+      name:r.querySelector('.ge-name').value.trim(),
+      unit:r.querySelector('.ge-unit').value.trim(),
+      total:r.querySelector('.ge-total').value.trim()===''?'':Number(r.querySelector('.ge-total').value)
+    })).filter(g=>g.name);
     saveConfig();
     Store.mode='local'; Store.ready=false; await Store.init();
     await refresh();
