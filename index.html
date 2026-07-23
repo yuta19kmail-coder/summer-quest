@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="app-version" content="v1.0" />
 <title>SUMMER QUEST</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -382,15 +383,16 @@ body.warn1 .care-item{border-left-color:var(--warn)}body.warn2 .care-item{border
     <div class="sub">A C C E S S&nbsp;&nbsp;T E R M I N A L</div>
     <div class="field">
       <label>ID（あいでぃー）</label>
-      <input type="text" id="loginId" autocomplete="off" placeholder="IDをにゅうりょく" />
+      <input type="text" id="loginId" autocomplete="off" placeholder="IDを 入力" />
     </div>
     <div class="field">
       <label>パスワード</label>
-      <input type="password" id="loginPw" autocomplete="off" placeholder="パスワードをにゅうりょく" />
+      <input type="password" id="loginPw" autocomplete="off" placeholder="パスワードを 入力" />
     </div>
     <button class="btn" id="loginBtn">ログイン ▶</button>
     <div class="login-err" id="loginErr"></div>
-    <div class="login-tip">キーボードで じぶんの ID と パスワードを うちこもう。<br>Enterキーでも ログインできるよ。<br><span style="opacity:.7">おうちのひとは IDを あけて パスワードだけ でOK。</span></div>
+    <div class="login-tip">キーボードで 自分の ID と パスワードを 入力しよう。<br>Enterキーでも ログインできます。<br><span style="opacity:.7">おうちの人は IDを あけて パスワードだけ でOK。</span></div>
+    <div id="loginVer" class="small-note" style="text-align:center;margin-top:10px;opacity:.55;font-size:10px"></div>
   </div>
 </div>
 
@@ -443,6 +445,7 @@ const SQ_REPLY_URL   = 'https://asia-northeast1-carflow-9d500.cloudfunctions.net
 const SQ_REPLY_TOKEN = 'Py0AUy_8K4JIXnJ0lOaHrBIu8VHuNHgc'; // 合言葉（公開クライアントに載る=完全秘密ではない。守りは$5上限＋CORS）
 let lastReply = '';  // いま画面に出ている せんせいの返信（保存時に一緒に記録）
 const PARENT_PW = '0612';         // 親アカ：IDなし・パスワードのみ（設定はこちらだけ）
+const APP_VERSION = 'v1.0';       // バージョン表記（更新時はここと head の meta を上げる）
 const PAGE_OPTIONS = 60;      // ページ数プルダウン 0〜60
 const MIN_OPTIONS = [0,5,10,15,20,30,45,60,90,120,150,180]; // 時間(分)プルダウン
 
@@ -457,7 +460,7 @@ const DEFAULT_GOALS = [
 ];
 const CARE_ITEMS = [
   '言いわけを しない。言いわけ ではなく「けっか」で しめそう。',
-  'かならず 毎日 べんきょうを する。'
+  '毎日 かならず べんきょうを する。'
 ];
 
 /* ---------- 毎日の よみもの（小3向け・42話でループ） ---------- */
@@ -845,9 +848,9 @@ async function renderHome(){
   const streak=currentStreak();
 
   let warnHtml='';
-  if(delay===1) warnHtml=`<div class="warnbar"><span class="big">⚠️</span><div>きのうの きろくが まだだよ！<br>いまのうちに かいて、〇を つなげよう。</div></div>`;
-  else if(delay>=2) warnHtml=`<div class="warnbar"><span class="big">🚨</span><div>２日いじょう きろくが とまってるよ！<br>がめんが あかく なってる。きょう ばんかいしよう！</div></div>`;
-  else if(delay===0 && passed>0) warnHtml=`<div class="warnbar"><span class="big">✨</span><div>ちょうしバッチリ！このまま つづけよう。</div></div>`;
+  if(delay===1) warnHtml=`<div class="warnbar"><span class="big">⚠️</span><div>きのうの きろくが まだです。<br>今のうちに 書いて、〇を つなげよう。</div></div>`;
+  else if(delay>=2) warnHtml=`<div class="warnbar"><span class="big">🚨</span><div>２日いじょう きろくが 止まっています。<br>がめんが 赤く なっています。今日 ばんかいしよう。</div></div>`;
+  else if(delay===0 && passed>0) warnHtml=`<div class="warnbar"><span class="big">✨</span><div>ちょうし バッチリ！この まま つづけよう。</div></div>`;
 
   const goals = CONFIG.goals||[];
   const goalRows = goals.map(g=>{
@@ -870,7 +873,7 @@ async function renderHome(){
     ${warnHtml}
     <div class="hero">
       <div class="stat">
-        <div class="lbl">なつやすみ しゅうりょうまで</div>
+        <div class="lbl">夏休み おわりまで</div>
         <div class="num">${remain}<span class="unit">日</span></div>
       </div>
       <div class="stat">
@@ -904,10 +907,10 @@ async function renderHome(){
       <div class="cal-grid" id="calGrid"></div>
       <div class="legend">
         <span><span class="dot" style="background:var(--accent2)"></span>きろく できた日（〇）</span>
-        <span><span class="dot" style="background:var(--accent)"></span>きょう</span>
+        <span><span class="dot" style="background:var(--accent)"></span>今日</span>
         <span><span class="dot" style="background:#ff6b81"></span>おやすみ・しゅくじつ</span>
       </div>
-      <div class="small-note">日づけを タップすると その日の ミッションを かけるよ。夏休みの きかんは「せってい」で かえられます。</div>
+      <div class="small-note">日づけを タップすると その日の ミッションを 書けます。夏休みの きかんは「せってい」で かえられます。</div>
     </div>
   `;
   $('#prevM').onclick=()=>{ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderHome(); };
@@ -982,7 +985,7 @@ function renderReport(){
   const el=$('#view-report');
   const data=REPORTS[editingDate]||{};
   const d=parseYmd(editingDate);
-  const dowName=['にちようび','げつようび','かようび','すいようび','もくようび','きんようび','どようび'][d.getDay()];
+  const dowName=['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'][d.getDay()];
   const holi=Holidays.name(editingDate);
   const study=(data.study&&data.study.length)?data.study:[{name:'',pages:''}];
 
@@ -996,12 +999,12 @@ function renderReport(){
     </div>
 
     <div class="panel">
-      <h2><span class="tag">MISSION</span>きょうの ミッション記録</h2>
+      <h2><span class="tag">MISSION</span>今日の ミッション記録</h2>
 
       <div class="field">
         <label>📖 べんきょう <span class="hint">やること から えらぶ／ないものは その他</span></label>
         <div id="studyList"></div>
-        <button class="addbtn" id="addStudy">＋ きょうかを ふやす</button>
+        <button class="addbtn" id="addStudy">＋ 教科を ふやす</button>
       </div>
 
       <div class="field">
@@ -1011,7 +1014,7 @@ function renderReport(){
       </div>
 
       <div class="field">
-        <label>🏊 プール <span class="hint">プールに はいった じかん（分）</span></label>
+        <label>🏊 プール <span class="hint">プールに 入った 時間（分）</span></label>
         <div class="row">
           <input type="number" id="poolMin" inputmode="numeric" placeholder="れい：60" value="${data.pool??''}"/>
           <div style="flex:1;font-size:12px;color:var(--silver-dim)">分</div>
@@ -1028,7 +1031,7 @@ function renderReport(){
         </div>
         <div class="row">
           <div class="grow2">
-            <input type="number" id="typeScore" inputmode="numeric" placeholder="スコア（すうじ）" value="${data.typing?.score??''}"/>
+            <input type="number" id="typeScore" inputmode="numeric" placeholder="スコア（数字）" value="${data.typing?.score??''}"/>
           </div>
           <div style="flex:1;font-size:11px;color:var(--silver-dim)">てん / WPM など</div>
         </div>
@@ -1042,16 +1045,16 @@ function renderReport(){
       </div>
 
       <div class="field">
-        <label>🎨 ならいごと・そのほか <span class="hint">じゆうに かこう</span></label>
+        <label>🎨 ならいごと・そのほか <span class="hint">じゆうに 書こう</span></label>
         <input type="text" id="naraiText" placeholder="れい：ピアノ、スイミング、おてつだい" value="${esc(data.narai?.text)}"/>
       </div>
 
       <div class="field">
-        <label>✍️ きょうを ふりかえって <span class="hint">ぶんしょうで かいて、タイピングの れんしゅう！</span></label>
-        <textarea id="reflection" placeholder="きょう がんばったこと、たのしかったこと、あしたの もくひょうを かこう。">${esc(data.reflection)}</textarea>
-        <div class="small-note">くわしく かくほど、日本語の ちからと タイピングが うまくなるよ。</div>
+        <label>✍️ 今日を ふりかえって <span class="hint">文しょうで 書いて、タイピングの れんしゅう！</span></label>
+        <textarea id="reflection" placeholder="今日 がんばったこと、楽しかったこと、あしたの 目あてを 書こう。">${esc(data.reflection)}</textarea>
+        <div class="small-note">くわしく 書くほど、日本語の 力と タイピングが うまく なります。</div>
         <button class="btn ai" id="getReply" type="button">🤖 AIに みてもらう</button>
-        <div class="small-note" style="margin-top:10px">かいた ぶんしょうを AIが よんで、ほめて・やさしく なおして・あしたの もくひょうを ひとこと くれるよ。</div>
+        <div class="small-note" style="margin-top:10px">書いた 文しょうを AIが 読んで、ほめて・やさしく なおして・あしたの 目あてを ひとこと くれます。</div>
         <div id="refReplyBox" class="ref-reply" style="display:none">
           <span class="rr-head">🤖 AIより</span>
           <div class="rr-text" id="refReplyText"></div>
@@ -1079,7 +1082,7 @@ function renderReport(){
   function studyRow(v={name:'',pages:'',unit:''}){
     const cont=$('#studyList');
     const isGoal = !!v.name && gGoals.some(g=>g.name===v.name);
-    const opts = ['<option value="">きょうかを えらぶ</option>']
+    const opts = ['<option value="">教科を えらぶ</option>']
       .concat(gGoals.map(g=>`<option value="${esc(g.name)}" ${g.name===v.name?'selected':''}>${esc(g.name)}${g.unit?`（${esc(g.unit)}）`:''}</option>`))
       .concat([`<option value="__other" ${(v.name&&!isGoal)?'selected':''}>その他（じゆう）</option>`]).join('');
     const row=document.createElement('div'); row.className='study-row';
@@ -1164,10 +1167,10 @@ async function fetchReflectionReply(){
   const box  = $('#refReplyBox');
   const txt  = $('#refReplyText');
   const btn  = $('#getReply');
-  if(!text){ toast('さきに ふりかえりを かいてね'); return; }
+  if(!text){ toast('先に ふりかえりを 書いてね'); return; }
   box.classList.remove('err'); box.classList.add('loading');
   box.style.display = 'block';
-  txt.textContent = 'AIが よんでいます…⏳';
+  txt.textContent = 'AIが 読んでいます…⏳';
   btn.disabled = true; const orig = btn.textContent; btn.textContent = 'かんがえ中…';
   try{
     const res = await fetch(SQ_REPLY_URL, {
@@ -1182,7 +1185,7 @@ async function fetchReflectionReply(){
     txt.textContent = d.reply;
   }catch(e){
     box.classList.remove('loading'); box.classList.add('err');
-    txt.textContent = 'ごめんね、いま おへんじが もらえなかったよ。すこし まってから、もういちど おしてね。';
+    txt.textContent = 'ごめんね、いま おへんじが もらえませんでした。すこし まってから、もう一ど おしてね。';
   }finally{
     btn.disabled = false; btn.textContent = orig;
   }
@@ -1217,7 +1220,7 @@ function renderSummary(){
          <button class="btn ghost small" id="btnPhoto">📷 かえる</button>
          <button class="btn ghost small" id="btnPhotoDel">けす</button>
        </div>`
-    : `<div class="photo-frame"><div class="ph-empty">📷<br>がんばっている しゃしんを<br>いれてみよう！<br><span style="opacity:.7">（作品・じゆうけんきゅう・けしき など）</span></div></div>
+    : `<div class="photo-frame"><div class="ph-empty">📷<br>がんばっている しゃしんを<br>入れてみよう。<br><span style="opacity:.7">（作品・じゆうけんきゅう・けしき など）</span></div></div>
        <div class="photo-actions"><button class="btn ghost small" id="btnPhoto">📷 しゃしんを えらぶ</button></div>`;
   const statusPanel=`
     <div class="panel"><h2><span class="tag">STATUS</span>ステータス</h2>
@@ -1230,7 +1233,7 @@ function renderSummary(){
 
   if(dates.length===0){
     el.innerHTML=statusPanel+`<div class="panel"><h2><span class="tag">STATS</span>せいせき</h2>
-      <div class="empty-note">まだ きろくが ないよ。<br>カレンダーから 日を えらんで、さいしょの ミッションを かいてみよう！</div></div>`;
+      <div class="empty-note">まだ きろくが ありません。<br>カレンダーから 日を えらんで、さいしょの ミッションを 書いてみよう。</div></div>`;
     wireStatus(); drawRadar(stats); return;
   }
 
@@ -1252,10 +1255,10 @@ function renderSummary(){
   const kpiHtml=`<div class="kpi">
       <div class="stat"><div class="lbl">べんきょう</div><div class="num">${totalPages}<span class="unit">ページ</span></div></div>
       <div class="stat"><div class="lbl">タイピング さいこう</div><div class="num">${bestType||'-'}</div></div>
-      <div class="stat"><div class="lbl">うんどうした日</div><div class="num">${exDays}<span class="unit">日</span></div></div>
-      <div class="stat"><div class="lbl">プール ごうけい</div><div class="num">${poolTotal}<span class="unit">分</span></div></div>
-      <div class="stat"><div class="lbl">ゲーム ごうけい</div><div class="num">${gameMin}<span class="unit">分</span></div></div>
-      <div class="stat"><div class="lbl">かいた文字</div><div class="num">${refChars}<span class="unit">字</span></div></div>
+      <div class="stat"><div class="lbl">うんどうした 日</div><div class="num">${exDays}<span class="unit">日</span></div></div>
+      <div class="stat"><div class="lbl">プール 合計</div><div class="num">${poolTotal}<span class="unit">分</span></div></div>
+      <div class="stat"><div class="lbl">ゲーム 合計</div><div class="num">${gameMin}<span class="unit">分</span></div></div>
+      <div class="stat"><div class="lbl">書いた文字</div><div class="num">${refChars}<span class="unit">字</span></div></div>
     </div>`;
 
   if(typeof Chart==='undefined'){
@@ -1396,7 +1399,7 @@ function renderSettings(){
 
     <button class="btn" id="saveSettings">💾 せっていを 保存する</button>
     <button class="btn ghost" id="logout" style="margin-top:10px">ログアウト</button>
-    <div class="small-note" style="text-align:center;margin-top:14px">SUMMER QUEST</div>
+    <div class="small-note" style="text-align:center;margin-top:14px">SUMMER QUEST <span style="opacity:.7">${APP_VERSION}</span></div>
   `;
   // やること（もくひょう）の 編集行
   function goalRow(g={emoji:'',name:'',unit:'',total:''}){
@@ -1473,6 +1476,7 @@ function toast(msg){
 }
 
 /* ---------- 起動 ---------- */
+(function(){ const lv=document.getElementById('loginVer'); if(lv) lv.textContent='SUMMER QUEST '+APP_VERSION; })();
 initLogin();
 </script>
 </body>
