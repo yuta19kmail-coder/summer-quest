@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="app-version" content="v1.0" />
+<meta name="app-version" content="v1.1" />
 <title>SUMMER QUEST</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -403,7 +403,7 @@ body.warn1 .care-item{border-left-color:var(--warn)}body.warn2 .care-item{border
       <div class="logo">🛡️</div>
       <div>
         <h1>SUMMER QUEST</h1>
-        <small>DAILY MISSION SYSTEM</small>
+        <small>DAILY MISSION SYSTEM · <span id="topVer" style="opacity:.75"></span></small>
       </div>
     </div>
     <div class="user-chip" id="userChip" title="タップして ログアウト">👤 <b id="userName">びゃくれん</b> <span style="opacity:.5;font-size:10px">⏻</span></div>
@@ -445,7 +445,7 @@ const SQ_REPLY_URL   = 'https://asia-northeast1-carflow-9d500.cloudfunctions.net
 const SQ_REPLY_TOKEN = 'Py0AUy_8K4JIXnJ0lOaHrBIu8VHuNHgc'; // 合言葉（公開クライアントに載る=完全秘密ではない。守りは$5上限＋CORS）
 let lastReply = '';  // いま画面に出ている せんせいの返信（保存時に一緒に記録）
 const PARENT_PW = '0612';         // 親アカ：IDなし・パスワードのみ（設定はこちらだけ）
-const APP_VERSION = 'v1.0';       // バージョン表記（更新時はここと head の meta を上げる）
+const APP_VERSION = 'v1.1';       // バージョン表記（更新時はここと head の meta を上げる）
 const PAGE_OPTIONS = 60;      // ページ数プルダウン 0〜60
 const MIN_OPTIONS = [0,5,10,15,20,30,45,60,90,120,150,180]; // 時間(分)プルダウン
 
@@ -1054,7 +1054,7 @@ function renderReport(){
         <textarea id="reflection" placeholder="今日 がんばったこと、楽しかったこと、あしたの 目あてを 書こう。">${esc(data.reflection)}</textarea>
         <div class="small-note">くわしく 書くほど、日本語の 力と タイピングが うまく なります。</div>
         <button class="btn ai" id="getReply" type="button">🤖 AIに みてもらう</button>
-        <div class="small-note" style="margin-top:10px">書いた 文しょうを AIが 読んで、ほめて・やさしく なおして・あしたの 目あてを ひとこと くれます。</div>
+        <div class="small-note" style="margin-top:10px">今日の きろくと ふりかえりを AIコーチが 読んで、勉強・かつどう・ふりかえりに コメントを くれます。</div>
         <div id="refReplyBox" class="ref-reply" style="display:none">
           <span class="rr-head">🤖 AIより</span>
           <div class="rr-text" id="refReplyText"></div>
@@ -1172,11 +1172,35 @@ async function fetchReflectionReply(){
   box.style.display = 'block';
   txt.textContent = 'AIが 読んでいます…⏳';
   btn.disabled = true; const orig = btn.textContent; btn.textContent = 'かんがえ中…';
+
+  // --- いまの日報の入力を すべて集める（勉強は 総数・合計・のこり日数つき）---
+  const goals = CONFIG.goals||[];
+  const study = [...document.querySelectorAll('#studyList .study-row')].map(r=>{
+    const sel=r.querySelector('.s-sel')?r.querySelector('.s-sel').value:'';
+    let name='',unit='';
+    if(sel==='__other'){ name=r.querySelector('.s-name').value.trim(); unit=r.querySelector('.s-unit-in').value.trim(); }
+    else if(sel!==''){ name=sel; const g=goals.find(x=>x.name===sel); unit=(g&&g.unit)?g.unit:''; }
+    const amt=r.querySelector('.s-amt').value;
+    const g=goals.find(x=>x.name===name);
+    const total=(g && g.total!=='' && g.total!=null)?Number(g.total):'';
+    return {name, unit, today: amt===''?'':Number(amt), total, done: name?goalProgress(name):0};
+  }).filter(o=>o.name!=='');
+  const readMin=(sel)=>[...document.querySelectorAll(sel+' .study-row')].map(r=>({
+    name:r.querySelector('input').value.trim(),
+    minutes:r.querySelector('select').value===''?'':Number(r.querySelector('select').value)
+  })).filter(o=>o.name||o.minutes!=='');
+  const exercise=readMin('#exList');
+  const game=readMin('#gameList');
+  const pool = $('#poolMin').value===''?'':Number($('#poolMin').value);
+  const typing = { score: $('#typeScore').value===''?'':Number($('#typeScore').value), memo: $('#typeMemo').value.trim() };
+  const lessons = $('#naraiText').value.trim();
+  const remainingDays = Math.max(0, diffDays(CONFIG.vacEnd, editingDate));
+
   try{
     const res = await fetch(SQ_REPLY_URL, {
       method:'POST',
       headers:{ 'Content-Type':'application/json', 'X-SQ-Token':SQ_REPLY_TOKEN },
-      body: JSON.stringify({ text, name: (ROLE==='child' ? CHILD_ID : '') })
+      body: JSON.stringify({ name:(ROLE==='child'?CHILD_ID:''), remainingDays, study, exercise, pool, game, typing, lessons, reflection:text })
     });
     let d = {}; try{ d = await res.json(); }catch(e){}
     if(!res.ok || !d.reply){ throw new Error((d && d.error) || ('エラー ' + res.status)); }
@@ -1476,7 +1500,8 @@ function toast(msg){
 }
 
 /* ---------- 起動 ---------- */
-(function(){ const lv=document.getElementById('loginVer'); if(lv) lv.textContent='SUMMER QUEST '+APP_VERSION; })();
+(function(){ const lv=document.getElementById('loginVer'); if(lv) lv.textContent='SUMMER QUEST '+APP_VERSION;
+  const tv=document.getElementById('topVer'); if(tv) tv.textContent=APP_VERSION; })();
 initLogin();
 </script>
 </body>
