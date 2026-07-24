@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="app-version" content="v1.4" />
+<meta name="app-version" content="v1.6" />
 <title>SUMMER QUEST</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -267,6 +267,67 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .lvl-note{font-size:12px;color:var(--silver-dim);margin-top:6px;line-height:1.7}
 .empty-note{text-align:center;color:var(--silver-dim);font-size:14px;padding:36px 12px;line-height:1.9}
 
+/* ===== v1.6 レベル演出（動く光・0から伸びるバー・調子ピップ） ===== */
+.sbar{position:relative}
+.sbar .lab .cond{font-family:'Noto Sans JP';font-size:11px;font-weight:700;margin-left:8px;padding:2px 8px;border-radius:999px;letter-spacing:0;vertical-align:middle;white-space:nowrap}
+.cond.up{color:#04121a;background:linear-gradient(135deg,#7af5c8,#00e5ff);box-shadow:0 0 10px rgba(122,245,200,.45)}
+.cond.down{color:#ffd9df;background:rgba(255,59,92,.16);border:1px solid rgba(255,59,92,.5)}
+.cond.flat{color:var(--silver-dim);background:rgba(255,255,255,.05);border:1px solid var(--line)}
+.sbar .track{position:relative}
+.sbar .fill{position:relative;width:0}                 /* 毎回0から。JSでtarget幅へ伸ばす */
+.sbar .fill::after{content:"";position:absolute;inset:0;border-radius:6px;
+  background:linear-gradient(100deg,transparent 22%,rgba(255,255,255,.55) 50%,transparent 78%);
+  background-size:220% 100%;animation:barShimmer 2.6s linear infinite}
+.sbar .fill .pip{position:absolute;right:-1px;top:50%;width:12px;height:12px;border-radius:50%;
+  transform:translate(50%,-50%);background:radial-gradient(circle,#fff,var(--accent) 58%,transparent 72%);
+  box-shadow:0 0 12px var(--accent),0 0 22px var(--accent);opacity:0;transition:opacity .5s .55s}
+.sbar.grown .fill .pip{opacity:1;animation:pipPulse 1.8s ease-in-out infinite}
+.sbar.lag .fill .pip{background:radial-gradient(circle,#fff,#ffd23f 58%,transparent 72%);box-shadow:0 0 12px #ffd23f,0 0 22px #ffd23f}
+.sbar.levelup .lab b{animation:lvlPop .7s ease}
+.sbar.levelup .track::after{content:"";position:absolute;inset:-3px;border-radius:9px;border:1px solid var(--accent2);
+  animation:sparkRing .9s ease forwards;pointer-events:none}
+@keyframes barShimmer{0%{background-position:120% 0}100%{background-position:-120% 0}}
+@keyframes pipPulse{0%,100%{box-shadow:0 0 10px var(--accent),0 0 16px var(--accent)}50%{box-shadow:0 0 16px var(--accent),0 0 30px var(--accent)}}
+@keyframes lvlPop{0%{transform:scale(1)}40%{transform:scale(1.35);color:var(--accent)}100%{transform:scale(1)}}
+@keyframes sparkRing{0%{opacity:.9;transform:scale(.9)}100%{opacity:0;transform:scale(1.25)}}
+@keyframes ringGrow{from{stroke-dasharray:0,100}}
+@keyframes ambientSweep{0%{background-position:135% 0}100%{background-position:-135% 0}}
+/* 総合レベル ヘッダー */
+.lvlhead{display:flex;align-items:center;gap:18px;padding:16px 18px;margin-bottom:20px;border-radius:16px;
+  border:1px solid var(--line);background:linear-gradient(135deg,rgba(0,229,255,.09),rgba(122,245,200,.04));position:relative;overflow:hidden}
+.lvlhead::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,transparent 32%,rgba(0,229,255,.16) 50%,transparent 68%);
+  background-size:250% 100%;animation:ambientSweep 5.5s linear infinite}
+.lvlhead>*{position:relative;z-index:1}
+.lvlhead .lv-badge{flex:0 0 auto;width:78px;height:78px;border-radius:20px;display:grid;place-items:center;text-align:center;
+  background:linear-gradient(135deg,#0c1322,#182740);border:1px solid var(--accent);box-shadow:0 0 22px rgba(0,229,255,.25)}
+.lvlhead .lv-badge .k{font-family:'Orbitron';font-size:9px;letter-spacing:2px;color:var(--accent)}
+.lvlhead .lv-badge .n{font-family:'Orbitron';font-size:31px;line-height:1;color:var(--silver-bright);text-shadow:var(--glow)}
+.lvlhead .lv-main{flex:1 1 auto;min-width:0}
+.lvlhead .lv-title{font-size:13px;color:var(--silver);margin-bottom:8px}
+.lvlhead .lv-title b{color:var(--silver-bright);font-family:'Orbitron';font-size:15px;margin-left:4px}
+.lvlhead .exp-track{height:13px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:8px;overflow:hidden;position:relative}
+.lvlhead .exp-fill{height:100%;width:0;border-radius:8px;background:linear-gradient(90deg,var(--accent2),var(--accent));
+  box-shadow:0 0 14px rgba(0,229,255,.5);transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
+.lvlhead .exp-fill::after{content:"";position:absolute;inset:0;border-radius:8px;
+  background:linear-gradient(100deg,transparent 22%,rgba(255,255,255,.5) 50%,transparent 78%);
+  background-size:220% 100%;animation:barShimmer 2.6s linear infinite}
+.lvlhead .lv-sub{font-size:11px;color:var(--silver-dim);margin-top:7px}
+/* パネルにうっすら流れる光（STATUSだけ） */
+.panel.glowy::before{content:"";position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:0;
+  background:linear-gradient(120deg,transparent 42%,rgba(0,229,255,.06) 50%,transparent 58%);
+  background-size:280% 100%;animation:ambientSweep 8s linear infinite}
+.panel.glowy>*{position:relative;z-index:1}
+/* カウントダウンカードに流れる光 */
+.stat.big::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(120deg,transparent 40%,rgba(0,229,255,.07) 50%,transparent 60%);
+  background-size:260% 100%;animation:ambientSweep 7s linear infinite}
+.stat.big>*{position:relative;z-index:1}
+@media(prefers-reduced-motion:reduce){
+  .sbar .fill::after,.lvlhead::before,.lvlhead .exp-fill::after,.panel.glowy::before,.stat.big::before,.sbar.grown .fill .pip{animation:none !important}
+  .lvlhead .exp-fill,.sbar .fill{transition:none !important}
+}
+
 /* toast */
 #toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(30px);z-index:200;
   background:linear-gradient(135deg,var(--accent),var(--accent2));color:#04121a;font-weight:900;
@@ -450,7 +511,7 @@ const SQ_REPLY_TOKEN = 'Py0AUy_8K4JIXnJ0lOaHrBIu8VHuNHgc'; // 合言葉（公開
 let lastReply = '';  // いま画面に出ている AIコメント（保存時に一緒に記録）
 let aiRound = 0;     // その日にAIを叩いた回数（1日2回まで）
 const PARENT_PW = '0612';         // 親アカ：IDなし・パスワードのみ（設定はこちらだけ）
-const APP_VERSION = 'v1.5';       // バージョン表記（更新時はここと head の meta を上げる）
+const APP_VERSION = 'v1.6';       // バージョン表記（更新時はここと head の meta を上げる）
 const PAGE_OPTIONS = 60;      // ページ数プルダウン 0〜60
 const MIN_OPTIONS = [0,5,10,15,20,30,45,60,90,120,150,180]; // 時間(分)プルダウン
 
@@ -774,32 +835,77 @@ const poolMin = r => Number(r && r.pool) || 0;
    ===================================================================== */
 function computeStats(reports){
   const dates=Object.keys(reports).filter(d=>d>=CONFIG.vacStart&&d<=CONFIG.vacEnd).sort();
-  const d=dates.length; // 記録した日数がのびるほど成長
-  let mathPages=0,kanjiPages=0,gameMin=0,exMin=0,poolTotal=0,naraiDays=0,bestType=0;
+  const cl=(x,a,b)=>Math.max(a,Math.min(b,x));
+  const R=Math.round;
+
+  // ---- 夏休みの進み具合（時間経過）＝実力が終盤に向けて徐々に上がる土台 ----
+  const totalDays=Math.max(1,diffDays(CONFIG.vacEnd,CONFIG.vacStart)+1);
+  let elapsed=diffDays(todayStr(),CONFIG.vacStart)+1; elapsed=cl(elapsed,0,totalDays);
+  const timeProg=elapsed/totalDays;                 // 0..1（時間だけで進む）
+  const d=dates.length;                             // 記録した日数（増える一方）
+  const dFactor=1-Math.exp(-d/8);                   // 記録の充実（単調に増える。実力は下げない）
+  const smooth=x=>{x=cl(x,0,1);return x*x*(3-2*x);};
+
+  // ---- 各項目の これまでの取り組み量＋日別（調子用） ----
+  let mathP=0,kanjiP=0,gameM=0,exM=0,poolM=0,naraiD=0,bestType=0;
+  const per={kanji:[],math:[],game:[],exercise:[],narai:[],typing:[]};
   dates.forEach(dt=>{
-    const r=reports[dt];
+    const r=reports[dt]||{};
+    let dm=0,dk=0;
     (r.study||[]).forEach(s=>{
       const nm=String(s.name||''); const p=Number(s.pages)||0;
-      if(/算|さんすう|けいさん|計算|数/.test(nm)) mathPages+=p;
-      else if(/漢|かんじ|国語|こくご|字|よみ/.test(nm)) kanjiPages+=p;
-      else { mathPages+=p*0.5; kanjiPages+=p*0.5; } // ふりわけ不明は半々
+      if(/算|さんすう|けいさん|計算|数/.test(nm)) dm+=p;
+      else if(/漢|かんじ|国語|こくご|字|よみ/.test(nm)) dk+=p;
+      else { dm+=p*0.5; dk+=p*0.5; }               // ふりわけ不明は半々
     });
-    gameArr(r).forEach(g=>gameMin+=Number(g.minutes)||0);
-    exArr(r).forEach(e=>exMin+=Number(e.minutes)||0);
-    poolTotal+=poolMin(r);
-    if(r.narai&&r.narai.text) naraiDays++;
-    const ts=Number(r.typing&&r.typing.score)||0; if(ts>bestType) bestType=ts;
+    const dg=gameArr(r).reduce((s,x)=>s+(Number(x.minutes)||0),0);
+    const de=exArr(r).reduce((s,x)=>s+(Number(x.minutes)||0),0);
+    const dp=poolMin(r);
+    const dn=(r.narai&&r.narai.text)?1:0;
+    const dtp=Number(r.typing&&r.typing.score)||0;
+    mathP+=dm; kanjiP+=dk; gameM+=dg; exM+=de; poolM+=dp; if(dn) naraiD++; if(dtp>bestType) bestType=dtp;
+    per.kanji.push(dk); per.math.push(dm); per.game.push(dg);
+    per.exercise.push(de+dp); per.narai.push(dn); per.typing.push(dtp);
   });
-  const clamp=x=>Math.max(0,Math.min(100,Math.round(x)));
-  const curve=(k,cap)=>cap*(1-Math.exp(-k*d));
-  return {
-    kanji:    clamp(curve(0.028,92)*0.85 + Math.min(kanjiPages*0.4,12)), // 後追い（ゆっくり）
-    math:     clamp(curve(0.10 ,96)      + Math.min(mathPages *0.3,10)), // 伸びやすい
-    game:     clamp(curve(0.12 ,94)      + Math.min(gameMin   *0.05,8)), // 伸びやすい
-    exercise: clamp(curve(0.05 ,90)      + Math.min((exMin+poolTotal)*0.03,10)),
-    narai:    clamp(curve(0.045,88)      + Math.min(naraiDays *1.5,12)),
-    typing:   clamp(curve(0.055,90)      + Math.min(bestType  /30,15))
+
+  // ---- 実力（下がらない）：時間土台×項目ごとの振り分け ----
+  // 土台エンベロープ：序盤 ~14、終盤 ~94。時間が主・記録がすこし前倒し。
+  const envelope=14 + 80*smooth(timeProg*0.82 + dFactor*0.18);
+  const norm=(v,scale)=>Math.tanh(v/scale);          // 0〜約1（飽和）＝累積で単調に増える
+  const share={
+    kanji: norm(kanjiP,60), math: norm(mathP,55), game: norm(gameM,900),
+    exercise: norm(exM+poolM,900), narai: norm(naraiD,12), typing: norm(bestType,320)
   };
+  const dist=k=>0.80+0.32*share[k];                  // 取り組んだ項目ほど高い（0.80〜1.12）
+  const skill={
+    kanji:    R(cl(envelope*dist('kanji')*0.94,0,100)), // 漢字は後追いで少し控えめ
+    math:     R(cl(envelope*dist('math')     ,0,100)),
+    game:     R(cl(envelope*dist('game')     ,0,100)),
+    exercise: R(cl(envelope*dist('exercise') ,0,100)),
+    narai:    R(cl(envelope*dist('narai')    ,0,100)),
+    typing:   R(cl(envelope*dist('typing')   ,0,100))
+  };
+
+  // ---- 調子（実力とは別に上下）：直近3日 vs これまでの平均 ----
+  const delay=(typeof computeDelay==='function')?computeDelay(reports):0;
+  const gPen=delay>=2?-6:(delay===1?-3:0);            // 記録が止まると全体的に調子ダウン
+  const cond={};
+  Object.keys(per).forEach(k=>{
+    const arr=per[k]; const base=arr.length?arr.reduce((s,x)=>s+x,0)/arr.length:0;
+    const rec=arr.slice(-3); const recAvg=rec.length?rec.reduce((s,x)=>s+x,0)/rec.length:0;
+    let c = base<=0 ? (recAvg>0?6:0) : ((recAvg-base)/base)*14;
+    cond[k]=R(cl(c+gPen,-16,12));
+  });
+
+  const vals=[skill.kanji,skill.math,skill.game,skill.exercise,skill.narai,skill.typing];
+  const avg=vals.reduce((s,x)=>s+x,0)/6;
+  const cvals=Object.values(cond); const condAvg=cvals.reduce((s,x)=>s+x,0)/cvals.length;
+
+  return Object.assign(skill,{
+    cond, condOverall:R(condAvg),
+    overall:{ lv:R(avg), exp:R(avg) },
+    _meta:{ elapsed, totalDays, days:d }
+  });
 }
 
 /* =====================================================================
@@ -935,7 +1041,7 @@ async function renderHome(){
         <svg class="ring" viewBox="0 0 36 36">
           <path d="M18 2a16 16 0 1 1 0 32 16 16 0 1 1 0-32" fill="none" stroke="#1e2b45" stroke-width="3"/>
           <path d="M18 2a16 16 0 1 1 0 32 16 16 0 1 1 0-32" fill="none" stroke="var(--accent)" stroke-width="3"
-            stroke-dasharray="${pct},100" stroke-linecap="round" style="filter:drop-shadow(var(--glow))"/>
+            stroke-dasharray="${pct},100" stroke-linecap="round" style="filter:drop-shadow(var(--glow));animation:ringGrow 1.2s cubic-bezier(.2,.8,.2,1)"/>
           <text x="18" y="20" text-anchor="middle" font-size="9" fill="#f2f5fb" font-family="Orbitron">${pct}%</text>
         </svg>
       </div>
@@ -962,6 +1068,14 @@ async function renderHome(){
   $('#prevM').onclick=()=>{ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderHome(); };
   $('#nextM').onclick=()=>{ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderHome(); };
   drawCalendar();
+  // ホームの数字カウントアップ＆やることバーを0から伸ばす
+  document.querySelectorAll('#view-home .hero .num').forEach(el=>{
+    const node=el.firstChild; if(node&&node.nodeType===3){ const to=parseInt(el.textContent,10); if(!isNaN(to)) countUpNode(node,to,850); }
+  });
+  if(!prefersReduce()){
+    document.querySelectorAll('#view-home .goal-fill').forEach((f,i)=>{ const w=f.style.width; f.style.width='0%';
+      requestAnimationFrame(()=>setTimeout(()=>{ f.style.width=w; }, 90+i*90)); });
+  }
 }
 
 function drawCalendar(){
@@ -1294,10 +1408,16 @@ function renderSummary(){
     {key:'narai',label:'習い事'},
     {key:'typing',label:'タイピング'}
   ];
+  const cond=stats.cond||{};
+  const condChip=v=>{ v=Number(v)||0;
+    if(v>=3)  return `<span class="cond up">ちょうし ▲${v}</span>`;
+    if(v<=-3) return `<span class="cond down">ちょうし ▼${Math.abs(v)}</span>`;
+    return `<span class="cond flat">ちょうし →</span>`;
+  };
   const barsHtml=axes.map(a=>`
-    <div class="sbar ${a.lag?'lag':''}">
-      <div class="lab"><span>${a.label}</span><b>Lv ${stats[a.key]}</b></div>
-      <div class="track"><div class="fill" style="width:${stats[a.key]}%"></div></div>
+    <div class="sbar ${a.lag?'lag':''}" data-key="${a.key}">
+      <div class="lab"><span>${a.label}</span><b>Lv <span class="lvn" data-to="${stats[a.key]}">0</span> ${condChip(cond[a.key])}</b></div>
+      <div class="track"><div class="fill" data-to="${stats[a.key]}"><span class="pip"></span></div></div>
     </div>`).join('');
   const photoHtml = META.photo
     ? `<div class="photo-frame"><img src="${META.photo}" alt="プロフィール画像"></div>
@@ -1307,8 +1427,20 @@ function renderSummary(){
        </div>`
     : `<div class="photo-frame"><div class="ph-empty">📷<br>プロフィール画像（アバター）を<br>入れてみよう。<br><span style="opacity:.7">（自分の 顔や すきな もの など）</span></div></div>
        <div class="photo-actions"><button class="btn ghost small" id="btnPhoto">📷 アバターを えらぶ</button></div>`;
+  const ov=stats.overall||{lv:0,exp:0};
+  const oc=stats.condOverall||0;
+  const lvlheadHtml=`
+    <div class="lvlhead">
+      <div class="lv-badge"><div class="k">LEVEL</div><div class="n"><span class="lvn" data-to="${ov.lv}">0</span></div></div>
+      <div class="lv-main">
+        <div class="lv-title">そうごうレベル <b>Lv <span class="lvn" data-to="${ov.lv}">0</span></b></div>
+        <div class="exp-track"><div class="exp-fill" data-to="${ov.exp}"></div></div>
+        <div class="lv-sub">なつやすみの おわりに むけて どんどん のびるよ　${condChip(oc)}</div>
+      </div>
+    </div>`;
   const statusPanel=`
-    <div class="panel"><h2><span class="tag">STATUS</span>ステータス</h2>
+    <div class="panel glowy"><h2><span class="tag">STATUS</span>ステータス</h2>
+      ${lvlheadHtml}
       <div class="status-grid">
         <div><div class="radar-wrap"><canvas id="c_radar"></canvas></div></div>
         <div>${photoHtml}<input type="file" id="photoInput" accept="image/*" class="hidden"/></div>
@@ -1319,7 +1451,7 @@ function renderSummary(){
   if(dates.length===0){
     el.innerHTML=statusPanel+`<div class="panel"><h2><span class="tag">STATS</span>せいせき</h2>
       <div class="empty-note">まだ きろくが ありません。<br>カレンダーから 日を えらんで、さいしょの ミッションを 書いてみよう。</div></div>`;
-    wireStatus(); drawRadar(stats); return;
+    wireStatus(); drawRadar(stats); animateStatus(stats); return;
   }
 
   // ---- 集計（運動・ゲームは配列、プールは分） ----
@@ -1349,7 +1481,7 @@ function renderSummary(){
   if(typeof Chart==='undefined'){
     el.innerHTML=statusPanel+`<div class="panel"><h2><span class="tag">STATS</span>これまでの せいせき</h2>${kpiHtml}
       <div class="empty-note">グラフの よみこみに インターネットが ひつようです。<br>ネットに つないで もういちど ひらいてね。</div></div>`;
-    wireStatus(); return;
+    wireStatus(); animateStatus(stats); return;
   }
 
   el.innerHTML=statusPanel+`
@@ -1365,6 +1497,7 @@ function renderSummary(){
   `;
   wireStatus();
   drawRadar(stats);
+  animateStatus(stats);
   const grid={color:'rgba(120,160,220,.08)'}, tick={color:'#8b97ad',font:{family:'Noto Sans JP',size:10}};
   const baseOpts=(extra={})=>({responsive:true,maintainAspectRatio:false,
     plugins:{legend:{labels:{color:'#d8dee9',font:{size:11}}}},
@@ -1399,7 +1532,9 @@ function drawRadar(stats){
       datasets:[{data:[stats.kanji,stats.math,stats.game,stats.exercise,stats.narai,stats.typing],
         backgroundColor:'rgba(0,229,255,.18)',borderColor:'#00e5ff',borderWidth:2,
         pointBackgroundColor:'#7af5c8',pointBorderColor:'#7af5c8',pointRadius:3}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+    options:{responsive:true,maintainAspectRatio:false,
+      animation:{duration:1100,easing:'easeOutCubic'},
+      plugins:{legend:{display:false},
       tooltip:{callbacks:{label:c=>' Lv '+c.raw}}},
       scales:{r:{suggestedMin:0,suggestedMax:100,
         grid:{color:'rgba(120,160,220,.18)'},angleLines:{color:'rgba(120,160,220,.18)'},
@@ -1558,6 +1693,58 @@ function renderSettings(){
 /* =====================================================================
    小物
    ===================================================================== */
+/* ステータス演出：数字カウントアップ／レベルバー0→target／レベルアップ検知 */
+function prefersReduce(){ return window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches; }
+function countUp(el,to,dur){
+  to=Number(to)||0; if(prefersReduce()){ el.textContent=to; return; }
+  const t0=performance.now();
+  const step=t=>{ const p=Math.min(1,(t-t0)/dur); const e=1-Math.pow(1-p,3);
+    el.textContent=Math.round(to*e); if(p<1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function countUpNode(node,to,dur){
+  to=Number(to)||0; if(prefersReduce()){ node.textContent=to; return; }
+  const t0=performance.now();
+  const step=t=>{ const p=Math.min(1,(t-t0)/dur); const e=1-Math.pow(1-p,3);
+    node.textContent=Math.round(to*e); if(p<1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function readStatSnap(){ try{ return JSON.parse(LS.get('sq_stat_prev')||'null'); }catch(e){ return null; } }
+function writeStatSnap(o){ try{ LS.set('sq_stat_prev', JSON.stringify(o)); }catch(e){} }
+function jpAxis(k){ return {kanji:'かんじ',math:'さんすう',game:'ゲーム',exercise:'うんどう',narai:'ならいごと',typing:'タイピング'}[k]||k; }
+function animateStatus(stats){
+  const reduce=prefersReduce();
+  // 数字（Lv・総合Lv）
+  document.querySelectorAll('#view-summary .lvn').forEach(el=>countUp(el,el.dataset.to,900));
+  // KPIの数値（先頭テキストノードだけ動かす。単位spanは残す）
+  document.querySelectorAll('#view-summary .kpi .num').forEach(el=>{
+    const node=el.firstChild; if(!node||node.nodeType!==3) return;
+    const to=parseInt(el.textContent,10); if(isNaN(to)) return;
+    countUpNode(node,to,900);
+  });
+  // 総合EXPバー
+  const exp=document.querySelector('#view-summary .exp-fill');
+  if(exp){ const to=Number(exp.dataset.to)||0;
+    if(reduce){ exp.style.width=to+'%'; } else requestAnimationFrame(()=>setTimeout(()=>{ exp.style.width=to+'%'; },60)); }
+  // レベルバー：0→target（少しずつ順番に伸ばす）＋レベルアップ演出
+  const prev=readStatSnap();
+  const bars=[...document.querySelectorAll('#view-summary .sbar')];
+  bars.forEach((bar,i)=>{
+    const fill=bar.querySelector('.fill'); if(!fill) return;
+    const to=Number(fill.dataset.to)||0;
+    const grow=()=>{ fill.style.width=to+'%'; bar.classList.add('grown'); };
+    if(reduce){ grow(); } else setTimeout(grow, 120+i*130);
+    const key=bar.dataset.key;
+    if(!reduce && key && prev && prev[key]!=null && to>prev[key]){
+      setTimeout(()=>bar.classList.add('levelup'), 300+i*130);
+    }
+  });
+  // スナップショット保存＋レベルアップの ひとことトースト
+  const cur={}; bars.forEach(b=>{ const f=b.querySelector('.fill'); if(f) cur[b.dataset.key]=Number(f.dataset.to)||0; });
+  const ups=[]; if(prev){ Object.keys(cur).forEach(k=>{ if(prev[k]!=null && cur[k]>prev[k]) ups.push(k); }); }
+  writeStatSnap(cur);
+  if(ups.length && !reduce) setTimeout(()=>toast('✨ '+jpAxis(ups[0])+'が レベルアップ！'), 720);
+}
 function esc(s){ if(s===undefined||s===null) return ''; return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 let toastT;
 function toast(msg){
