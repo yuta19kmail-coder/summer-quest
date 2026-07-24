@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="app-version" content="v1.6" />
+<meta name="app-version" content="v1.7" />
 <title>SUMMER QUEST</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -436,6 +436,115 @@ body.warn1 .care-item{border-left-color:var(--warn)}body.warn2 .care-item{border
   .sbar .lab{font-size:12px}
   .sbar .lab b{font-size:13px}
 }
+
+/* ===================================================================
+   v1.7 リッチモーション（全体・カレンダー・日報。入力の邪魔はしない）
+   =================================================================== */
+/* アンビエント：ゆっくり漂う光のオーブ（背景・GPUのみ・低負荷） */
+#fx{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+#fx .orb{position:absolute;border-radius:50%;filter:blur(56px);opacity:.5;mix-blend-mode:screen;will-change:transform}
+#fx .o1{width:420px;height:420px;background:radial-gradient(circle,rgba(0,229,255,.5),transparent 70%);top:-120px;left:-80px;animation:orbA 26s ease-in-out infinite}
+#fx .o2{width:360px;height:360px;background:radial-gradient(circle,rgba(122,245,200,.42),transparent 70%);bottom:-120px;right:-70px;animation:orbB 32s ease-in-out infinite}
+#fx .o3{width:300px;height:300px;background:radial-gradient(circle,rgba(90,140,255,.34),transparent 70%);top:42%;left:58%;animation:orbC 38s ease-in-out infinite}
+@keyframes orbA{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(80px,120px) scale(1.15)}}
+@keyframes orbB{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-100px,-80px) scale(1.2)}}
+@keyframes orbC{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-120px,60px) scale(.85)}}
+body.warn2 #fx{filter:hue-rotate(-45deg) saturate(1.2)}
+
+/* ロゴのゆらぎ＆きらめき */
+.brand .logo,.login-logo{animation:logoFloat 5s ease-in-out infinite}
+.brand .logo{position:relative;overflow:hidden}
+.brand .logo::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(120deg,transparent 40%,rgba(255,255,255,.4) 50%,transparent 60%);
+  background-size:250% 100%;animation:logoShine 4.5s ease-in-out infinite}
+@keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes logoShine{0%{background-position:150% 0}60%,100%{background-position:-150% 0}}
+
+/* 押下リップル＆主要ボタンのシャイン */
+.btn,.addbtn,.nav button,.cal-head button,.typing-link,.user-chip,.del{position:relative;overflow:hidden}
+.ripple{position:absolute;border-radius:50%;transform:translate(-50%,-50%) scale(0);pointer-events:none;z-index:2;
+  background:radial-gradient(circle,rgba(255,255,255,.55),transparent 70%);animation:ripple .6s ease-out forwards}
+@keyframes ripple{to{transform:translate(-50%,-50%) scale(1);opacity:0}}
+.btn:not(.ghost):not(.ai)::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,transparent 42%,rgba(255,255,255,.32) 50%,transparent 58%);
+  background-size:250% 100%;animation:ambientSweep 4.5s linear infinite}
+.btn:active{transform:translateY(1px) scale(.99)}
+.addbtn{transition:.2s}
+.addbtn:hover{background:rgba(0,229,255,.1);box-shadow:0 0 16px rgba(0,229,255,.18)}
+
+/* ナビ：アクティブの脈動＆アイコンの弾み */
+.nav button{transition:.2s}
+.nav button:active{transform:scale(.94)}
+.nav button.active{animation:navGlow 2.6s ease-in-out infinite}
+.nav button.active .ic{animation:iconBounce .55s ease}
+@keyframes navGlow{0%,100%{box-shadow:0 0 10px rgba(0,229,255,.22)}50%{box-shadow:0 0 22px rgba(0,229,255,.5)}}
+@keyframes iconBounce{0%{transform:translateY(0)}35%{transform:translateY(-6px) scale(1.15)}70%{transform:translateY(0) scale(1)}}
+
+/* ビュー切替：パネルが順番にせり上がる */
+.view.enter .panel,.view.enter .hero,.view.enter .warnbar,.view.enter .lvlhead{animation:panelIn .55s cubic-bezier(.2,.8,.2,1) both}
+.view.enter .panel{animation-delay:calc(var(--pi,0)*80ms)}
+#view-report.enter .panel{animation:none}
+@keyframes panelIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+/* カレンダー：セルのポップイン／今日の脈動／〇のきらめき／月送りスライド */
+.cell[data-date]{animation:cellIn .4s ease both;animation-delay:calc(var(--ci,0)*16ms)}
+@keyframes cellIn{from{opacity:0;transform:scale(.6) translateY(6px)}to{opacity:1;transform:none}}
+.cell.today{animation:cellIn .4s ease both,todayPulse 2.2s ease-in-out infinite .4s}
+@keyframes todayPulse{0%,100%{box-shadow:0 0 8px rgba(0,229,255,.35)}50%{box-shadow:0 0 20px rgba(0,229,255,.7)}}
+.cell.done::after{content:"";position:absolute;inset:0;border-radius:12px;pointer-events:none;
+  background:radial-gradient(circle at 50% 45%,rgba(122,245,200,.16),transparent 60%);animation:doneGlow 3s ease-in-out infinite}
+.cell .maru{position:relative;z-index:1}
+.cal-grid.slide-l{animation:slideL .32s ease}.cal-grid.slide-r{animation:slideR .32s ease}
+@keyframes doneGlow{0%,100%{opacity:.4}50%{opacity:.95}}
+@keyframes slideL{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+@keyframes slideR{from{opacity:0;transform:translateX(-26px)}to{opacity:1;transform:none}}
+.cal-head button:active{transform:scale(.9)}
+.badge-streak{animation:flameFlk 1.6s ease-in-out infinite}
+@keyframes flameFlk{0%,100%{filter:drop-shadow(0 0 4px rgba(255,159,67,.5))}50%{filter:drop-shadow(0 0 10px rgba(255,159,67,.9))}}
+
+/* 日報：フィールドが順番に現れる（初回だけ／入力は邪魔しない） */
+#view-report.enter .topbar{animation:panelIn .45s ease both}
+#view-report.enter .field{animation:fieldIn .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--fi,0)*55ms + 120ms)}
+@keyframes fieldIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+/* フォーカス：やわらかな縁の光（フォーカス時のみ・連続モーションなし） */
+input[type=text],input[type=number],input[type=password],textarea,select{transition:border-color .2s,box-shadow .3s,background .2s}
+input:focus,textarea:focus,select:focus{background:#0a1120;box-shadow:0 0 0 1px var(--accent),0 0 16px rgba(0,229,255,.28)}
+.field>label{transition:color .2s}
+.field:focus-within>label{color:var(--accent)}
+/* 行の追加・削除アニメ */
+.study-row.added{animation:rowIn .34s cubic-bezier(.2,.8,.2,1) both}
+@keyframes rowIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+.study-row.removing{animation:rowOut .28s ease forwards}
+@keyframes rowOut{to{opacity:0;transform:translateX(24px);max-height:0;margin:0;padding:0}}
+.del{transition:transform .15s,background .15s}
+.del:hover{background:rgba(255,59,92,.18)!important;transform:rotate(90deg)}
+/* AI返信ボックス：出現＆ローディングのシマー */
+.ref-reply{animation:replyIn .5s cubic-bezier(.2,.8,.2,1)}
+@keyframes replyIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+.ref-reply.loading{position:relative;overflow:hidden}
+.ref-reply.loading::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(110deg,transparent 35%,rgba(122,245,200,.14) 50%,transparent 65%);
+  background-size:220% 100%;animation:ambientSweep 1.6s linear infinite}
+
+/* 保存の お祝いバースト */
+.spark{position:fixed;width:9px;height:9px;border-radius:50%;pointer-events:none;z-index:300;
+  will-change:transform,opacity;animation:spark .82s ease-out forwards}
+@keyframes spark{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
+
+/* カード hover の持ち上がり（PCのみ） */
+@media(hover:hover){
+  .panel{transition:transform .3s,box-shadow .3s}
+  .kpi .stat{transition:transform .25s,box-shadow .25s}
+  .kpi .stat:hover{transform:translateY(-3px);box-shadow:0 8px 26px rgba(0,0,0,.35),0 0 18px rgba(0,229,255,.12)}
+}
+
+/* reduced-motion：全部おとなしく */
+@media(prefers-reduced-motion:reduce){
+  #fx,.brand .logo,.brand .logo::after,.login-logo,.btn:not(.ghost):not(.ai)::after,.nav button.active,.badge-streak,
+  .cell[data-date],.cell.today,.cell.done::after,.ref-reply.loading::after,.spark{animation:none!important}
+  .view.enter .panel,.view.enter .hero,.view.enter .warnbar,.view.enter .lvlhead,
+  #view-report.enter .field,#view-report.enter .topbar,.study-row.added,.ref-reply,.cal-grid.slide-l,.cal-grid.slide-r{animation:none!important}
+}
 </style>
 </head>
 <body>
@@ -511,7 +620,7 @@ const SQ_REPLY_TOKEN = 'Py0AUy_8K4JIXnJ0lOaHrBIu8VHuNHgc'; // 合言葉（公開
 let lastReply = '';  // いま画面に出ている AIコメント（保存時に一緒に記録）
 let aiRound = 0;     // その日にAIを叩いた回数（1日2回まで）
 const PARENT_PW = '0612';         // 親アカ：IDなし・パスワードのみ（設定はこちらだけ）
-const APP_VERSION = 'v1.6';       // バージョン表記（更新時はここと head の meta を上げる）
+const APP_VERSION = 'v1.7';       // バージョン表記（更新時はここと head の meta を上げる）
 const PAGE_OPTIONS = 60;      // ページ数プルダウン 0〜60
 const MIN_OPTIONS = [0,5,10,15,20,30,45,60,90,120,150,180]; // 時間(分)プルダウン
 
@@ -935,6 +1044,7 @@ function initLogin(){
 async function startApp(){
   $('#login').classList.add('hidden');
   $('#app').classList.remove('hidden');
+  initMotion();
   ROLE = LS.get('sq_role')||'child';
   // アカウントに合わせて表示を切替
   $('#userName').textContent = ROLE==='parent' ? 'おうちのひと' : CHILD_ID;
@@ -978,6 +1088,7 @@ function switchView(v){
   if(v==='home') renderHome();
   if(v==='summary') renderSummary();
   if(v==='settings') renderSettings();
+  if(v!=='report') enterView($('#view-'+v));
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -1065,8 +1176,8 @@ async function renderHome(){
       <div class="small-note">日づけを タップすると その日の ミッションを 書けます。夏休みの きかんは「せってい」で かえられます。</div>
     </div>
   `;
-  $('#prevM').onclick=()=>{ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderHome(); };
-  $('#nextM').onclick=()=>{ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderHome(); };
+  $('#prevM').onclick=()=>{ calMonth--; if(calMonth<0){calMonth=11;calYear--;} calSlide='r'; renderHome(); };
+  $('#nextM').onclick=()=>{ calMonth++; if(calMonth>11){calMonth=0;calYear++;} calSlide='l'; renderHome(); };
   drawCalendar();
   // ホームの数字カウントアップ＆やることバーを0から伸ばす
   document.querySelectorAll('#view-home .hero .num').forEach(el=>{
@@ -1102,13 +1213,17 @@ function drawCalendar(){
     if(done) cls+=' done';
     if(ds===tStr) cls+=' today';
     if(!inVac) cls+=' out';
-    html+=`<div class="${cls}" data-date="${ds}">
+    html+=`<div class="${cls}" data-date="${ds}" style="--ci:${day-1}">
       <div class="dnum">${day}</div>
       ${done?'<div class="maru">〇</div>':''}
       ${holi&&!done?`<div class="holi-name">${holi.length>5?holi.slice(0,4)+'…':holi}</div>`:''}
     </div>`;
   }
   grid.innerHTML=html;
+  if(calSlide && !prefersReduce()){
+    grid.classList.remove('slide-l','slide-r'); void grid.offsetWidth;
+    grid.classList.add(calSlide==='l'?'slide-l':'slide-r'); calSlide='';
+  }
   grid.querySelectorAll('.cell[data-date]').forEach(c=>{
     c.addEventListener('click',()=>openReport(c.dataset.date));
   });
@@ -1233,8 +1348,9 @@ function renderReport(){
       const row=document.createElement('div'); row.className='study-row';
       row.innerHTML=`<input type="text" placeholder="${placeholder}" value="${esc(v.name)}"/>
         <select>${optFn(v.val)}</select><button class="del">✕</button>`;
-      row.querySelector('.del').onclick=()=>{ if(container.children.length>1) row.remove(); };
+      row.querySelector('.del').onclick=()=>removeRow(row,container);
       container.appendChild(row);
+      return row;
     }
     (items.length?items:[{name:'',val:''}]).forEach(add);
     return add;
@@ -1263,19 +1379,25 @@ function renderReport(){
       else { nameI.hidden=true; unitIn.hidden=true; const g=gGoals.find(x=>x.name===val); unitSpan.textContent=(g&&g.unit)?g.unit:''; }
     }
     sel.onchange=sync; sync();
-    row.querySelector('.del').onclick=()=>{ if(cont.children.length>1) row.remove(); };
+    row.querySelector('.del').onclick=()=>removeRow(row,cont);
     cont.appendChild(row);
+    return row;
   }
   (study.length?study:[{name:'',pages:'',unit:''}]).forEach(studyRow);
   const addEx=buildList($('#exList'),
     exArr(data).map(e=>({name:e.name,val:e.minutes})), minOptions, 'れい：なわとび、たいそう');
   const addGame=buildList($('#gameList'),
     gameArr(data).map(g=>({name:g.name,val:g.minutes})), minOptions, 'れい：マイクラ、スプラ');
-  $('#addStudy').onclick=()=>studyRow();
-  $('#addEx').onclick=()=>addEx();
-  $('#addGame').onclick=()=>addGame();
+  const flash=fn=>()=>{ const r=fn(); if(r&&!prefersReduce()) r.classList.add('added'); };
+  $('#addStudy').onclick=flash(studyRow);
+  $('#addEx').onclick=flash(addEx);
+  $('#addGame').onclick=flash(addGame);
   $('#backHome').onclick=()=>switchView('home');
-  $('#saveReport').onclick=saveReportForm;
+  $('#saveReport').onclick=(e)=>{
+    const t=e.currentTarget.getBoundingClientRect();
+    celebrate(t.left+t.width/2, t.top+t.height/2);
+    saveReportForm();
+  };
   // せんせいの返信 UI（保存済みがあれば復元）
   lastReply = data.reflectionReply || '';
   if(lastReply){
@@ -1287,6 +1409,7 @@ function renderReport(){
   if($('#delReport')) $('#delReport').onclick=async()=>{
     await Store.remove(editingDate); await refresh(); toast('きろくを けしたよ'); switchView('home');
   };
+  enterView(el);
 }
 
 async function saveReportForm(){
@@ -1744,6 +1867,50 @@ function animateStatus(stats){
   const ups=[]; if(prev){ Object.keys(cur).forEach(k=>{ if(prev[k]!=null && cur[k]>prev[k]) ups.push(k); }); }
   writeStatSnap(cur);
   if(ups.length && !reduce) setTimeout(()=>toast('✨ '+jpAxis(ups[0])+'が レベルアップ！'), 720);
+}
+/* ===== v1.7 モーション：アンビエント／押下リップル／登場演出／お祝いバースト ===== */
+let _motionInit=false, calSlide='';
+function initMotion(){
+  if(_motionInit) return; _motionInit=true;
+  if(!prefersReduce()){
+    const fx=document.createElement('div'); fx.id='fx';
+    fx.innerHTML='<div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>';
+    document.body.appendChild(fx);
+  }
+  document.addEventListener('pointerdown',e=>{
+    if(prefersReduce()) return;
+    const t=e.target.closest && e.target.closest('.btn,.addbtn,.nav button,.cal-head button,.typing-link,.del,.user-chip');
+    if(!t) return;
+    const r=t.getBoundingClientRect(); const d=Math.max(r.width,r.height)*1.35;
+    const s=document.createElement('span'); s.className='ripple';
+    s.style.width=s.style.height=d+'px';
+    s.style.left=(e.clientX-r.left)+'px'; s.style.top=(e.clientY-r.top)+'px';
+    t.appendChild(s); setTimeout(()=>s.remove(),640);
+  },{passive:true});
+}
+function enterView(view){
+  if(!view||prefersReduce()) return;
+  view.querySelectorAll('.panel').forEach((p,i)=>p.style.setProperty('--pi',i));
+  view.querySelectorAll('.field').forEach((f,i)=>f.style.setProperty('--fi',i));
+  view.classList.remove('enter'); void view.offsetWidth; view.classList.add('enter');
+  setTimeout(()=>view.classList.remove('enter'),1100);
+}
+function celebrate(x,y){
+  if(prefersReduce()) return;
+  for(let i=0;i<16;i++){
+    const s=document.createElement('div'); s.className='spark';
+    const a=(Math.PI*2*i/16)+Math.random()*0.35, dist=60+Math.random()*75;
+    s.style.left=x+'px'; s.style.top=y+'px';
+    s.style.setProperty('--dx',(Math.cos(a)*dist).toFixed(1)+'px');
+    s.style.setProperty('--dy',(Math.sin(a)*dist).toFixed(1)+'px');
+    s.style.background='radial-gradient(circle,#fff,'+(i%2?'#00e5ff':'#7af5c8')+' 60%,transparent)';
+    document.body.appendChild(s); setTimeout(()=>s.remove(),840);
+  }
+}
+function removeRow(row,cont){
+  if(cont.children.length<=1) return;
+  if(prefersReduce()){ row.remove(); return; }
+  row.classList.add('removing'); setTimeout(()=>row.remove(),270);
 }
 function esc(s){ if(s===undefined||s===null) return ''; return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 let toastT;
