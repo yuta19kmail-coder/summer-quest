@@ -450,7 +450,7 @@ const SQ_REPLY_TOKEN = 'Py0AUy_8K4JIXnJ0lOaHrBIu8VHuNHgc'; // 合言葉（公開
 let lastReply = '';  // いま画面に出ている AIコメント（保存時に一緒に記録）
 let aiRound = 0;     // その日にAIを叩いた回数（1日2回まで）
 const PARENT_PW = '0612';         // 親アカ：IDなし・パスワードのみ（設定はこちらだけ）
-const APP_VERSION = 'v1.4';       // バージョン表記（更新時はここと head の meta を上げる）
+const APP_VERSION = 'v1.5';       // バージョン表記（更新時はここと head の meta を上げる）
 const PAGE_OPTIONS = 60;      // ページ数プルダウン 0〜60
 const MIN_OPTIONS = [0,5,10,15,20,30,45,60,90,120,150,180]; // 時間(分)プルダウン
 
@@ -607,11 +607,21 @@ const Store = {
   async getAll(){
     if(this.mode==='firebase'){
       try{
-        const {collection,getDocs}=this.fns;
+        const {collection,getDocs,doc,setDoc}=this.fns;
         const snap = await withTimeout(getDocs(collection(this.fdb,'reports')), 8000);
         const cloud={}; snap.forEach(d=>cloud[d.id]=d.data());
+        const local=this._localAll();
+        // ★取り残し自動同期：ローカルにあってクラウドに無い日付だけ 裏でアップロード（既存クラウドは絶対に上書きしない）
+        for(const _d in local){
+          if(!(_d in cloud)){
+            try{ withTimeout(setDoc(doc(this.fdb,'reports',_d), local[_d]), 8000)
+                  .then(()=>{ this.cloudOk=true; })
+                  .catch(e=>console.warn('取り残しの同期はあとで再試行',e)); }
+            catch(e){ console.warn(e); }
+          }
+        }
         // クラウド優先で端末の内容とあわせる（未アップ分も消えない）
-        const merged=Object.assign({}, this._localAll(), cloud);
+        const merged=Object.assign({}, local, cloud);
         LS.set('sq_reports',JSON.stringify(merged));
         this.cloudOk=true;
         return merged;
