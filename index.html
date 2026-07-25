@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="app-version" content="v1.7.2" />
+<meta name="app-version" content="v1.7.4" />
 <title>SUMMER QUEST</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -620,7 +620,7 @@ const SQ_REPLY_TOKEN = 'Py0AUy_8K4JIXnJ0lOaHrBIu8VHuNHgc'; // 合言葉（公開
 let lastReply = '';  // いま画面に出ている AIコメント（保存時に一緒に記録）
 let aiRound = 0;     // その日にAIを叩いた回数（1日2回まで）
 const PARENT_PW = '0612';         // 親アカ：IDなし・パスワードのみ（設定はこちらだけ）
-const APP_VERSION = 'v1.7.2';       // バージョン表記（更新時はここと head の meta を上げる）
+const APP_VERSION = 'v1.7.4';       // バージョン表記（更新時はここと head の meta を上げる）
 const PAGE_OPTIONS = 60;      // ページ数プルダウン 0〜60
 const MIN_OPTIONS = [0,5,10,15,20,30,45,60,90,120,150,180]; // 時間(分)プルダウン
 
@@ -1330,12 +1330,12 @@ function renderReport(){
         <label>✍️ 今日を ふりかえって <span class="hint">文しょうで 書いて、タイピングの れんしゅう！</span></label>
         <textarea id="reflection" lang="ja" placeholder="今日 がんばったこと、楽しかったこと、あしたの 目あてを 書こう。">${esc(data.reflection)}</textarea>
         <div class="small-note">くわしく 書くほど、日本語の 力と タイピングが うまく なります。</div>
-        <button class="btn ai" id="getReply" type="button">🤖 AIに みてもらう</button>
-        <div class="small-note" style="margin-top:10px">AIコーチが 各コーナーの 下に コメントを くれます。アドバイスを 見て 直したら、もう一回 みてもらおう（1日 2回まで）。</div>
         <div id="refReplyBox" class="ref-reply" style="display:none">
           <span class="rr-head">✍️ ふりかえり</span>
           <div class="rr-text" id="refReplyText"></div>
         </div>
+        <button class="btn ai" id="getReply" type="button">🤖 AIに みてもらう</button>
+        <div class="small-note" style="margin-top:10px">AIコーチが 各コーナーの 下に コメントを くれます。アドバイスを 見て 直したら、もう一回 みてもらおう（1日 2回まで）。</div>
       </div>
 
       <button class="btn" id="saveReport">💾 この日を きろくする！</button>
@@ -1502,6 +1502,20 @@ async function fetchReflectionReply(){
     lastReply = c;
     aiRound = thisRound;
     showAiComments(c);
+    // 空応答・切れで 何も出せないとき、無言で 消えないように 案内を出す
+    const anyShown = ['aiStudy','aiActivity','refReplyBox'].some(id=>$('#'+id).style.display!=='none');
+    if(!anyShown){
+      const ov=$('#refReplyBox'); ov.classList.remove('loading','err'); ov.style.display='block';
+      ov.querySelector('.rr-text').textContent='うまく よみこめませんでした。もう一回 「AIに みてもらう」を おしてみてね。';
+    }
+    // 途中で切れた（max_tokens）ときは 親にだけ そっと知らせる（表示中のボックスに付ける）
+    if(d.stop_reason==='max_tokens'){
+      console.warn('[sqReply] 応答が max_tokens で 切れました');
+      if(ROLE==='parent'){
+        const vis=['refReplyBox','aiActivity','aiStudy'].map(id=>$('#'+id)).find(b=>b.style.display!=='none');
+        if(vis){ vis.querySelector('.rr-text').textContent += '\n\n[技術情報（親のみ）] 応答が長すぎて途中で切れました（max_tokens）。'; }
+      }
+    }
   }catch(e){
     console.warn('[sqReply] AI呼び出し失敗:', e);
     $('#aiStudy').style.display='none'; $('#aiActivity').style.display='none';
