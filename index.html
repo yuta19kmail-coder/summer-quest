@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="app-version" content="v1.7" />
+<meta name="app-version" content="v1.7.1" />
 <title>SUMMER QUEST</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -620,7 +620,7 @@ const SQ_REPLY_TOKEN = 'Py0AUy_8K4JIXnJ0lOaHrBIu8VHuNHgc'; // 合言葉（公開
 let lastReply = '';  // いま画面に出ている AIコメント（保存時に一緒に記録）
 let aiRound = 0;     // その日にAIを叩いた回数（1日2回まで）
 const PARENT_PW = '0612';         // 親アカ：IDなし・パスワードのみ（設定はこちらだけ）
-const APP_VERSION = 'v1.7';       // バージョン表記（更新時はここと head の meta を上げる）
+const APP_VERSION = 'v1.7.1';       // バージョン表記（更新時はここと head の meta を上げる）
 const PAGE_OPTIONS = 60;      // ページ数プルダウン 0〜60
 const MIN_OPTIONS = [0,5,10,15,20,30,45,60,90,120,150,180]; // 時間(分)プルダウン
 
@@ -1497,15 +1497,18 @@ async function fetchReflectionReply(){
       body: JSON.stringify({ name:(ROLE==='child'?CHILD_ID:''), round:thisRound, remainingDays, study, exercise, pool, game, typing, lessons, reflection:text })
     });
     let d = {}; try{ d = await res.json(); }catch(e){}
-    if(!res.ok){ throw new Error((d && d.error) || ('エラー ' + res.status)); }
+    if(!res.ok){ throw new Error(((d && d.error) || ('エラー ' + res.status)) + ((d && d.detail) ? (' / ' + d.detail) : '')); }
     const c = d.comments || { study:'', activity:'', overall:(d.reply||'') };
     lastReply = c;
     aiRound = thisRound;
     showAiComments(c);
   }catch(e){
+    console.warn('[sqReply] AI呼び出し失敗:', e);
     $('#aiStudy').style.display='none'; $('#aiActivity').style.display='none';
     const ov=$('#refReplyBox'); ov.classList.remove('loading'); ov.classList.add('err'); ov.style.display='block';
-    ov.querySelector('.rr-text').textContent = 'ごめんね、いま おへんじが もらえませんでした。すこし まってから、もう一ど おしてね。';
+    let msg = 'ごめんね、いま おへんじが もらえませんでした。すこし まってから、もう一ど おしてね。';
+    if(ROLE==='parent'){ msg += '\n\n[技術情報（親のみ表示）] ' + (e&&e.message ? e.message : String(e)); }
+    ov.querySelector('.rr-text').textContent = msg;
   }finally{
     if(aiRound>=2){ btn.disabled=true; btn.textContent='✅ AIチェック ずみ'; }
     else if(aiRound===1){ btn.disabled=false; btn.textContent='🤖 直したら もう一回 みてもらう'; }
