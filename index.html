@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="app-version" content="v1.7.4" />
+<meta name="app-version" content="v1.7.5" />
 <title>SUMMER QUEST</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -620,7 +620,7 @@ const SQ_REPLY_TOKEN = 'Py0AUy_8K4JIXnJ0lOaHrBIu8VHuNHgc'; // 合言葉（公開
 let lastReply = '';  // いま画面に出ている AIコメント（保存時に一緒に記録）
 let aiRound = 0;     // その日にAIを叩いた回数（1日2回まで）
 const PARENT_PW = '0612';         // 親アカ：IDなし・パスワードのみ（設定はこちらだけ）
-const APP_VERSION = 'v1.7.4';       // バージョン表記（更新時はここと head の meta を上げる）
+const APP_VERSION = 'v1.7.5';       // バージョン表記（更新時はここと head の meta を上げる）
 const PAGE_OPTIONS = 60;      // ページ数プルダウン 0〜60
 const MIN_OPTIONS = [0,5,10,15,20,30,45,60,90,120,150,180]; // 時間(分)プルダウン
 
@@ -1273,6 +1273,16 @@ function renderReport(){
       </div>
     </div>
 
+    ${(REPORTS[editingDate] && ROLE==='parent')?`
+    <div class="panel" style="padding:14px 16px;margin-bottom:12px">
+      <h2 style="margin-bottom:10px"><span class="tag">PARENT</span>日づけの しゅうせい（おうちのひと専用）</h2>
+      <div class="row">
+        <input type="date" id="moveDateInput" value="${editingDate}" style="flex:2"/>
+        <button class="btn ghost small" id="moveDateBtn" style="flex:1;white-space:nowrap">この日に うつす</button>
+      </div>
+      <div class="small-note">まちがえた日に 入れた きろくを、まるごと 正しい日に うつせます（元の日の きろくは 消えます）。</div>
+    </div>`:''}
+
     <div class="panel">
       <h2><span class="tag">MISSION</span>今日の ミッション記録</h2>
 
@@ -1409,7 +1419,42 @@ function renderReport(){
   if($('#delReport')) $('#delReport').onclick=async()=>{
     await Store.remove(editingDate); await refresh(); toast('きろくを けしたよ'); switchView('home');
   };
+  // 親アカ：日づけの しゅうせい
+  if($('#moveDateBtn')) $('#moveDateBtn').onclick=()=>moveReportDate($('#moveDateInput').value);
   enterView(el);
+}
+
+/* 親アカ専用：この日の きろくを まるごと べつの日づけに うつす（入力ミスの修正） */
+async function moveReportDate(newDate){
+  if(ROLE!=='parent'){ toast('この そうさは おうちのひと だけです'); return; }
+  const oldDate=editingDate;
+  const src=REPORTS[oldDate];
+  const disp=s=>String(s).replace(/-/g,'.');
+  if(!src){ toast('この日には きろくが ありません'); return; }
+  if(!newDate || !/^\d{4}-\d{2}-\d{2}$/.test(newDate)){ toast('うつす さきの 日づけを えらんでください'); return; }
+  if(newDate===oldDate){ toast('同じ 日づけです'); return; }
+  const msg = REPORTS[newDate]
+    ? `${disp(newDate)} には すでに きろくが あります。\n上書きしますか？（その日の いまの きろくは 消えます）`
+    : `${disp(oldDate)} の きろくを ${disp(newDate)} に うつします。\nよろしいですか？`;
+  if(!window.confirm(msg)) return;
+
+  const data=Object.assign({}, src, {
+    date:newDate,
+    movedFrom:oldDate,
+    updatedAt:new Date().toISOString()
+  });
+  await Store.save(newDate,data);
+  await Store.remove(oldDate);
+  // TOPの「やること」チェック状態も いっしょに うつす（端末保存）
+  try{
+    const all=JSON.parse(LS.get('sq_todos')||'{}');
+    if(all[oldDate]){ all[newDate]=all[oldDate]; delete all[oldDate]; LS.set('sq_todos',JSON.stringify(all)); }
+  }catch(e){}
+
+  editingDate=newDate;
+  await refresh();
+  toast(`📅 ${disp(oldDate)} → ${disp(newDate)} に うつしました`);
+  renderReport();
 }
 
 async function saveReportForm(){
