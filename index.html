@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="app-version" content="v1.7.6" />
+<meta name="app-version" content="v1.7.8" />
 <title>SUMMER QUEST</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -369,6 +369,13 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .study-row .s-amt{flex:1 1 70px;min-width:64px}
 .study-row .s-unit{flex:0 0 auto;font-size:14px;color:var(--silver-dim);min-width:16px}
 .study-row .s-unit-in{flex:1 1 80px;min-width:64px}
+.study-row .g-kind{flex:0 0 104px;width:104px;min-width:104px;padding-left:10px;padding-right:6px}
+.study-row .g-name{flex:1 1 90px;min-width:78px}
+.study-row .g-min{flex:0 0 86px;width:86px;min-width:86px}
+/* せまい画面では 2段に おれるので、1行が どこまでか わかるように わくを つける */
+@media(max-width:400px){
+  .study-row.g-row{padding:10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.015)}
+}
 .care-item{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-left:3px solid var(--accent);background:rgba(0,229,255,.05);border-radius:0 10px 10px 0;margin-bottom:10px;font-size:15px;color:var(--silver-bright);font-weight:700;line-height:1.75}
 body.warn1 .care-item{border-left-color:var(--warn)}body.warn2 .care-item{border-left-color:var(--danger)}
 .reading .reading-cat{font-size:13px;color:var(--accent);font-weight:700;margin-bottom:4px}
@@ -620,7 +627,7 @@ const SQ_REPLY_TOKEN = 'Py0AUy_8K4JIXnJ0lOaHrBIu8VHuNHgc'; // 合言葉（公開
 let lastReply = '';  // いま画面に出ている AIコメント（保存時に一緒に記録）
 let aiRound = 0;     // その日にAIを叩いた回数（1日2回まで）
 const PARENT_PW = '0612';         // 親アカ：IDなし・パスワードのみ（設定はこちらだけ）
-const APP_VERSION = 'v1.7.6';       // バージョン表記（更新時はここと head の meta を上げる）
+const APP_VERSION = 'v1.7.8';       // バージョン表記（更新時はここと head の meta を上げる）
 const PAGE_OPTIONS = 60;      // ページ数プルダウン 0〜60
 const MIN_OPTIONS = [0,5,10,15,20,30,45,60,90,120,150,180]; // 時間(分)プルダウン
 
@@ -975,7 +982,13 @@ function toArr(v){
   return [];
 }
 const exArr   = r => toArr(r && r.exercise);
-const gameArr = r => toArr(r && r.game);
+const gameArr = r => toArr(r && r.game);          // ゲーム＋アニメ（合計用）
+/* ゲーム欄は 1つの欄で しゅるいを えらぶ方式。kind:'anime' が アニメ（TV）。
+   kind が 無い 古いデータは ぜんぶ ゲームあつかい（後方ごかん） */
+const isAnimeRow = x => !!(x && x.kind === 'anime');
+const playArr  = r => gameArr(r).filter(x=>!isAnimeRow(x));   // 🎮ゲームだけ
+const animeArr = r => gameArr(r).filter(isAnimeRow);          // 📺アニメだけ
+const sumMin   = a => a.reduce((s,x)=>s+(Number(x.minutes)||0),0);
 const poolMin = r => Number(r && r.pool) || 0;
 
 /* =====================================================================
@@ -1367,9 +1380,9 @@ function renderReport(){
       </div>
 
       <div class="field">
-        <label>🎮 ゲーム <span class="hint">なにを 何分あそんだ？ ふやせるよ</span></label>
+        <label>🎮 ゲーム・📺 アニメ（TV） <span class="hint">しゅるいを えらんで、なにを 何分？ ふやせるよ</span></label>
         <div id="gameList"></div>
-        <button class="addbtn" id="addGame">＋ ゲームを ふやす</button>
+        <button class="addbtn" id="addGame">＋ ゲーム・アニメを ふやす</button>
       </div>
 
       <div class="field">
@@ -1438,8 +1451,28 @@ function renderReport(){
   (study.length?study:[{name:'',pages:'',unit:''}]).forEach(studyRow);
   const addEx=buildList($('#exList'),
     exArr(data).map(e=>({name:e.name,val:e.minutes})), minOptions, 'れい：なわとび、たいそう');
-  const addGame=buildList($('#gameList'),
-    gameArr(data).map(g=>({name:g.name,val:g.minutes})), minOptions, 'れい：マイクラ、スプラ');
+  // ゲーム・アニメ：1つの欄で しゅるい（🎮/📺）を えらぶ
+  const GAME_PH={game:'れい：マイクラ、スプラ', anime:'れい：ワンピース、ドラえもん'};
+  function gameRow(v={kind:'game',name:'',minutes:''}){
+    const cont=$('#gameList');
+    const kind=isAnimeRow(v)?'anime':'game';
+    const row=document.createElement('div'); row.className='study-row g-row';
+    row.innerHTML=`<select class="g-kind">
+        <option value="game" ${kind==='game'?'selected':''}>🎮ゲーム</option>
+        <option value="anime" ${kind==='anime'?'selected':''}>📺アニメ</option>
+      </select>`
+      +`<input class="g-name" type="text" lang="ja" placeholder="${GAME_PH[kind]}" value="${esc(v.name)}">`
+      +`<select class="g-min">${minOptions(v.minutes)}</select>`
+      +`<button class="del">✕</button>`;
+    const ks=row.querySelector('.g-kind'), ni=row.querySelector('.g-name');
+    ks.onchange=()=>{ ni.placeholder=GAME_PH[ks.value]||''; };
+    row.querySelector('.del').onclick=()=>removeRow(row,cont);
+    cont.appendChild(row);
+    return row;
+  }
+  const gRows=gameArr(data);
+  (gRows.length?gRows:[{kind:'game',name:'',minutes:''}]).forEach(gameRow);
+  const addGame=gameRow;
   const flash=fn=>()=>{ const r=fn(); if(r&&!prefersReduce()) r.classList.add('added'); };
   $('#addStudy').onclick=flash(studyRow);
   $('#addEx').onclick=flash(addEx);
@@ -1499,6 +1532,16 @@ async function moveReportDate(newDate){
   renderReport();
 }
 
+/* ゲーム・アニメ欄を 読む（しゅるい・なまえ・分） */
+function readGameList(){
+  return [...document.querySelectorAll('#gameList .study-row')].map(r=>{
+    const k=r.querySelector('.g-kind'), n=r.querySelector('.g-name'), m=r.querySelector('.g-min');
+    if(!k||!n||!m) return null;
+    return { kind:(k.value==='anime'?'anime':'game'), name:n.value.trim(),
+             minutes:(m.value===''?'':Number(m.value)) };
+  }).filter(o=>o && (o.name || o.minutes!==''));
+}
+
 async function saveReportForm(){
   const readList=(sel,key)=>[...document.querySelectorAll(sel+' .study-row')].map(r=>({
     name:r.querySelector('input').value.trim(),
@@ -1522,7 +1565,7 @@ async function saveReportForm(){
     exercise:readList('#exList','minutes'),
     pool:$('#poolMin').value===''?'':Number($('#poolMin').value),
     typing:{ score:$('#typeScore').value===''?'':Number($('#typeScore').value), memo:$('#typeMemo').value.trim() },
-    game:readList('#gameList','minutes'),
+    game:readGameList(),
     narai:{ text:$('#naraiText').value.trim() },
     reflection:$('#reflection').value.trim(),
     reflectionReply:lastReply,
@@ -1546,10 +1589,15 @@ function showAiComments(c){
 async function fetchReflectionReply(){
   const text = $('#reflection').value.trim();
   const btn  = $('#getReply');
-  const boxes = ['aiStudy','aiActivity','refReplyBox'].map(id=>$('#'+id));
   if(!text){ toast('先に ふりかえりを 書いてね'); return; }
   if(aiRound>=2){ toast('今日は もう 2回 みてもらったよ。じゅうぶん！'); return; }
   const thisRound = aiRound + 1;
+  // ★2回目（さいごの チェック）は「ふりかえり（所感）」だけを 見なおす。
+  //   勉強・かつどうの コメントは 1回目の ものを のこす（むだに 書きかえない・切れない）
+  const onlyOverall = thisRound >= 2;
+  const prev = (lastReply && typeof lastReply==='object') ? lastReply
+             : { study:'', activity:'', overall:(typeof lastReply==='string'?lastReply:'') };
+  const boxes = (onlyOverall ? ['refReplyBox'] : ['aiStudy','aiActivity','refReplyBox']).map(id=>$('#'+id));
   boxes.forEach(b=>{ b.classList.remove('err'); b.classList.add('loading'); b.style.display='block'; b.querySelector('.rr-text').textContent='AIが 読んでいます…⏳'; });
   btn.disabled = true; const orig = btn.textContent; btn.textContent = 'かんがえ中…';
 
@@ -1571,7 +1619,9 @@ async function fetchReflectionReply(){
     minutes:r.querySelector('select').value===''?'':Number(r.querySelector('select').value)
   })).filter(o=>o.name||o.minutes!=='');
   const exercise=readMin('#exList');
-  const game=readMin('#gameList');
+  const gRows=readGameList();
+  const game =gRows.filter(o=>o.kind!=='anime').map(({name,minutes})=>({name,minutes}));
+  const anime=gRows.filter(o=>o.kind==='anime').map(({name,minutes})=>({name,minutes}));
   const pool = $('#poolMin').value===''?'':Number($('#poolMin').value);
   const typing = { score: $('#typeScore').value===''?'':Number($('#typeScore').value), memo: $('#typeMemo').value.trim() };
   const lessons = $('#naraiText').value.trim();
@@ -1581,14 +1631,19 @@ async function fetchReflectionReply(){
     const res = await fetch(SQ_REPLY_URL, {
       method:'POST',
       headers:{ 'Content-Type':'application/json', 'X-SQ-Token':SQ_REPLY_TOKEN },
-      body: JSON.stringify({ name:(ROLE==='child'?CHILD_ID:''), round:thisRound, remainingDays, study, exercise, pool, game, typing, lessons, reflection:text })
+      body: JSON.stringify({ name:(ROLE==='child'?CHILD_ID:''), round:thisRound, only:(onlyOverall?'overall':'all'),
+        remainingDays, study, exercise, pool, game, anime, typing, lessons, reflection:text })
     });
     let d = {}; try{ d = await res.json(); }catch(e){}
     if(!res.ok){ throw new Error(((d && d.error) || ('エラー ' + res.status)) + ((d && d.detail) ? (' / ' + d.detail) : '')); }
     const c = d.comments || { study:'', activity:'', overall:(d.reply||'') };
-    lastReply = c;
+    // 2回目は ふりかえり（所感）だけ 新しくして、勉強・かつどうは 1回目の ままに する
+    const merged = onlyOverall
+      ? { study:(c.study||prev.study||''), activity:(c.activity||prev.activity||''), overall:(c.overall||'') }
+      : c;
+    lastReply = merged;
     aiRound = thisRound;
-    showAiComments(c);
+    showAiComments(merged);
     // 空応答・切れで 何も出せないとき、無言で 消えないように 案内を出す
     const anyShown = ['aiStudy','aiActivity','refReplyBox'].some(id=>$('#'+id).style.display!=='none');
     if(!anyShown){
@@ -1605,7 +1660,7 @@ async function fetchReflectionReply(){
     }
   }catch(e){
     console.warn('[sqReply] AI呼び出し失敗:', e);
-    $('#aiStudy').style.display='none'; $('#aiActivity').style.display='none';
+    if(!onlyOverall){ $('#aiStudy').style.display='none'; $('#aiActivity').style.display='none'; }
     const ov=$('#refReplyBox'); ov.classList.remove('loading'); ov.classList.add('err'); ov.style.display='block';
     let msg = 'ごめんね、いま おへんじが もらえませんでした。すこし まってから、もう一ど おしてね。';
     if(ROLE==='parent'){ msg += '\n\n[技術情報（親のみ表示）] ' + (e&&e.message ? e.message : String(e)); }
@@ -1630,7 +1685,7 @@ function renderSummary(){
   const axes=[
     {key:'kanji',label:'漢字',lag:true},
     {key:'math',label:'算数'},
-    {key:'game',label:'ゲーム'},
+    {key:'game',label:'ゲーム/アニメ'},
     {key:'exercise',label:'運動'},
     {key:'narai',label:'習い事'},
     {key:'typing',label:'タイピング'}
@@ -1681,16 +1736,17 @@ function renderSummary(){
     wireStatus(); drawRadar(stats); animateStatus(stats); return;
   }
 
-  // ---- 集計（運動・ゲームは配列、プールは分） ----
-  let totalPages=0,bestType=0,exDays=0,gameMin=0,exMin=0,poolTotal=0,refChars=0;
-  const dayPages=[],dayType=[],dayExMin=[],dayGameMin=[],dayPool=[]; let cum=0; const cumPages=[];
+  // ---- 集計（運動・ゲーム・アニメは配列、プールは分） ----
+  let totalPages=0,bestType=0,exDays=0,gameMin=0,animeMin=0,exMin=0,poolTotal=0,refChars=0;
+  const dayPages=[],dayType=[],dayExMin=[],dayGameMin=[],dayAnimeMin=[],dayPool=[]; let cum=0; const cumPages=[];
   dates.forEach(d=>{
     const r=REPORTS[d];
     const p=(r.study||[]).reduce((s,x)=>s+(Number(x.pages)||0),0);
     totalPages+=p; cum+=p; dayPages.push(p); cumPages.push(cum);
     const ts=Number(r.typing?.score)||0; if(ts>bestType) bestType=ts; dayType.push(ts||null);
     const em=exArr(r).reduce((s,x)=>s+(Number(x.minutes)||0),0); exMin+=em; dayExMin.push(em);
-    const gm=gameArr(r).reduce((s,x)=>s+(Number(x.minutes)||0),0); gameMin+=gm; dayGameMin.push(gm);
+    const gm=sumMin(playArr(r));  gameMin+=gm;   dayGameMin.push(gm);
+    const am=sumMin(animeArr(r)); animeMin+=am;  dayAnimeMin.push(am);
     const pm=poolMin(r); poolTotal+=pm; dayPool.push(pm);
     if(exArr(r).length||pm) exDays++;
     refChars+=(r.reflection||'').length;
@@ -1701,7 +1757,8 @@ function renderSummary(){
       <div class="stat"><div class="lbl">タイピング さいこう</div><div class="num">${bestType||'-'}</div></div>
       <div class="stat"><div class="lbl">うんどうした 日</div><div class="num">${exDays}<span class="unit">日</span></div></div>
       <div class="stat"><div class="lbl">プール 合計</div><div class="num">${poolTotal}<span class="unit">分</span></div></div>
-      <div class="stat"><div class="lbl">ゲーム 合計</div><div class="num">${gameMin}<span class="unit">分</span></div></div>
+      <div class="stat"><div class="lbl">🎮 ゲーム 合計</div><div class="num">${gameMin}<span class="unit">分</span></div></div>
+      <div class="stat"><div class="lbl">📺 アニメ 合計</div><div class="num">${animeMin}<span class="unit">分</span></div></div>
       <div class="stat"><div class="lbl">書いた文字</div><div class="num">${refChars}<span class="unit">字</span></div></div>
     </div>`;
 
@@ -1719,7 +1776,7 @@ function renderSummary(){
     <div class="panel"><h2><span class="tag">02</span>タイピング スコアの せいちょう</h2>
       <div class="chart-wrap"><canvas id="c_type"></canvas></div>
       <div class="small-note">おなじ じょうけんで やると、じぶんの せいちょうが よくわかるよ。</div></div>
-    <div class="panel"><h2><span class="tag">03</span>うんどう・プール・ゲームの じかん（分）</h2>
+    <div class="panel"><h2><span class="tag">03</span>うんどう・プール・ゲーム・アニメの じかん（分）</h2>
       <div class="chart-wrap"><canvas id="c_time"></canvas></div></div>
   `;
   wireStatus();
@@ -1746,7 +1803,8 @@ function renderSummary(){
   charts.push(new Chart($('#c_time'),{type:'line',data:{labels,datasets:[
     {label:'うんどう(分)',data:dayExMin,borderColor:'#7af5c8',tension:.35,pointRadius:2},
     {label:'プール(分)',data:dayPool,borderColor:'#00e5ff',tension:.35,pointRadius:2},
-    {label:'ゲーム(分)',data:dayGameMin,borderColor:'#ff9f43',tension:.35,pointRadius:2}
+    {label:'🎮ゲーム(分)',data:dayGameMin,borderColor:'#ff9f43',tension:.35,pointRadius:2},
+    {label:'📺アニメ(分)',data:dayAnimeMin,borderColor:'#b388ff',tension:.35,pointRadius:2}
   ]},options:baseOpts()}));
 }
 
@@ -1755,7 +1813,7 @@ function drawRadar(stats){
   if(typeof Chart==='undefined') return;
   const cv=$('#c_radar'); if(!cv) return;
   charts.push(new Chart(cv,{type:'radar',
-    data:{labels:['漢字','算数','ゲーム','運動','習い事','タイピング'],
+    data:{labels:['漢字','算数','ゲーム/アニメ','運動','習い事','タイピング'],
       datasets:[{data:[stats.kanji,stats.math,stats.game,stats.exercise,stats.narai,stats.typing],
         backgroundColor:'rgba(0,229,255,.18)',borderColor:'#00e5ff',borderWidth:2,
         pointBackgroundColor:'#7af5c8',pointBorderColor:'#7af5c8',pointRadius:3}]},
@@ -1938,7 +1996,7 @@ function countUpNode(node,to,dur){
 }
 function readStatSnap(){ try{ return JSON.parse(LS.get('sq_stat_prev')||'null'); }catch(e){ return null; } }
 function writeStatSnap(o){ try{ LS.set('sq_stat_prev', JSON.stringify(o)); }catch(e){} }
-function jpAxis(k){ return {kanji:'かんじ',math:'さんすう',game:'ゲーム',exercise:'うんどう',narai:'ならいごと',typing:'タイピング'}[k]||k; }
+function jpAxis(k){ return {kanji:'かんじ',math:'さんすう',game:'ゲーム/アニメ',exercise:'うんどう',narai:'ならいごと',typing:'タイピング'}[k]||k; }
 function animateStatus(stats){
   const reduce=prefersReduce();
   // 数字（Lv・総合Lv）
