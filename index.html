@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="app-version" content="v1.7.5" />
+<meta name="app-version" content="v1.7.6" />
 <title>SUMMER QUEST</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -620,7 +620,7 @@ const SQ_REPLY_TOKEN = 'Py0AUy_8K4JIXnJ0lOaHrBIu8VHuNHgc'; // 合言葉（公開
 let lastReply = '';  // いま画面に出ている AIコメント（保存時に一緒に記録）
 let aiRound = 0;     // その日にAIを叩いた回数（1日2回まで）
 const PARENT_PW = '0612';         // 親アカ：IDなし・パスワードのみ（設定はこちらだけ）
-const APP_VERSION = 'v1.7.5';       // バージョン表記（更新時はここと head の meta を上げる）
+const APP_VERSION = 'v1.7.6';       // バージョン表記（更新時はここと head の meta を上げる）
 const PAGE_OPTIONS = 60;      // ページ数プルダウン 0〜60
 const MIN_OPTIONS = [0,5,10,15,20,30,45,60,90,120,150,180]; // 時間(分)プルダウン
 
@@ -774,6 +774,16 @@ const Store = {
     this.ready = true;
     return this.mode;
   },
+  /* --- 消した日づけの「けしたよ印（tombstone）」-------------------------
+     消したのに 復活する バグ対策。
+     ① 端末側：sq_deleted に 消した日づけを のこす → 取り残し同期で 再アップしない
+     ② クラウド側：ドキュメントを 消すのでは なく {_deleted:true} を 置く
+        → 別の端末に 古いデータが のこっていても 復活しない            */
+  _tombs(){ try{ return JSON.parse(LS.get('sq_deleted')||'{}'); }catch(e){ return {}; } },
+  _setTombs(o){ LS.set('sq_deleted',JSON.stringify(o)); },
+  _addTomb(date){ const t=this._tombs(); t[date]=new Date().toISOString(); this._setTombs(t); },
+  _clearTomb(date){ const t=this._tombs(); if(date in t){ delete t[date]; this._setTombs(t); } },
+
   async getAll(){
     if(this.mode==='firebase'){
       try{
@@ -781,17 +791,36 @@ const Store = {
         const snap = await withTimeout(getDocs(collection(this.fdb,'reports')), 8000);
         const cloud={}; snap.forEach(d=>cloud[d.id]=d.data());
         const local=this._localAll();
+        const tombs=this._tombs();
+        // クラウドの「けしたよ印」は この端末にも おぼえさせる（他端末で 消したぶん）
+        for(const _d in cloud){
+          if(cloud[_d] && cloud[_d]._deleted && !(_d in tombs)){ tombs[_d]=cloud[_d].deletedAt||new Date().toISOString(); }
+        }
+        this._setTombs(tombs);
         // ★取り残し自動同期：ローカルにあってクラウドに無い日付だけ 裏でアップロード（既存クラウドは絶対に上書きしない）
+        //   ただし 消した日づけは ぜったいに アップしない（＝復活させない）
         for(const _d in local){
-          if(!(_d in cloud)){
+          if(!(_d in cloud) && !(_d in tombs)){
             try{ withTimeout(setDoc(doc(this.fdb,'reports',_d), local[_d]), 8000)
                   .then(()=>{ this.cloudOk=true; })
                   .catch(e=>console.warn('取り残しの同期はあとで再試行',e)); }
             catch(e){ console.warn(e); }
           }
         }
+        // 消したのに クラウドへ 届いていない ぶんは ここで 送りなおす
+        for(const _d in tombs){
+          if(!cloud[_d] || !cloud[_d]._deleted){
+            try{ withTimeout(setDoc(doc(this.fdb,'reports',_d), {date:_d,_deleted:true,deletedAt:tombs[_d]}), 8000)
+                  .catch(e=>console.warn('削除の同期はあとで再試行',e)); }
+            catch(e){ console.warn(e); }
+          }
+        }
         // クラウド優先で端末の内容とあわせる（未アップ分も消えない）
         const merged=Object.assign({}, local, cloud);
+        // 消した日づけは 表示にも 端末保存にも のこさない
+        for(const k of Object.keys(merged)){
+          if((merged[k] && merged[k]._deleted) || (k in tombs)) delete merged[k];
+        }
         LS.set('sq_reports',JSON.stringify(merged));
         this.cloudOk=true;
         return merged;
@@ -799,9 +828,15 @@ const Store = {
     }
     return this._localAll();
   },
-  _localAll(){ try{ return JSON.parse(LS.get('sq_reports')||'{}'); }catch(e){ return {}; } },
+  _localAll(){
+    let all={}; try{ all=JSON.parse(LS.get('sq_reports')||'{}'); }catch(e){ return {}; }
+    const tombs=this._tombs();
+    for(const k of Object.keys(all)){ if((all[k]&&all[k]._deleted) || (k in tombs)) delete all[k]; }
+    return all;
+  },
   async get(date){ const all=await this.getAll(); return all[date]||null; },
   async save(date,data){
+    this._clearTomb(date);   // もう一度 きろくしたら「けしたよ印」は とりけす
     // ① まず端末に即保存（ぜったいに失敗しない・固まらない）
     const all=this._localAll(); all[date]=data; LS.set('sq_reports',JSON.stringify(all));
     // ② クラウドは裏で同期（待たないので画面が止まらない）
@@ -816,13 +851,20 @@ const Store = {
     return true;
   },
   async remove(date){
+    this._addTomb(date);     // ★先に「けしたよ印」を つける（復活ふせぎ）
     const all=this._localAll(); delete all[date]; LS.set('sq_reports',JSON.stringify(all));
     if(this.mode==='firebase'){
-      try{ const {doc,deleteDoc}=this.fns; withTimeout(deleteDoc(doc(this.fdb,'reports',date)),8000).catch(e=>console.warn(e)); }catch(e){console.warn(e);}
+      // ドキュメントを 消すのでは なく「けしたよ印」を 置く（他端末からの 復活を ふせぐ）
+      try{ const {doc,setDoc}=this.fns;
+        withTimeout(setDoc(doc(this.fdb,'reports',date), {date,_deleted:true,deletedAt:new Date().toISOString()}),8000)
+          .then(()=>{this.cloudOk=true;})
+          .catch(e=>{this.cloudOk=false; console.warn('削除の同期はあとで再試行',e);});
+      }catch(e){console.warn(e);}
     }
     return true;
   },
   async importAll(obj){
+    for(const d in obj) this._clearTomb(d);   // よみこんだ日づけは「けしたよ印」を とりけす
     if(this.mode==='firebase'){
       const {doc,setDoc}=this.fns;
       for(const [d,v] of Object.entries(obj)){ try{await setDoc(doc(this.fdb,'reports',d),v);}catch(e){console.warn(e);} }
