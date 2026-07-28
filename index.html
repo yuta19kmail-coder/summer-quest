@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="app-version" content="v1.7.8" />
+<meta name="app-version" content="v1.7.9" />
 <title>SUMMER QUEST</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -255,8 +255,22 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .photo-frame{aspect-ratio:4/3;border:1px solid var(--line);border-radius:16px;overflow:hidden;position:relative;background:#070c16;display:grid;place-items:center}
 .photo-frame img{width:100%;height:100%;object-fit:cover}
 .photo-frame .ph-empty{color:var(--silver-dim);font-size:13px;text-align:center;padding:18px;line-height:1.8}
-.photo-actions{display:flex;gap:10px;margin-top:12px}
-.photo-actions .btn.small{flex:1}
+.photo-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.photo-actions .btn.small{flex:1 1 120px;min-width:104px}
+/* カメラ（アバター撮影） */
+.cam-modal{position:fixed;inset:0;z-index:60;background:rgba(2,4,10,.88);backdrop-filter:blur(6px);
+  display:grid;place-items:center;padding:18px}
+.cam-box{width:min(460px,100%);background:linear-gradient(180deg,rgba(18,24,38,.98),rgba(8,12,22,.98));
+  border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.cam-head{font-family:Orbitron;font-size:15px;color:var(--silver-bright);letter-spacing:1px;margin-bottom:12px;text-align:center}
+.cam-stage{position:relative;aspect-ratio:4/3;border-radius:16px;overflow:hidden;background:#04070e;border:1px solid var(--line)}
+.cam-stage video{width:100%;height:100%;object-fit:cover;display:block}
+.cam-guide{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:58%;aspect-ratio:1/1;
+  border:2px dashed rgba(0,229,255,.55);border-radius:50%;pointer-events:none;box-shadow:0 0 24px rgba(0,229,255,.18) inset}
+.cam-actions{display:flex;gap:10px;align-items:center;margin-top:14px}
+.cam-actions .btn{flex:2}
+.cam-actions .btn.small{flex:1 1 0;padding:13px 6px;font-size:13px;letter-spacing:0;white-space:nowrap}
+.cam-actions .btn:not(.small){flex:1.5 1 0}
 .stat-bars{margin-top:6px}
 .sbar{margin-bottom:14px}
 .sbar .lab{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;color:var(--silver)}
@@ -609,6 +623,23 @@ input:focus,textarea:focus,select:focus{background:#0a1120;box-shadow:0 0 0 1px 
   </div>
 </div>
 
+<!-- カメラ（アバターを その場で とる） -->
+<div id="camModal" class="cam-modal hidden">
+  <div class="cam-box">
+    <div class="cam-head">📷 しゃしんを とろう</div>
+    <div class="cam-stage">
+      <video id="camVideo" playsinline autoplay muted></video>
+      <div class="cam-guide"></div>
+    </div>
+    <div class="cam-actions">
+      <button class="btn ghost small" id="camSwitch" type="button">🔄 切りかえ</button>
+      <button class="btn" id="camShot" type="button">📸 とる！</button>
+      <button class="btn ghost small" id="camClose" type="button">やめる</button>
+    </div>
+    <div class="small-note" id="camNote">まるの 中に 顔が 入るように してね。</div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -627,7 +658,7 @@ const SQ_REPLY_TOKEN = 'Py0AUy_8K4JIXnJ0lOaHrBIu8VHuNHgc'; // 合言葉（公開
 let lastReply = '';  // いま画面に出ている AIコメント（保存時に一緒に記録）
 let aiRound = 0;     // その日にAIを叩いた回数（1日2回まで）
 const PARENT_PW = '0612';         // 親アカ：IDなし・パスワードのみ（設定はこちらだけ）
-const APP_VERSION = 'v1.7.8';       // バージョン表記（更新時はここと head の meta を上げる）
+const APP_VERSION = 'v1.7.9';       // バージョン表記（更新時はここと head の meta を上げる）
 const PAGE_OPTIONS = 60;      // ページ数プルダウン 0〜60
 const MIN_OPTIONS = [0,5,10,15,20,30,45,60,90,120,150,180]; // 時間(分)プルダウン
 
@@ -1135,6 +1166,7 @@ async function refresh(){
    ビュー切替
    ===================================================================== */
 function switchView(v){
+  if(typeof closeCamera==='function') closeCamera();   // 画面を かえたら カメラは 止める
   if(v==='settings' && ROLE!=='parent') v='home';  // 子アカは設定に入れない
   ['home','report','summary','settings'].forEach(x=>{
     $('#view-'+x).classList.toggle('hidden', x!==v);
@@ -1704,11 +1736,15 @@ function renderSummary(){
   const photoHtml = META.photo
     ? `<div class="photo-frame"><img src="${META.photo}" alt="プロフィール画像"></div>
        <div class="photo-actions">
-         <button class="btn ghost small" id="btnPhoto">📷 かえる</button>
+         <button class="btn ghost small" id="btnPhotoCam">📷 とりなおす</button>
+         <button class="btn ghost small" id="btnPhoto">🖼️ ファイル</button>
          <button class="btn ghost small" id="btnPhotoDel">けす</button>
        </div>`
     : `<div class="photo-frame"><div class="ph-empty">📷<br>プロフィール画像（アバター）を<br>入れてみよう。<br><span style="opacity:.7">（自分の 顔や すきな もの など）</span></div></div>
-       <div class="photo-actions"><button class="btn ghost small" id="btnPhoto">📷 アバターを えらぶ</button></div>`;
+       <div class="photo-actions">
+         <button class="btn ghost small" id="btnPhotoCam">📷 カメラで とる</button>
+         <button class="btn ghost small" id="btnPhoto">🖼️ ファイルから えらぶ</button>
+       </div>`;
   const ov=stats.overall||{lv:0,exp:0};
   const oc=stats.condOverall||0;
   const lvlheadHtml=`
@@ -1725,7 +1761,8 @@ function renderSummary(){
       ${lvlheadHtml}
       <div class="status-grid">
         <div><div class="radar-wrap"><canvas id="c_radar"></canvas></div></div>
-        <div>${photoHtml}<input type="file" id="photoInput" accept="image/*" class="hidden"/></div>
+        <div>${photoHtml}<input type="file" id="photoInput" accept="image/*" class="hidden"/>
+          <input type="file" id="photoCam" accept="image/*" capture="user" class="hidden"/></div>
       </div>
       <div class="stat-bars">${barsHtml}</div>
     </div>`;
@@ -1831,9 +1868,76 @@ function drawRadar(stats){
 function wireStatus(){
   const input=$('#photoInput'); if(!input) return;
   const pick=$('#btnPhoto'); if(pick) pick.onclick=()=>input.click();
+  const cam=$('#btnPhotoCam'); if(cam) cam.onclick=openCamera;
   const del=$('#btnPhotoDel'); if(del) del.onclick=async()=>{ delete META.photo; await Store.setMeta(META); updateChipAvatar(); renderSummary(); toast('アバターを けしました'); };
-  input.onchange=e=>{ const f=e.target.files[0]; if(f) handlePhoto(f); };
+  input.onchange=e=>{ const f=e.target.files[0]; if(f) handlePhoto(f); e.target.value=''; };
+  const ci=$('#photoCam'); if(ci) ci.onchange=e=>{ const f=e.target.files[0]; if(f) handlePhoto(f); e.target.value=''; };
+  // カメラ画面の ボタン（1回 つないでおけば OK）
+  const shot=$('#camShot'), sw=$('#camSwitch'), cl=$('#camClose');
+  if(shot) shot.onclick=shootCamera;
+  if(cl)   cl.onclick=closeCamera;
+  if(sw)   sw.onclick=async()=>{ camFacing=(camFacing==='user')?'environment':'user';
+    try{ await startCam(); }catch(e){ toast('この カメラは つかえません'); camFacing=(camFacing==='user')?'environment':'user'; try{await startCam();}catch(_){ closeCamera(); } } };
 }
+
+/* ---- カメラで アバターを とる ---------------------------------------
+   ・パソコン／スマホの カメラを その場で ひらいて 撮る（getUserMedia）
+   ・つかえない ときは スマホの カメラアプリ、それも だめなら ファイル選択に にげる
+   ・カメラは https（GitHub Pages）か localhost でしか うごかない（ブラウザの きまり） */
+let camStream=null, camFacing='user';
+function camFallback(){
+  const ci=$('#photoCam'), input=$('#photoInput');
+  if(ci) ci.click(); else if(input) input.click();
+}
+async function startCam(){
+  stopCam();
+  const video=$('#camVideo');
+  camStream=await navigator.mediaDevices.getUserMedia({
+    video:{ facingMode:camFacing, width:{ideal:1280}, height:{ideal:1280} }, audio:false });
+  video.srcObject=camStream;
+  video.style.transform=(camFacing==='user')?'scaleX(-1)':'none';   // 自分どり は 鏡のように 見せる
+  try{ await video.play(); }catch(e){}
+}
+function stopCam(){ if(camStream){ camStream.getTracks().forEach(t=>{try{t.stop()}catch(e){}}); camStream=null; }
+  const v=$('#camVideo'); if(v) v.srcObject=null; }
+function closeCamera(){ stopCam(); const m=$('#camModal'); if(m) m.classList.add('hidden'); }
+async function openCamera(){
+  const modal=$('#camModal');
+  if(!modal || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ camFallback(); return; }
+  modal.classList.remove('hidden');
+  const note=$('#camNote'); if(note) note.textContent='カメラを じゅんびしています…';
+  try{
+    await startCam();
+    if(note) note.textContent='まるの 中に 顔が 入るように してね。';
+  }catch(e){
+    console.warn('カメラを ひらけませんでした', e);
+    closeCamera();
+    const denied=(e&&(e.name==='NotAllowedError'||e.name==='SecurityError'));
+    toast(denied?'カメラの きょかが ひつようです':'カメラが つかえないので ファイルから えらんでね');
+    camFallback();
+  }
+}
+async function shootCamera(){
+  const video=$('#camVideo');
+  const vw=video.videoWidth, vh=video.videoHeight;
+  if(!vw||!vh){ toast('もう ちょっと まってね'); return; }
+  // アバター枠（よこ4：たて3）に あわせて まん中を きりぬく＝見えている とおりに のこる
+  const AR=4/3;
+  let sw=vw, sh=vh;
+  if(vw/vh > AR) sw=Math.round(vh*AR); else sh=Math.round(vw/AR);
+  const sx=(vw-sw)/2, sy=(vh-sh)/2, ow=960, oh=720;
+  const c=document.createElement('canvas'); c.width=ow; c.height=oh;
+  const ctx=c.getContext('2d');
+  if(camFacing==='user'){ ctx.translate(ow,0); ctx.scale(-1,1); }  // 見たままの 向きで のこす
+  ctx.drawImage(video, sx,sy,sw,sh, 0,0,ow,oh);
+  let url; try{ url=c.toDataURL('image/jpeg',0.8); }catch(e){ toast('しゃしんを 作れませんでした'); return; }
+  closeCamera();
+  await savePhotoSrc(url);
+}
+async function savePhotoSrc(url){
+  META.photo=url; await Store.setMeta(META); updateChipAvatar(); renderSummary(); toast('アバターを 保存しました');
+}
+
 function handlePhoto(file){
   const reader=new FileReader();
   reader.onload=ev=>{
@@ -1845,7 +1949,7 @@ function handlePhoto(file){
       const c=document.createElement('canvas'); c.width=w; c.height=h;
       c.getContext('2d').drawImage(img,0,0,w,h);
       let url; try{ url=c.toDataURL('image/jpeg',0.72); }catch(err){ url=ev.target.result; }
-      META.photo=url; await Store.setMeta(META); updateChipAvatar(); renderSummary(); toast('アバターを 保存しました');
+      await savePhotoSrc(url);
     };
     img.src=ev.target.result;
   };
