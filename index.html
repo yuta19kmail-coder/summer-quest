@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="app-version" content="v1.7.9" />
+<meta name="app-version" content="v1.8.0" />
 <title>SUMMER QUEST</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -384,8 +384,9 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .study-row .s-unit{flex:0 0 auto;font-size:14px;color:var(--silver-dim);min-width:16px}
 .study-row .s-unit-in{flex:1 1 80px;min-width:64px}
 .study-row .g-kind{flex:0 0 104px;width:104px;min-width:104px;padding-left:10px;padding-right:6px}
-.study-row .g-name{flex:1 1 90px;min-width:78px}
-.study-row .g-min{flex:0 0 86px;width:86px;min-width:86px}
+.study-row .g-name{flex:1 1 90px;min-width:70px}
+/* 「2時間半」まで はみ出さずに 入るように 少し広げた（v1.8.0） */
+.study-row .g-min{flex:0 0 104px;width:104px;min-width:104px}
 /* せまい画面では 2段に おれるので、1行が どこまでか わかるように わくを つける */
 @media(max-width:400px){
   .study-row.g-row{padding:10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.015)}
@@ -658,9 +659,11 @@ const SQ_REPLY_TOKEN = 'Py0AUy_8K4JIXnJ0lOaHrBIu8VHuNHgc'; // 合言葉（公開
 let lastReply = '';  // いま画面に出ている AIコメント（保存時に一緒に記録）
 let aiRound = 0;     // その日にAIを叩いた回数（1日2回まで）
 const PARENT_PW = '0612';         // 親アカ：IDなし・パスワードのみ（設定はこちらだけ）
-const APP_VERSION = 'v1.7.9';       // バージョン表記（更新時はここと head の meta を上げる）
+const APP_VERSION = 'v1.8.0';       // バージョン表記（更新時はここと head の meta を上げる）
 const PAGE_OPTIONS = 60;      // ページ数プルダウン 0〜60
-const MIN_OPTIONS = [0,5,10,15,20,30,45,60,90,120,150,180]; // 時間(分)プルダウン
+const MIN_OPTIONS = [0,5,10,15,20,30,45,60,90,120,150,180]; // 時間(分)プルダウン（うんどう用）
+// ゲーム・アニメ(TV)用：15分きざみ → 1時間からは30分きざみで 6時間まで
+const GAME_MIN_OPTIONS = [15,30,45,60,90,120,150,180,210,240,270,300,330,360];
 
 /* ---------- TOP：やること / 気を付けること ---------- */
 /* やること（もくひょう）の 既定。設定画面で 編集できる（読書は 外した）。
@@ -1342,6 +1345,23 @@ function minOptions(sel){
   for(const m of MIN_OPTIONS) o+=`<option value="${m}" ${String(sel)===String(m)?'selected':''}>${m}分</option>`;
   return o;
 }
+/* 60分以上は「1時間」「1時間半」と読みやすく出す */
+function minLabel(m){
+  m=Number(m);
+  if(m<60) return m+'分';
+  const h=Math.floor(m/60), r=m%60;
+  return h+'時間'+(r===30?'半':(r?r+'分':''));
+}
+/* ゲーム・アニメ(TV)用のプルダウン。
+   むかしの記録が 一覧に無い数字（5分・20分など）でも 消えないように、その値だけ足して出す */
+function gameMinOptions(sel){
+  let o='<option value="">-</option>';
+  const list=GAME_MIN_OPTIONS.slice();
+  const n=Number(sel);
+  if(sel!=='' && sel!=null && !isNaN(n) && list.indexOf(n)<0){ list.push(n); list.sort((a,b)=>a-b); }
+  for(const m of list) o+=`<option value="${m}" ${String(sel)===String(m)?'selected':''}>${minLabel(m)}</option>`;
+  return o;
+}
 
 function renderReport(){
   const el=$('#view-report');
@@ -1494,7 +1514,7 @@ function renderReport(){
         <option value="anime" ${kind==='anime'?'selected':''}>📺アニメ</option>
       </select>`
       +`<input class="g-name" type="text" lang="ja" placeholder="${GAME_PH[kind]}" value="${esc(v.name)}">`
-      +`<select class="g-min">${minOptions(v.minutes)}</select>`
+      +`<select class="g-min">${gameMinOptions(v.minutes)}</select>`
       +`<button class="del">✕</button>`;
     const ks=row.querySelector('.g-kind'), ni=row.querySelector('.g-name');
     ks.onchange=()=>{ ni.placeholder=GAME_PH[ks.value]||''; };
