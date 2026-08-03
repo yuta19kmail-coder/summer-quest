@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="app-version" content="v1.8.0" />
+<meta name="app-version" content="v1.9.0" />
 <title>SUMMER QUEST</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -537,6 +537,9 @@ input:focus,textarea:focus,select:focus{background:#0a1120;box-shadow:0 0 0 1px 
 .study-row.added{animation:rowIn .55s cubic-bezier(.2,.8,.2,1) both}
 @keyframes rowIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
 .study-row.removing{animation:rowOut .42s ease forwards}
+/* v1.9.0：保存できない行を 光らせて 教える（消さない） */
+.study-row.needfix{outline:2px solid var(--warn);outline-offset:4px;border-radius:12px;animation:shakeRow .45s ease}
+@keyframes shakeRow{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}60%{transform:translateX(6px)}}
 @keyframes rowOut{to{opacity:0;transform:translateX(24px);max-height:0;margin:0;padding:0}}
 .del{transition:transform .15s,background .15s}
 .del:hover{background:rgba(255,59,92,.18)!important;transform:rotate(90deg)}
@@ -659,7 +662,7 @@ const SQ_REPLY_TOKEN = 'Py0AUy_8K4JIXnJ0lOaHrBIu8VHuNHgc'; // 合言葉（公開
 let lastReply = '';  // いま画面に出ている AIコメント（保存時に一緒に記録）
 let aiRound = 0;     // その日にAIを叩いた回数（1日2回まで）
 const PARENT_PW = '0612';         // 親アカ：IDなし・パスワードのみ（設定はこちらだけ）
-const APP_VERSION = 'v1.8.0';       // バージョン表記（更新時はここと head の meta を上げる）
+const APP_VERSION = 'v1.9.0';       // バージョン表記（更新時はここと head の meta を上げる）
 const PAGE_OPTIONS = 60;      // ページ数プルダウン 0〜60
 const MIN_OPTIONS = [0,5,10,15,20,30,45,60,90,120,150,180]; // 時間(分)プルダウン（うんどう用）
 // ゲーム・アニメ(TV)用：15分きざみ → 1時間からは30分きざみで 6時間まで
@@ -1166,9 +1169,97 @@ async function refresh(){
 }
 
 /* =====================================================================
+   v1.9.0：下書き（未保存の 書きかけ）を 端末に のこす
+   ---------------------------------------------------------------------
+   ・クラウド（Firestore）は いっさい 触らない。localStorage だけ。
+   ・キーは sq_draft_<YYYY-MM-DD>。保存に 成功したら 消す。
+   ===================================================================== */
+const DRAFT_KEY = d => 'sq_draft_' + d;
+let baseRaw = null;      // 日報を ひらいた ときの すがた（null＝未保存判定を しない）
+let draftT = null;
+let _formHooked = false;
+
+/* 画面の 入力を そのまま（行ごと）読む。保存用の readStudy などとは別物 */
+function readFormRaw(){
+  const v = el => el ? String(el.value) : '';
+  const q = sel => [...document.querySelectorAll(sel + ' .study-row')];
+  return {
+    study: q('#studyList').map(r=>({
+      sel:v(r.querySelector('.s-sel')), name:v(r.querySelector('.s-name')),
+      amt:v(r.querySelector('.s-amt')), unit:v(r.querySelector('.s-unit-in'))
+    })),
+    exercise: q('#exList').map(r=>({ name:v(r.querySelector('input')), min:v(r.querySelector('select')) })),
+    game: q('#gameList').map(r=>({
+      kind:v(r.querySelector('.g-kind')), name:v(r.querySelector('.g-name')), min:v(r.querySelector('.g-min'))
+    })),
+    pool:v($('#poolMin')), typeScore:v($('#typeScore')), typeMemo:v($('#typeMemo')),
+    narai:v($('#naraiText')), reflection:v($('#reflection'))
+  };
+}
+function rawEq(a,b){ try{ return JSON.stringify(a)===JSON.stringify(b); }catch(e){ return false; } }
+function rawEmpty(f){
+  if(!f) return true;
+  const some=(arr,keys)=>(arr||[]).some(o=>keys.some(k=>String(o[k]||'').trim()!==''));
+  return !( some(f.study,['sel','name','amt','unit'])
+         || some(f.exercise,['name','min'])
+         || some(f.game,['name','min'])
+         || [f.pool,f.typeScore,f.typeMemo,f.narai,f.reflection].some(x=>String(x||'').trim()!=='') );
+}
+function isDirty(){
+  if(!baseRaw) return false;
+  const rep=$('#view-report');
+  if(!rep || rep.classList.contains('hidden')) return false;
+  return !rawEq(readFormRaw(), baseRaw);
+}
+function saveDraft(){
+  if(!editingDate || !baseRaw) return;
+  const f=readFormRaw();
+  if(rawEq(f,baseRaw) || rawEmpty(f)){ LS.del(DRAFT_KEY(editingDate)); return; }
+  try{ LS.set(DRAFT_KEY(editingDate), JSON.stringify({ at:new Date().toISOString(), f })); }catch(e){}
+}
+function loadDraft(d){ try{ const t=LS.get(DRAFT_KEY(d)); return t?JSON.parse(t):null; }catch(e){ return null; } }
+function clearDraft(d){ LS.del(DRAFT_KEY(d)); }
+function draftWhen(iso){
+  try{ const t=new Date(iso), p=x=>String(x).padStart(2,'0');
+    return (t.getMonth()+1)+'月'+t.getDate()+'日 '+p(t.getHours())+':'+p(t.getMinutes()); }catch(e){ return ''; }
+}
+/* ふりかえりBOXを 中身に あわせて のばす（上の行が かくれて「消えた」に 見えるのを 防ぐ） */
+function autoGrow(t){
+  if(!t) return;
+  t.style.height='auto';
+  t.style.height=(t.scrollHeight+2)+'px';
+}
+/* 日報の 入力を 見はる（1回だけ しかけ"る） */
+function hookForm(){
+  if(_formHooked) return; _formHooked=true;
+  const rep=$('#view-report');
+  const onChange=e=>{
+    if(e && e.target && e.target.id==='reflection') autoGrow(e.target);
+    clearTimeout(draftT); draftT=setTimeout(saveDraft,400);
+  };
+  rep.addEventListener('input', onChange);
+  rep.addEventListener('change', onChange);
+  // タブが うらに まわる／閉じる ときは すぐ 書き出す（スマホで 落とされても のこる）
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden'){ clearTimeout(draftT); saveDraft(); } });
+  window.addEventListener('pagehide', ()=>{ clearTimeout(draftT); saveDraft(); });
+  window.addEventListener('beforeunload', e=>{
+    if(!isDirty()) return;
+    clearTimeout(draftT); saveDraft();
+    e.preventDefault(); e.returnValue='';
+  });
+}
+
+/* =====================================================================
    ビュー切替
    ===================================================================== */
 function switchView(v){
+  // v1.9.0：未保存のまま 日報から 出ようとしたら 止める
+  if(v!=='report' && isDirty()){
+    if(!window.confirm('まだ ほぞんして いません。\n\nこのまま 出ると、書いたことが 画面から 消えます。\n「キャンセル」を おして、💾 この日を きろくする！ を おそう。\n\nそれでも 出ますか？')){
+      return;
+    }
+    clearTimeout(draftT); saveDraft();   // 出るなら 書きかけを のこす
+  }
   if(typeof closeCamera==='function') closeCamera();   // 画面を かえたら カメラは 止める
   if(v==='settings' && ROLE!=='parent') v='home';  // 子アカは設定に入れない
   ['home','report','summary','settings'].forEach(x=>{
@@ -1544,10 +1635,56 @@ function renderReport(){
   $('#getReply').onclick = fetchReflectionReply;
   $('#getReply').disabled = false; $('#getReply').textContent = '🤖 AIに みてもらう';
   if($('#delReport')) $('#delReport').onclick=async()=>{
-    await Store.remove(editingDate); await refresh(); toast('きろくを けしたよ'); switchView('home');
+    await Store.remove(editingDate); clearDraft(editingDate); baseRaw=null;
+    await refresh(); toast('きろくを けしたよ'); switchView('home');
   };
   // 親アカ：日づけの しゅうせい
   if($('#moveDateBtn')) $('#moveDateBtn').onclick=()=>moveReportDate($('#moveDateInput').value);
+
+  // ---- v1.9.0：ふりかえりBOXを 中身に あわせて のばす ----
+  autoGrow($('#reflection'));
+
+  // ---- v1.9.0：書きかけ（下書き）を 画面に もどす ----
+  function applyRaw(f){
+    if(!f) return;
+    $('#studyList').innerHTML='';
+    ((f.study&&f.study.length)?f.study:[{sel:'',name:'',amt:'',unit:''}]).forEach(o=>{
+      const row=studyRow({name:'',pages:'',unit:''});
+      const sel=row.querySelector('.s-sel');
+      sel.value=o.sel||'';
+      row.querySelector('.s-name').value=o.name||'';
+      row.querySelector('.s-amt').value=o.amt||'';
+      row.querySelector('.s-unit-in').value=o.unit||'';
+      if(typeof sel.onchange==='function') sel.onchange();
+    });
+    $('#exList').innerHTML='';
+    ((f.exercise&&f.exercise.length)?f.exercise:[{name:'',min:''}]).forEach(o=>{
+      const row=addEx({ name:o.name||'', val:(o.min===''?'':Number(o.min)) });
+      const s=row.querySelector('select'); if(s && o.min!=='') s.value=o.min;
+    });
+    $('#gameList').innerHTML='';
+    ((f.game&&f.game.length)?f.game:[{kind:'game',name:'',minutes:''}]).forEach(o=>{
+      const row=gameRow({ kind:(o.kind==='anime'?'anime':'game'), name:o.name||'', minutes:(o.min===''?'':Number(o.min)) });
+      const s=row.querySelector('.g-min'); if(s && o.min!=='') s.value=o.min;
+    });
+    $('#poolMin').value=f.pool||'';
+    $('#typeScore').value=f.typeScore||'';
+    $('#typeMemo').value=f.typeMemo||'';
+    $('#naraiText').value=f.narai||'';
+    $('#reflection').value=f.reflection||'';
+    autoGrow($('#reflection'));
+  }
+  baseRaw = readFormRaw();                       // ここが「保存ずみ」の きじゅん
+  const _dr = loadDraft(editingDate);
+  if(_dr && _dr.f && !rawEq(_dr.f, baseRaw)){
+    if(window.confirm('この日の 書きかけが のこって います。\n（' + draftWhen(_dr.at) + ' に 書いたもの）\n\nつづきから もどしますか？\n「キャンセル」を おすと、書きかけは すてます。')){
+      applyRaw(_dr.f);
+      toast('📝 書きかけを もどしたよ');
+    } else {
+      clearDraft(editingDate);
+    }
+  }
+  hookForm();
   enterView(el);
 }
 
@@ -1572,6 +1709,7 @@ async function moveReportDate(newDate){
   });
   await Store.save(newDate,data);
   await Store.remove(oldDate);
+  clearDraft(oldDate); baseRaw=null;
   // TOPの「やること」チェック状態も いっしょに うつす（端末保存）
   try{
     const all=JSON.parse(LS.get('sq_todos')||'{}');
@@ -1601,15 +1739,33 @@ async function saveReportForm(){
   })).filter(o=>o.name || o[key]!=='');
 
   // 勉強：やること選択 or その他 の行を読む（名前・数(pages)・単位）
-  const readStudy=()=>[...document.querySelectorAll('#studyList .study-row')].map(r=>{
+  // ★v1.9.0：名前が 空の行を だまって 捨てていた（＝書いた行が 消える）ので やめた。
+  //   数だけ 入っている行が あるときは 保存を 止めて、その行を 光らせて 教える。
+  const studyRows=[...document.querySelectorAll('#studyList .study-row')].map(r=>{
     const sel=r.querySelector('.s-sel')?r.querySelector('.s-sel').value:'';
     let name='', unit='';
     if(sel==='__other'){ name=r.querySelector('.s-name').value.trim(); unit=r.querySelector('.s-unit-in').value.trim(); }
     else if(sel!==''){ name=sel; const g=(CONFIG.goals||[]).find(x=>x.name===sel); unit=(g&&g.unit)?g.unit:''; }
     const amtRaw=r.querySelector('.s-amt').value;
     const pages = amtRaw===''?'':Number(amtRaw);
-    return {name, pages, unit};
-  }).filter(o=> o.name!=='');
+    return {name, pages, unit, sel, el:r};
+  });
+  const readStudy=()=>studyRows
+    .filter(o=> o.name!=='' || String(o.pages)!=='')
+    .map(({name,pages,unit})=>({name,pages,unit}));
+
+  // ★v1.9.0：名前の ない行を 見つけたら 保存を 止める（消さない）
+  const bad = studyRows.find(o=> o.name==='' && String(o.pages)!=='' );
+  if(bad){
+    bad.el.classList.add('needfix');
+    try{ bad.el.scrollIntoView({block:'center',behavior:'smooth'}); }catch(e){ bad.el.scrollIntoView(); }
+    const focusEl = bad.el.querySelector(bad.sel==='__other' ? '.s-name' : '.s-sel');
+    if(focusEl) try{ focusEl.focus(); }catch(e){}
+    toast(bad.sel==='__other' ? '📖 なまえを 書いてね（消さずに まってるよ）'
+                              : '📖 教科を えらんでね（消さずに まってるよ）');
+    setTimeout(()=>bad.el.classList.remove('needfix'), 2800);
+    return;
+  }
 
   const data={
     date:editingDate,
@@ -1624,6 +1780,8 @@ async function saveReportForm(){
     updatedAt:new Date().toISOString()
   };
   await Store.save(editingDate,data);
+  clearDraft(editingDate);   // 保存できたので 書きかけは もういらない
+  baseRaw=null;              // ここから先は「未保存」あつかいしない
   await refresh();
   toast('🎉 ミッション かんりょう！〇を ゲット！');
   switchView('home');
@@ -2193,16 +2351,58 @@ function celebrate(x,y){
     document.body.appendChild(s); setTimeout(()=>s.remove(),1500);
   }
 }
+/* v1.9.0：✕の 押しまちがいで 行が 消える事故を 防ぐ
+   ・中身が 入っている行は「けしますか？」と きく
+   ・消したあとも トーストの「↩ もどす」で 元の位置に 戻せる */
+let _undoRow=null;
+function rowHasContent(row){
+  return [...row.querySelectorAll('input,select')].some(el=>{
+    if(el.classList && el.classList.contains('g-kind')) return false;  // しゅるいは 最初から 入っている
+    return String(el.value||'').trim()!=='';
+  });
+}
 function removeRow(row,cont){
   if(cont.children.length<=1) return;
-  if(prefersReduce()){ row.remove(); return; }
-  row.classList.add('removing'); setTimeout(()=>row.remove(),420);
+  if(rowHasContent(row)){
+    if(!window.confirm('この行を けしますか？\n\n書いた ことは 消えます。')) return;
+  }
+  const idx=[...cont.children].indexOf(row);
+  const go=()=>{
+    row.classList.remove('removing');
+    row.remove();
+    _undoRow={row,cont,idx};
+    toastUndo('1行 けしたよ', ()=>{
+      if(!_undoRow) return;
+      const u=_undoRow; _undoRow=null;
+      if(u.idx>=0 && u.idx<u.cont.children.length) u.cont.insertBefore(u.row, u.cont.children[u.idx]);
+      else u.cont.appendChild(u.row);
+      if(typeof saveDraft==='function') saveDraft();
+      toast('↩ もどしたよ');
+    });
+    if(typeof saveDraft==='function') saveDraft();
+  };
+  if(prefersReduce()){ go(); return; }
+  row.classList.add('removing'); setTimeout(go,420);
 }
 function esc(s){ if(s===undefined||s===null) return ''; return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 let toastT;
 function toast(msg){
-  const t=$('#toast'); t.textContent=msg; t.classList.add('show');
+  const t=$('#toast'); t.textContent=msg; t.style.pointerEvents=''; t.classList.add('show');
   clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2200);
+}
+/* 「↩ もどす」つきトースト（v1.9.0） */
+function toastUndo(msg,fn){
+  const t=$('#toast');
+  t.textContent='';
+  const s=document.createElement('span'); s.textContent=msg; t.appendChild(s);
+  const b=document.createElement('button'); b.type='button'; b.textContent='↩ もどす';
+  b.style.cssText='margin-left:14px;background:rgba(4,18,26,.16);border:1px solid rgba(4,18,26,.5);'
+    +'color:#04121a;border-radius:9px;padding:7px 13px;font-size:13px;font-weight:900;cursor:pointer';
+  b.onclick=()=>{ t.classList.remove('show'); t.style.pointerEvents=''; fn(); };
+  t.appendChild(b);
+  t.style.pointerEvents='auto';
+  t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>{ t.classList.remove('show'); t.style.pointerEvents=''; },7000);
 }
 
 /* ---------- 起動 ---------- */
