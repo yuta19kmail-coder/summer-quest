@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="app-version" content="v1.9.0" />
+<meta name="app-version" content="v1.9.1" />
 <title>SUMMER QUEST</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -383,10 +383,21 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .study-row .s-amt{flex:1 1 70px;min-width:64px}
 .study-row .s-unit{flex:0 0 auto;font-size:14px;color:var(--silver-dim);min-width:16px}
 .study-row .s-unit-in{flex:1 1 80px;min-width:64px}
-.study-row .g-kind{flex:0 0 104px;width:104px;min-width:104px;padding-left:10px;padding-right:6px}
+/* 🔴 v1.9.1：▼の矢印は「右から16px・幅12px」の所に描かれるので、
+   右の余白(padding-right)をそこより小さくすると、文字と矢印がぶつかる。
+   しゅるい欄は 右6px しか空けていなかった＝「アニメ」と▼がくっついて見えていた。 */
+.study-row .g-kind{flex:0 0 116px;width:116px;min-width:116px;
+  padding-left:12px;padding-right:30px;background-position:right 12px center}
 .study-row .g-name{flex:1 1 90px;min-width:70px}
-/* 「2時間半」まで はみ出さずに 入るように 少し広げた（v1.8.0） */
-.study-row .g-min{flex:0 0 104px;width:104px;min-width:104px}
+/* 🔴 v1.9.1：「2時間半」の“半”が切れていたのを直した。
+   ------------------------------------------------------------
+   104px では足りていなかった。内わけ＝左の余白16 ＋ 右の余白40（▼の矢印ぶん）＋ わく2 で
+   **58px が余白**に取られ、文字に使えるのは 46px しか無い。「2時間半」は 54px 要る。
+   → 幅を広げ、さらに ▼ を少し内側へ寄せて右の余白を詰めた（文字に使える幅 76px）。
+   ⚠ 古い記録の「1時間40分」(71px) まで入る。ここを狭めると また切れる。
+   ⚠ 数字は 実測（画面の書体でどれだけの幅になるか）で決めている。font-size を変えたら測り直すこと。 */
+.study-row .g-min{flex:0 0 124px;width:124px;min-width:124px;
+  padding-left:14px;padding-right:32px;background-position:right 12px center}
 /* せまい画面では 2段に おれるので、1行が どこまでか わかるように わくを つける */
 @media(max-width:400px){
   .study-row.g-row{padding:10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.015)}
@@ -662,7 +673,7 @@ const SQ_REPLY_TOKEN = 'Py0AUy_8K4JIXnJ0lOaHrBIu8VHuNHgc'; // 合言葉（公開
 let lastReply = '';  // いま画面に出ている AIコメント（保存時に一緒に記録）
 let aiRound = 0;     // その日にAIを叩いた回数（1日2回まで）
 const PARENT_PW = '0612';         // 親アカ：IDなし・パスワードのみ（設定はこちらだけ）
-const APP_VERSION = 'v1.9.0';       // バージョン表記（更新時はここと head の meta を上げる）
+const APP_VERSION = 'v1.9.1';       // バージョン表記（更新時はここと head の meta を上げる）
 const PAGE_OPTIONS = 60;      // ページ数プルダウン 0〜60
 const MIN_OPTIONS = [0,5,10,15,20,30,45,60,90,120,150,180]; // 時間(分)プルダウン（うんどう用）
 // ゲーム・アニメ(TV)用：15分きざみ → 1時間からは30分きざみで 6時間まで
