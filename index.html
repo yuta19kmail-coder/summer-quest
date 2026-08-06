@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="app-version" content="v1.9.1" />
+<meta name="app-version" content="v1.10.0" />
 <title>SUMMER QUEST</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -368,6 +368,26 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .goal-item.is-clear .goal-line span{color:var(--silver-dim)}
 .goal-bar{height:8px;margin-top:9px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .goal-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));box-shadow:var(--glow);border-radius:6px;transition:width 1.7s cubic-bezier(.2,.8,.2,1)}
+/* v1.10.0：しゅくだい ぜんたいの すすみぐあい（「やること」の いちばん上に 出す）
+   総数（total）を 入れてある もくひょうだけを ぜんぶ 足して、1本の バーに する。
+   バーの上の たて線＝「日にちが どこまで すすんだか」。線より バーが 左だと おくれ気味。 */
+.goal-sum{padding:14px 14px 13px;margin:2px 0 14px;border:1px solid var(--line);border-radius:14px;
+  background:linear-gradient(160deg,rgba(0,229,255,.07),rgba(122,245,200,.03))}
+.goal-sum .gs-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.goal-sum .gs-lbl{font-size:13px;letter-spacing:1px;color:var(--silver-dim)}
+.goal-sum .gs-pct{font-family:'Orbitron';font-size:32px;font-weight:900;color:var(--accent);text-shadow:var(--glow);line-height:1}
+.goal-sum .gs-pct i{font-size:15px;font-style:normal;margin-left:2px}
+.goal-sum .gs-bar{position:relative;height:12px;margin-top:11px;overflow:visible}
+.goal-sum .gs-bar .goal-fill{border-radius:6px}
+.goal-sum .gs-mark{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--silver);opacity:.9;
+  transform:translateX(-1px);border-radius:2px;pointer-events:none}
+.goal-sum .gs-sub{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:9px;font-size:12.5px;color:var(--silver-dim)}
+.goal-sum .gs-sub b{color:var(--silver-bright);font-family:'Orbitron'}
+.goal-sum.behind{border-color:rgba(255,210,63,.5);background:linear-gradient(160deg,rgba(255,210,63,.10),rgba(255,210,63,.02))}
+.goal-sum.behind .gs-pct{color:var(--warn);text-shadow:none}
+.goal-sum .gs-warn{margin-top:9px;font-size:13px;line-height:1.6;color:var(--warn)}
+.goal-sum.is-clear{border-color:rgba(122,245,200,.5)}
+.goal-sum.is-clear .gs-pct{color:var(--accent2)}
 /* 設定：やること編集の1行 */
 .goal-edit{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;background:rgba(255,255,255,.015)}
 .goal-edit .ge-emoji{flex:0 0 auto;width:54px;text-align:center}
@@ -672,8 +692,10 @@ const SQ_REPLY_URL   = 'https://asia-northeast1-carflow-9d500.cloudfunctions.net
 const SQ_REPLY_TOKEN = 'Py0AUy_8K4JIXnJ0lOaHrBIu8VHuNHgc'; // 合言葉（公開クライアントに載る=完全秘密ではない。守りは$5上限＋CORS）
 let lastReply = '';  // いま画面に出ている AIコメント（保存時に一緒に記録）
 let aiRound = 0;     // その日にAIを叩いた回数（1日2回まで）
+/* v1.10.0：1回目に見せた ふりかえりの 文。2回目に「ほんとうに 書き直したか」を AIが 見るため */
+let aiPrevReflection = '';
 const PARENT_PW = '0612';         // 親アカ：IDなし・パスワードのみ（設定はこちらだけ）
-const APP_VERSION = 'v1.9.1';       // バージョン表記（更新時はここと head の meta を上げる）
+const APP_VERSION = 'v1.10.0';       // バージョン表記（更新時はここと head の meta を上げる）
 const PAGE_OPTIONS = 60;      // ページ数プルダウン 0〜60
 const MIN_OPTIONS = [0,5,10,15,20,30,45,60,90,120,150,180]; // 時間(分)プルダウン（うんどう用）
 // ゲーム・アニメ(TV)用：15分きざみ → 1時間からは30分きざみで 6時間まで
@@ -748,6 +770,62 @@ function readingIndexFor(dateStr){
 /* やること：日付ごとの チェック状態（ローカル保存・〇には影響しない） */
 function getTodoState(date){ try{ return (JSON.parse(LS.get('sq_todos')||'{}'))[date]||{}; }catch(e){ return {}; } }
 function setTodoState(date,obj){ let all={}; try{ all=JSON.parse(LS.get('sq_todos')||'{}'); }catch(e){} all[date]=obj; LS.set('sq_todos',JSON.stringify(all)); }
+
+/* v1.10.0：しゅくだい ぜんたいの すすみぐあい。
+   総数（total）を 入れてある もくひょうだけを 合わせて、%・合計・おわった数 を 返す。
+   ⚠ 1つの もくひょうで 総数を こえて やっても、その ぶんは 100%で 打ち止め
+     （こえた ぶんが ほかの おくれを かくして しまうため）。
+   総数つきの もくひょうが 1つも 無ければ null（＝まとめは 出さない）。 */
+function goalSummary(){
+  const goals=(CONFIG.goals||[]).filter(g=> g.total!=='' && g.total!=null && Number(g.total)>0);
+  if(!goals.length) return null;
+  let total=0, done=0, clear=0;
+  goals.forEach(g=>{ const t=Number(g.total), d=Math.min(goalProgress(g.name), t);
+    total+=t; done+=d; if(d>=t) clear++; });
+  if(total<=0) return null;
+  const pct=Math.min(100, Math.round(done/total*100));
+  /* 日にちが どこまで すすんだか（0〜100）。これより 10 以上 下なら「おくれ気味」 */
+  const days=Math.max(1, diffDays(CONFIG.vacEnd,CONFIG.vacStart)+1);
+  let passed=diffDays(todayStr(),CONFIG.vacStart)+1; passed=Math.max(0,Math.min(passed,days));
+  const dayPct=Math.round(passed/days*100);
+  return {pct, done, total, clear, count:goals.length, dayPct, behind:(pct < dayPct-10)};
+}
+
+/* v1.10.0：AIに わたす「きのうまでの ◯日ぶん」の ようす。
+   🔴 これが 無いと AIは その日の ぶんしか 見えないので、
+      「うんどう、ここ何日 して ないよね？」のような ちゃんとした 指てきが できない。
+   ⚠ 今日ぶんは ここに 入れない（まだ 保存されていない＝画面の 入力が 正）。 */
+function recentStats(baseDate, days){
+  days = days || 7;
+  const o = { days:days, recorded:0, studyDays:0, exerciseDays:0, poolDays:0,
+              studyAmount:0, exerciseMin:0, poolMin:0, gameMin:0, animeMin:0,
+              reflectionChars:0, noExerciseInARow:0, noStudyInARow:0 };
+  for(let i=1;i<=days;i++){
+    const r = REPORTS[ ymd(addDays(parseYmd(baseDate), -i)) ];
+    if(!r) continue;
+    o.recorded++;
+    const st=(r.study||[]).reduce((a,x)=>a+(Number(x.pages)||0),0);
+    const em=sumMin(exArr(r)), pm=poolMin(r);
+    o.studyAmount+=st; o.exerciseMin+=em; o.poolMin+=pm;
+    o.gameMin+=sumMin(playArr(r)); o.animeMin+=sumMin(animeArr(r));
+    o.reflectionChars+=(r.reflection||'').length;
+    if(st>0)o.studyDays++;
+    if(em>0)o.exerciseDays++;
+    if(pm>0)o.poolDays++;
+  }
+  /* 「記録は あるのに 0」が 何日 つづいているか（きのうから さかのぼる。記録の無い日で 打ち止め） */
+  let brokeE=false, brokeS=false;
+  for(let i=1;i<=days;i++){
+    const r = REPORTS[ ymd(addDays(parseYmd(baseDate), -i)) ];
+    if(!r) break;
+    const em=sumMin(exArr(r))+poolMin(r);
+    const st=(r.study||[]).reduce((a,x)=>a+(Number(x.pages)||0),0);
+    if(!brokeE){ if(em>0)brokeE=true; else o.noExerciseInARow++; }
+    if(!brokeS){ if(st>0)brokeS=true; else o.noStudyInARow++; }
+    if(brokeE&&brokeS) break;
+  }
+  return o;
+}
 
 /* やること：これまでの 合計＝勉強の記録から その名前の 数(pages)を ぜんぶ たす */
 function goalProgress(name){
@@ -1321,7 +1399,29 @@ async function renderHome(){
         <div class="goal-bar"><div class="goal-fill" style="width:${pct}%"></div></div>
       </div>`;
   }).join('');
-  const todoPanel = goals.length ? `<div class="panel"><h2><span class="tag">GOAL</span>やること（もくひょう）</h2>${goalRows}</div>` : '';
+  /* v1.10.0：しゅくだい ぜんたいの すすみぐあい。
+     🔴 総数（total）を 入れてある もくひょうだけを 合わせる。総数の ない ものは 何ページで
+        おわりか 分からないので、入れると % が おかしく なる。 */
+  const gs = goalSummary();
+  const sumHtml = gs ? `
+    <div class="goal-sum${gs.behind?' behind':''}${gs.pct>=100?' is-clear':''}">
+      <div class="gs-top">
+        <span class="gs-lbl">ぜんぶの すすみぐあい</span>
+        <span class="gs-pct">${gs.pct}<i>%</i></span>
+      </div>
+      <div class="goal-bar gs-bar">
+        <div class="goal-fill" style="width:${gs.pct}%"></div>
+        <span class="gs-mark" style="left:${Math.min(100,Math.max(0,pct))}%" title="日にちの すすみ"></span>
+      </div>
+      <div class="gs-sub">
+        <span>ぜんぶで <b>${gs.done}</b> / ${gs.total}　・　おわった もくひょう <b>${gs.clear}</b> / ${gs.count}</span>
+        <span>｜ 日にちは ${pct}%</span>
+      </div>
+      ${gs.pct>=100 ? `<div class="gs-warn" style="color:var(--accent2)">🏆 ぜんぶ おわった！ すごい！</div>`
+        : gs.behind ? `<div class="gs-warn">⚠️ 日にちより おくれ気味。このままだと さいごに 大へん。今日 すこし 多めに やろう。</div>`
+        : ''}
+    </div>` : '';
+  const todoPanel = goals.length ? `<div class="panel"><h2><span class="tag">GOAL</span>やること（もくひょう）</h2>${sumHtml}${goalRows}</div>` : '';
   const carePanel=`<div class="panel"><h2><span class="tag">RULE</span>気を つけること</h2>${CARE_ITEMS.map(c=>`<div class="care-item">❗ ${c}</div>`).join('')}</div>`;
 
   el.innerHTML = `
@@ -1642,7 +1742,7 @@ function renderReport(){
   if(lastReply){
     showAiComments(typeof lastReply==='string' ? {overall:lastReply} : lastReply);
   }
-  aiRound = 0;
+  aiRound = 0; aiPrevReflection = '';
   $('#getReply').onclick = fetchReflectionReply;
   $('#getReply').disabled = false; $('#getReply').textContent = '🤖 AIに みてもらう';
   if($('#delReport')) $('#delReport').onclick=async()=>{
@@ -1847,13 +1947,26 @@ async function fetchReflectionReply(){
   const typing = { score: $('#typeScore').value===''?'':Number($('#typeScore').value), memo: $('#typeMemo').value.trim() };
   const lessons = $('#naraiText').value.trim();
   const remainingDays = Math.max(0, diffDays(CONFIG.vacEnd, editingDate));
+  /* v1.10.0：ほめるだけに しない ための 材料。
+     progress＝しゅくだい ぜんたいの すすみ ／ recent＝きのうまでの7日 ／ todaySum＝今日の 合計 */
+  const progress = goalSummary();
+  const recent   = recentStats(editingDate, 7);
+  const todaySum = {
+    studyAmount: study.reduce((a,x)=>a+(Number(x.today)||0),0),
+    exerciseMin: exercise.reduce((a,x)=>a+(Number(x.minutes)||0),0),
+    poolMin: Number(pool)||0,
+    gameMin: game.reduce((a,x)=>a+(Number(x.minutes)||0),0),
+    animeMin: anime.reduce((a,x)=>a+(Number(x.minutes)||0),0),
+    reflectionChars: text.length
+  };
 
   try{
     const res = await fetch(SQ_REPLY_URL, {
       method:'POST',
       headers:{ 'Content-Type':'application/json', 'X-SQ-Token':SQ_REPLY_TOKEN },
       body: JSON.stringify({ name:(ROLE==='child'?CHILD_ID:''), round:thisRound, only:(onlyOverall?'overall':'all'),
-        remainingDays, study, exercise, pool, game, anime, typing, lessons, reflection:text })
+        remainingDays, study, exercise, pool, game, anime, typing, lessons, reflection:text,
+        progress, recent, todaySum, prevReflection:(onlyOverall?aiPrevReflection:'') })
     });
     let d = {}; try{ d = await res.json(); }catch(e){}
     if(!res.ok){ throw new Error(((d && d.error) || ('エラー ' + res.status)) + ((d && d.detail) ? (' / ' + d.detail) : '')); }
@@ -1864,6 +1977,7 @@ async function fetchReflectionReply(){
       : c;
     lastReply = merged;
     aiRound = thisRound;
+    if(thisRound===1) aiPrevReflection = text;   /* 2回目に 見くらべる ための 1回目の 文 */
     showAiComments(merged);
     // 空応答・切れで 何も出せないとき、無言で 消えないように 案内を出す
     const anyShown = ['aiStudy','aiActivity','refReplyBox'].some(id=>$('#'+id).style.display!=='none');
