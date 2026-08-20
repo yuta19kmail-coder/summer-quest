@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="app-version" content="v1.10.1" />
+<meta name="app-version" content="v1.11.0" />
 <title>SUMMER QUEST</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Serif+JP:wght@500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 :root{
@@ -601,6 +601,355 @@ input:focus,textarea:focus,select:focus{background:#0a1120;box-shadow:0 0 0 1px 
   .view.enter .panel,.view.enter .hero,.view.enter .warnbar,.view.enter .lvlhead,
   #view-report.enter .field,#view-report.enter .topbar,.study-row.added,.ref-reply,.cal-grid.slide-l,.cal-grid.slide-r{animation:none!important}
 }
+
+/* ============ v1.11.0 ここから ============ */
+/* =====================================================================
+   FINALE：金のボタン と エンディング（v1.11.0）
+   ===================================================================== */
+:root{ --gold1:#ffe89a; --gold2:#ffc83d; --gold3:#c98a12; }
+
+/* ---- TOPの 金のボタン ---- */
+.goldwrap{ margin:26px 0 8px; text-align:center; position:relative }
+.goldsub{ font-size:12.5px; color:var(--silver-dim); margin-bottom:12px; letter-spacing:.04em }
+.gold{
+  position:relative; display:inline-block; border:0; cursor:pointer;
+  padding:22px 46px; border-radius:18px;
+  font-family:'Orbitron','Noto Sans JP',sans-serif; font-weight:800; font-size:21px; letter-spacing:3px;
+  color:#3a2600;
+  background:linear-gradient(160deg,var(--gold1) 0%,var(--gold2) 45%,var(--gold3) 100%);
+  box-shadow:0 0 0 2px rgba(255,232,154,.9), 0 0 34px rgba(255,200,61,.55),
+             0 14px 30px rgba(0,0,0,.55), inset 0 2px 0 rgba(255,255,255,.75),
+             inset 0 -3px 0 rgba(0,0,0,.22);
+  text-shadow:0 1px 0 rgba(255,255,255,.6);
+  animation:goldPulse 2.2s ease-in-out infinite; transition:transform .12s;
+}
+.gold:active{ transform:translateY(3px) scale(.98) }
+.gold .jp{ display:block; font-family:'Noto Sans JP'; font-weight:900; font-size:13px;
+  letter-spacing:.2em; margin-top:5px; opacity:.85 }
+@keyframes goldPulse{
+  0%,100%{box-shadow:0 0 0 2px rgba(255,232,154,.9),0 0 30px rgba(255,200,61,.45),0 14px 30px rgba(0,0,0,.55),inset 0 2px 0 rgba(255,255,255,.75),inset 0 -3px 0 rgba(0,0,0,.22)}
+  50%    {box-shadow:0 0 0 2px rgba(255,232,154,1),0 0 60px rgba(255,200,61,.85),0 14px 30px rgba(0,0,0,.55),inset 0 2px 0 rgba(255,255,255,.75),inset 0 -3px 0 rgba(0,0,0,.22)}
+}
+.goldwrap::before{ content:''; position:absolute; left:50%; top:50%; width:340px; height:340px; margin:-170px 0 0 -170px;
+  background:radial-gradient(circle,rgba(255,200,61,.16) 0%,rgba(255,200,61,0) 62%); pointer-events:none;
+  animation:halo 3.4s ease-in-out infinite }
+@keyframes halo{ 0%,100%{transform:scale(.85);opacity:.7} 50%{transform:scale(1.12);opacity:1} }
+
+/* ---- エンディング ---- */
+#starsF{ position:fixed; inset:0; pointer-events:none; z-index:49; display:none }
+#ending.on ~ #starsF, #ending.on + #starsF{ display:block }
+#ending{ position:fixed; inset:0; background:#03050a; z-index:50; display:none;
+  overflow-y:auto; overscroll-behavior:contain }
+#ending.on{ display:block }
+.ewrap{ position:relative; z-index:2; max-width:760px; margin:0 auto; padding:34px 16px 90px }
+#ending .fade{ opacity:0; transform:translateY(14px); transition:opacity .8s ease,transform .8s ease }
+#ending .fade.in{ opacity:1; transform:none }
+#ending .skip{ position:fixed; right:14px; top:14px; z-index:60; background:rgba(5,7,12,.7);
+  border:1px solid var(--line); color:var(--silver-dim); border-radius:999px; padding:7px 15px;
+  font-size:12px; cursor:pointer; font-family:inherit }
+
+.etitle{ text-align:center; margin:26px 0 6px }
+.etitle .sub{ font-family:'Orbitron'; font-size:11px; color:var(--accent); letter-spacing:5px }
+.etitle .main{ font-size:30px; font-weight:900; color:var(--silver-bright); letter-spacing:.12em; margin-top:8px;
+  text-shadow:0 0 26px rgba(0,229,255,.35) }
+.etitle .days{ font-family:'Orbitron'; font-size:13px; color:var(--silver-dim); letter-spacing:3px; margin-top:10px }
+
+.calbox{ margin:30px 0 10px }
+.calhead{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px }
+.calhead .cnt{ font-family:'Orbitron'; font-size:34px; font-weight:800; color:var(--accent);
+  text-shadow:0 0 24px rgba(0,229,255,.5); font-variant-numeric:tabular-nums }
+.calhead .cntl{ font-size:12px; color:var(--silver-dim); letter-spacing:.1em }
+.cals{ display:grid; grid-template-columns:1fr 1fr; gap:18px }
+@media(max-width:560px){ .cals{ grid-template-columns:1fr } }
+.cal{ background:rgba(14,21,36,.7); border:1px solid var(--line); border-radius:14px; padding:12px 12px 14px }
+.cal .m{ font-family:'Orbitron'; font-size:12px; color:var(--silver-dim); letter-spacing:2px; margin-bottom:9px; text-align:center }
+.grid7{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px }
+.wd{ font-size:9.5px; color:#5b6880; text-align:center; padding-bottom:3px }
+.wd.s{ color:#8aa2c8 } .wd.u{ color:#c88a9a }
+#ending .cell{ position:relative; aspect-ratio:1; border-radius:7px; display:grid; place-items:center;
+  font-size:10.5px; color:#4a5670; background:rgba(255,255,255,.015) }
+#ending .cell.act{ color:#93a3bd; background:rgba(255,255,255,.045) }
+#ending .cell svg{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible }
+#ending .cell circle{ fill:none; stroke:var(--accent); stroke-width:8; stroke-linecap:round;
+  stroke-dasharray:283; stroke-dashoffset:283; transform-origin:50% 50%; transform:rotate(-90deg) }
+#ending .cell.done circle{ animation:cdraw .34s cubic-bezier(.3,.9,.4,1) forwards }
+#ending .cell.done{ color:var(--silver-bright) }
+@keyframes cdraw{ to{ stroke-dashoffset:0 } }
+#ending .cell.pop::after{ content:''; position:absolute; inset:-6px; border-radius:12px;
+  box-shadow:0 0 22px 4px rgba(0,229,255,.55); animation:cpop .5s ease-out forwards }
+@keyframes cpop{ to{ opacity:0; transform:scale(1.5) } }
+#ending .cell.last circle{ stroke:var(--gold2) }
+#ending .cell.last.pop::after{ box-shadow:0 0 40px 10px rgba(255,200,61,.75) }
+
+.allclear{ text-align:center; margin:26px 0 0; opacity:0; transition:opacity .9s }
+.allclear.in{ opacity:1 }
+.allclear .big{ font-size:26px; font-weight:900; color:var(--gold2); letter-spacing:.1em;
+  text-shadow:0 0 30px rgba(255,200,61,.55) }
+.allclear .sm{ font-size:13px; color:var(--silver-dim); margin-top:8px; line-height:1.9 }
+
+#ending .stats{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:34px }
+#ending .stat{ background:rgba(14,21,36,.75); border:1px solid var(--line); border-radius:14px; padding:16px 14px; text-align:center }
+#ending .stat .n{ font-family:'Orbitron'; font-size:30px; font-weight:800; color:var(--silver-bright);
+  font-variant-numeric:tabular-nums; line-height:1.1 }
+#ending .stat .n small{ font-size:13px; color:var(--silver-dim); margin-left:3px; font-family:'Noto Sans JP' }
+#ending .stat .l{ font-size:11.5px; color:var(--silver-dim); margin-top:7px; letter-spacing:.06em }
+#ending .stat.gold .n{ color:var(--gold2); text-shadow:0 0 22px rgba(255,200,61,.4) }
+
+.ehead{ margin:34px 0 12px; font-size:15px; font-weight:800; color:var(--silver-bright); letter-spacing:.04em }
+.eletter{ background:rgba(255,253,247,.055); border:1.5px solid rgba(217,189,106,.5); border-radius:14px;
+  padding:22px 22px; font-size:15px; line-height:2.1; white-space:pre-wrap; color:#eef2f8 }
+.eletter .from{ text-align:right; margin-top:18px; font-size:13px; color:var(--gold2); white-space:normal }
+.eletter.fam{ border-color:rgba(240,165,192,.5); background:rgba(255,248,251,.05) }
+.eletter.fam .from{ color:#f0a5c0 }
+.eletter.waitbox{ text-align:center; color:var(--silver-dim); border-style:dashed; line-height:1.9 }
+.eletter.warnbox{ text-align:center; color:var(--warn); border-color:rgba(255,210,63,.5); line-height:1.9 }
+.ebtns{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:34px }
+.ebtns .btn.gold2{ background:linear-gradient(160deg,var(--gold1),var(--gold2) 55%,var(--gold3));
+  color:#3a2600; border:0; font-weight:800 }
+#ending .again{ margin-top:26px; text-align:center }
+#ending .again button{ background:transparent; border:1px solid var(--line); color:var(--silver-dim);
+  border-radius:999px; padding:10px 22px; font-size:13px; cursor:pointer; font-family:inherit }
+
+/* ---- せってい：あやしい 記録 ---- */
+.fixsus{ border:1px solid rgba(255,210,63,.35); background:rgba(255,210,63,.06);
+  border-radius:12px; padding:10px 12px; margin-bottom:8px }
+.fixsus-h{ font-size:13px; font-weight:700; color:var(--warn); margin-bottom:8px }
+.fixsus-r{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:6px 0;
+  border-top:1px dashed var(--line); font-size:13px }
+.fixsus-r:first-of-type{ border-top:0 }
+.fixsus-r .d{ color:var(--silver-dim); min-width:76px }
+.fixsus-r .n{ font-weight:700; color:var(--silver-bright) }
+.fixsus-r .v{ color:var(--warn); font-weight:700 }
+.fixsus-r .v em{ font-style:normal; font-weight:400; color:var(--silver-dim); font-size:11.5px; margin-left:6px }
+.fixsus-r button{ margin-left:auto }
+.fix-edit{ margin-bottom:6px }
+
+/* =====================================================================
+   紙もの（しょうじょう／ぼうけんの きろく／記録レポート）
+   ・画面でも「白いA4」で 見せる ＝ 印刷したものと 同じ
+   ・グラフは responsive:false の 決めうちサイズ（mmの中でも くずれない）
+   ===================================================================== */
+.sheetwrap{ padding:14px 0 90px; overflow-x:auto; }
+.sheetbar{ display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+  padding:10px 12px; margin:0 auto 14px; max-width:210mm;
+  background:var(--panel); border:1px solid var(--line); border-radius:12px; }
+.sheetbar .sp{ flex:1 }
+.sheetbar h2{ margin:0; font-size:14px; color:var(--silver-bright); letter-spacing:.04em; }
+
+.sheet{
+  width:210mm; min-height:297mm; box-sizing:border-box;
+  padding:15mm 15mm 13mm;
+  margin:0 auto 20px; background:#fff; color:#1b1f27;
+  font-family:'Noto Sans JP',sans-serif; font-size:10.5pt; line-height:1.65;
+  box-shadow:0 10px 44px rgba(0,0,0,.55);
+  position:relative;
+}
+.sheet *{ box-sizing:border-box }
+.sheet h3{ font-size:13pt; margin:0 0 6px; color:#0f172a; letter-spacing:.02em }
+.sheet h4{ font-size:11pt; margin:14px 0 6px; padding-left:8px; border-left:4px solid #1d4ed8; color:#0f172a }
+.sheet p { margin:0 0 8px }
+.sheet .muted{ color:#5b6472 }
+.sheet .tiny{ font-size:8.5pt; line-height:1.55 }
+
+/* ---- 見出し（レポート共通） ---- */
+.rp-head{ display:flex; align-items:flex-end; gap:12px; border-bottom:2.5px solid #0f172a; padding-bottom:8px; margin-bottom:12px }
+.rp-head .t{ flex:1 }
+.rp-head .t b{ display:block; font-size:16pt; letter-spacing:.02em; line-height:1.25 }
+.rp-head .t span{ font-size:9pt; color:#5b6472 }
+.rp-head .n{ text-align:right; font-size:9pt; color:#334155; white-space:nowrap }
+.rp-head .n b{ font-size:12pt; display:block }
+.rp-foot{ position:absolute; left:15mm; right:15mm; bottom:7mm;
+  border-top:1px solid #cbd5e1; padding-top:4px; font-size:8pt; color:#7c8797;
+  display:flex; justify-content:space-between }
+
+/* ---- 「見かた」の箱 ＝ このレポートの ねうち ---- */
+.howto{ background:#f1f5f9; border-left:4px solid #64748b; border-radius:0 6px 6px 0;
+  padding:7px 10px; margin:6px 0 12px; font-size:8.8pt; line-height:1.6; color:#334155 }
+.howto b{ color:#0f172a }
+
+/* ---- 数字のタイル ---- */
+.kpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:7px; margin:8px 0 4px }
+.kpis.k3{ grid-template-columns:repeat(3,1fr) }
+.kpis.k5{ grid-template-columns:repeat(5,1fr) }
+.kpi{ border:1px solid #dbe2ea; border-radius:8px; padding:7px 8px; background:#fbfcfe }
+.kpi .l{ font-size:8pt; color:#64748b; letter-spacing:.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.kpi .v{ font-size:17pt; font-weight:800; color:#0f172a; line-height:1.15; font-variant-numeric:tabular-nums }
+.kpi .v i{ font-size:9pt; font-style:normal; font-weight:600; color:#64748b; margin-left:2px }
+.kpi .s{ font-size:8pt; color:#64748b }
+
+/* ---- 気づき ---- */
+.find{ border:1px solid #dbe2ea; border-radius:8px; padding:8px 10px; margin:0 0 7px; background:#fff }
+.find.good{ border-left:5px solid #15803d; background:#f4fbf6 }
+.find.watch{ border-left:5px solid #c2410c; background:#fff8f3 }
+.find.info{ border-left:5px solid #475569; background:#f8fafc }
+.find b{ display:block; font-size:10.5pt; color:#0f172a; margin-bottom:2px }
+.find .bd{ font-size:9.2pt }
+.find .hw{ font-size:8.6pt; color:#475569; margin-top:3px; padding-top:3px; border-top:1px dashed #cbd5e1 }
+.find .tag{ float:right; font-size:7.5pt; font-weight:700; letter-spacing:.06em; padding:1px 6px; border-radius:99px }
+.find.good .tag{ background:#dcfce7; color:#15803d }
+.find.watch .tag{ background:#ffedd5; color:#c2410c }
+.find.info .tag{ background:#e2e8f0; color:#475569 }
+
+/* ---- 表 ---- */
+.rt{ width:100%; border-collapse:collapse; font-size:9pt; margin:4px 0 6px }
+.rt th,.rt td{ border:1px solid #d7dee7; padding:4px 6px; text-align:right; font-variant-numeric:tabular-nums }
+.rt th{ background:#eef2f7; color:#334155; font-weight:700; text-align:center; font-size:8.5pt }
+.rt td.l,.rt th.l{ text-align:left }
+.rt .bar{ position:relative; padding:0; width:74px }
+.rt .bar i{ position:absolute; left:2px; top:3px; bottom:3px; background:#93c5fd; border-radius:3px }
+.rt .bar u{ position:relative; text-decoration:none; font-size:8.5pt; display:block; text-align:center; line-height:20px }
+.rt tr.warn td{ background:#fff7ed }
+.rt tr.ok td{ background:#f6fdf8 }
+
+/* ---- 前半／後半 ---- */
+.halves{ display:grid; grid-template-columns:1fr auto 1fr; gap:8px; align-items:center;
+  border:1px solid #dbe2ea; border-radius:8px; padding:8px 10px; background:#fbfcfe; margin:6px 0 8px }
+.halves .h{ text-align:center }
+.halves .h .l{ font-size:8pt; color:#64748b }
+.halves .h .v{ font-size:15pt; font-weight:800; color:#0f172a }
+.halves .ar{ font-size:14pt; color:#94a3b8 }
+.halves .ar b{ display:block; font-size:9pt; padding:2px 7px; border-radius:99px }
+.halves .up b{ background:#dcfce7; color:#15803d }
+.halves .dn b{ background:#ffedd5; color:#c2410c }
+.halves .fl b{ background:#e2e8f0; color:#475569 }
+
+.chart{ margin:4px 0 2px }
+.chart canvas{ display:block; max-width:100% }
+
+/* ---- 作文の 引用 ---- */
+.quote{ border:1px solid #dbe2ea; border-left:5px solid #1d4ed8; border-radius:0 8px 8px 0;
+  background:#f8fbff; padding:9px 12px; margin:6px 0 8px }
+.quote .d{ font-size:8.5pt; color:#64748b; margin-bottom:3px }
+.quote .x{ font-size:10.5pt; line-height:1.85; white-space:pre-wrap }
+.quote .why{ font-size:8.8pt; color:#1d4ed8; margin-top:5px; padding-top:4px; border-top:1px dashed #bfdbfe }
+
+/* =====================================================================
+   ① しょうじょう
+   ===================================================================== */
+.sheet.shou{ padding:0; display:flex; align-items:stretch; justify-content:center }
+.shou-in{ margin:11mm; flex:1; border:3px double #a1730f; padding:11mm 12mm;
+  display:flex; flex-direction:column; position:relative;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(212,175,55,.10), transparent 42%),
+    radial-gradient(circle at 88% 90%, rgba(212,175,55,.10), transparent 42%), #fffdf7; }
+.shou-in:before{ content:''; position:absolute; inset:5px; border:1px solid #d9bd6a; pointer-events:none }
+.shou-ttl{ text-align:center; font-family:'Noto Serif JP',serif; font-weight:900;
+  font-size:34pt; letter-spacing:.55em; text-indent:.55em; color:#7a5a09; margin:4mm 0 2mm }
+.shou-sub{ text-align:center; font-size:9pt; letter-spacing:.4em; color:#a1873f; margin-bottom:8mm }
+.shou-name{ font-family:'Noto Serif JP',serif; font-size:23pt; font-weight:800; color:#1b1f27;
+  border-bottom:1.5px solid #d9bd6a; padding:0 0 3mm 4mm; margin:0 0 8mm; letter-spacing:.14em }
+.shou-name i{ font-style:normal; font-size:12pt; font-weight:500; margin-left:10px; color:#5b6472 }
+.shou-body{ font-family:'Noto Serif JP',serif; font-size:12.5pt; line-height:2.35; color:#1b1f27;
+  padding:0 3mm; letter-spacing:.06em; margin:auto 0 }
+.shou-body em{ font-style:normal; font-weight:800; color:#7a5a09; font-size:14pt }
+.shou-nums{ margin:0; padding-top:6mm }
+.shou-nums .hd{ text-align:center; font-size:9pt; letter-spacing:.3em; color:#a1873f; margin-bottom:3mm }
+.shou-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:0;
+  border:1px solid #d9bd6a; border-radius:4px; overflow:hidden }
+.shou-grid div{ padding:4mm 2mm; text-align:center; border-right:1px solid #e8dcb6; background:#fffef9 }
+.shou-grid div:last-child{ border-right:0 }
+.shou-grid .l{ font-size:8pt; color:#8a6f24; letter-spacing:.06em; display:block }
+.shou-grid .v{ font-family:'Noto Serif JP',serif; font-size:19pt; font-weight:900; color:#7a5a09;
+  line-height:1.2; font-variant-numeric:tabular-nums; display:block }
+.shou-grid .v i{ font-style:normal; font-size:9pt; margin-left:1px }
+.shou-foot{ display:flex; align-items:flex-end; justify-content:space-between; margin-top:9mm }
+.shou-date{ font-family:'Noto Serif JP',serif; font-size:12pt; letter-spacing:.12em; color:#1b1f27 }
+.shou-sign{ text-align:right; font-family:'Noto Serif JP',serif }
+.shou-sign b{ display:block; font-size:14pt; letter-spacing:.14em; color:#1b1f27 }
+.shou-sign span{ font-size:8pt; letter-spacing:.24em; color:#a1873f }
+.shou-seal{ width:19mm; height:19mm; border:2.2px solid #b3261e; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; color:#b3261e;
+  font-family:'Noto Serif JP',serif; font-weight:900; font-size:8.5pt; line-height:1.15;
+  transform:rotate(-7deg); margin-left:8mm; text-align:center; letter-spacing:.02em }
+
+/* =====================================================================
+   ② ぼうけんの きろく（本人用）
+   ===================================================================== */
+.sheet.kid{ font-size:11pt }
+.kid-head{ background:linear-gradient(105deg,#0b3fa8,#0891b2 55%,#0e9f6e);
+  color:#fff; border-radius:12px; padding:7mm 8mm; margin-bottom:6mm;
+  -webkit-print-color-adjust:exact; print-color-adjust:exact }
+.kid-head b{ display:block; font-size:22pt; font-weight:900; letter-spacing:.06em; line-height:1.2 }
+.kid-head span{ font-size:10pt; opacity:.92 }
+.kid-head .who{ float:right; text-align:right; font-size:10pt }
+.kid-head .who b{ font-size:15pt }
+.kid h4{ border-left-color:#0891b2; font-size:12.5pt }
+
+.kid-kpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:0 0 6mm }
+.kid-kpi{ border-radius:10px; padding:6px 6px 8px; text-align:center; color:#fff;
+  -webkit-print-color-adjust:exact; print-color-adjust:exact }
+.kid-kpi .l{ font-size:8.5pt; opacity:.9 }
+.kid-kpi .v{ font-size:22pt; font-weight:900; line-height:1.15; font-variant-numeric:tabular-nums }
+.kid-kpi .v i{ font-size:10pt; font-style:normal; margin-left:1px }
+.kid-kpi.c1{ background:#0b3fa8 } .kid-kpi.c2{ background:#0891b2 }
+.kid-kpi.c3{ background:#0e9f6e } .kid-kpi.c4{ background:#c2410c }
+
+.kcal{ display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin:2mm 0 3mm }
+.kcal .hd{ text-align:center; font-size:8pt; color:#64748b; font-weight:700 }
+.kcal .c{ height:10.5mm; border-radius:6px; border:1px solid #e2e8f0; background:#f8fafc;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:8pt; color:#94a3b8 }
+.kcal .c.on{ background:#0891b2; border-color:#0891b2; color:#fff; font-weight:800;
+  -webkit-print-color-adjust:exact; print-color-adjust:exact }
+.kcal .c.on.big{ background:#0b3fa8; border-color:#0b3fa8 }
+.kcal .c.pre{ background:#fff; border-style:dashed; color:#cbd5e1 }
+.kcal .c b{ font-size:9pt; line-height:1.05 }
+.kcal .c u{ text-decoration:none; font-size:8pt; opacity:.9; line-height:1.05 }
+
+.klist{ display:flex; flex-wrap:wrap; gap:4px; margin:3px 0 8px }
+.klist span{ display:inline-flex; align-items:center; justify-content:center;
+  min-width:26px; height:26px; padding:0 4px; border:1px solid #cbd5e1; border-radius:6px;
+  background:#f8fafc; font-size:13pt; font-weight:700; color:#0f172a }
+
+.letter{ border:2px solid #d9bd6a; border-radius:10px; padding:7mm 8mm; background:#fffdf7;
+  font-size:11pt; line-height:2.05; white-space:pre-wrap;
+  -webkit-print-color-adjust:exact; print-color-adjust:exact }
+.letter .from{ text-align:right; margin-top:5mm; font-size:10pt; color:#7a5a09; white-space:normal }
+.letter.fam{ border-color:#f0a5c0; background:#fff8fb }
+.letter.fam .from{ color:#b0197a }
+
+/* =====================================================================
+   印刷
+   ===================================================================== */
+@media print{
+  @page{ size:A4 portrait; margin:0 }
+  html,body{ background:#fff !important }
+  body.print-mode .topbar,
+  body.print-mode .nav,
+  body.print-mode .noprint,
+  body.print-mode #toast,
+  body.print-mode #camModal,
+  body.print-mode #login{ display:none !important }
+  body.print-mode .view.hidden{ display:none !important }
+  body.print-mode .sheetwrap{ padding:0 !important; overflow:visible !important }
+  body.print-mode .sheet{ box-shadow:none !important; margin:0 !important; break-after:page; page-break-after:always }
+  body.print-mode .sheet:last-child{ break-after:auto; page-break-after:auto }
+}
+
+/* 画面が せまい時は 紙を ちいさく 見せる（印刷には ひびかない） */
+@media screen and (max-width:820px){
+  .sheetwrap{ padding-left:6px; padding-right:6px }
+  .sheet{ transform-origin:top left }
+}
+
+/* 5列のときは 数字を すこし 小さく（「25時間45分」が 折り返さないように） */
+.kpis.k5 .kpi .v{ font-size:14pt; white-space:nowrap }
+.kpi .v{ white-space:nowrap }
+
+/* さいごの ページだけ 「ながれる紙」＝ 中身の 長さで 伸びてよい。
+   （AIの 文の 長さは その時 まで 分からないので、切るのでは なく 伸ばす） */
+.sheet.flow{ min-height:210mm }
+@media print{
+  body.print-mode .sheet.flow{ break-inside:auto; page-break-inside:auto }
+  body.print-mode .sheet.flow .quote,
+  body.print-mode .sheet.flow .howto,
+  body.print-mode .sheet.flow .letter,
+  body.print-mode .sheet.flow ul,
+  body.print-mode .sheet.flow h4{ break-inside:avoid; page-break-inside:avoid }
+  body.print-mode .sheet.flow h4{ break-after:avoid; page-break-after:avoid }
+  body.print-mode .sheet.flow .rp-foot{ position:static; margin-top:10mm }
+}
+
+/* ============ v1.11.0 ここまで ============ */
 </style>
 </head>
 <body>
@@ -651,6 +1000,11 @@ input:focus,textarea:focus,select:focus{background:#0a1120;box-shadow:0 0 0 1px 
   <!-- ===== SETTINGS ===== -->
   <div id="view-settings" class="view hidden"></div>
 
+  <!-- ===== v1.11.0 紙もの（しょうじょう／ぼうけんの きろく） ===== -->
+  <div id="view-sheets" class="view hidden"></div>
+  <!-- ===== v1.11.0 記録レポート（保護者用・せっていから） ===== -->
+  <div id="view-preport" class="view hidden"></div>
+
   <div class="nav">
     <button data-view="home" class="active"><span class="ic">📅</span>カレンダー</button>
     <button data-view="summary"><span class="ic">📈</span>せいせき</button>
@@ -675,6 +1029,10 @@ input:focus,textarea:focus,select:focus{background:#0a1120;box-shadow:0 0 0 1px 
   </div>
 </div>
 
+<!-- ===== v1.11.0 エンディング ===== -->
+<div id="ending"></div>
+<canvas id="starsF"></canvas>
+
 <div id="toast"></div>
 
 <script>
@@ -695,7 +1053,7 @@ let aiRound = 0;     // その日にAIを叩いた回数（1日2回まで）
 /* v1.10.0：1回目に見せた ふりかえりの 文。2回目に「ほんとうに 書き直したか」を AIが 見るため */
 let aiPrevReflection = '';
 const PARENT_PW = '0612';         // 親アカ：IDなし・パスワードのみ（設定はこちらだけ）
-const APP_VERSION = 'v1.10.1';       // バージョン表記（更新時はここと head の meta を上げる）
+const APP_VERSION = 'v1.11.0';       // バージョン表記（更新時はここと head の meta を上げる）
 const PAGE_OPTIONS = 60;      // ページ数プルダウン 0〜60
 const MIN_OPTIONS = [0,5,10,15,20,30,45,60,90,120,150,180]; // 時間(分)プルダウン（うんどう用）
 // ゲーム・アニメ(TV)用：15分きざみ → 1時間からは30分きざみで 6時間まで
@@ -845,6 +1203,8 @@ const DEFAULT_CONFIG = {
   typingUrl:'https://typing.twi1.me/game/3880',   // こどもタイピング（マイタイピング）
   typingName:'こどもタイピング',
   typingRule:'まいかい さいごまで やって、でた スコアを 入力しよう',
+  familyMsg:{ text:'', from:'' },   // v1.11.0 おうちの人からの メッセージ
+  fixes:[],                          // v1.11.0 記録のなおし（単位ちがい）
   // 全端末が 同じクラウドに 自動で つながるよう 内蔵（Web apiKey は 公開して問題ない値）
   firebase:{
     apiKey:'AIzaSyBfYWSneYKEvkYikVJZkH0RPFOKalJCeU4',
@@ -1038,6 +1398,1542 @@ const Store = {
     return true;
   }
 };
+
+
+/* ===================== v1.11.0 ここから ===================== */
+/* =====================================================================
+   FINALE：40日ぶんの 記録を 数字に する（v1.11.0）
+   ---------------------------------------------------------------------
+   ここは「見せかた」を 一切もたない 計算だけの かたまり。
+   賞状 / 本人用レポート / 親用レポート の 3つが ぜんぶ ここを 見る。
+   🔴 ふりかえりの「1回目・2回目」は 保存されていないので 出さない。
+      （reflectionReply は その日の 最後の コメントだけ）
+   ===================================================================== */
+
+/* ---- 小さな道具 ---------------------------------------------------- */
+function fnRange(s,e){ const a=[]; let d=parseYmd(s); const z=parseYmd(e);
+  while(d<=z){ a.push(ymd(d)); d=addDays(d,1); } return a; }
+function fnAvg(a){ const v=a.filter(x=>typeof x==='number'&&!isNaN(x)); return v.length? v.reduce((s,x)=>s+x,0)/v.length : 0; }
+function fnSum(a){ return a.reduce((s,x)=>s+(Number(x)||0),0); }
+function fnMed(a){ const v=a.slice().sort((x,y)=>x-y); if(!v.length) return 0;
+  const m=v.length>>1; return v.length%2? v[m] : (v[m-1]+v[m])/2; }
+function fnMA(arr,w){                       /* 中央ぞろえの ならし（はしは あるぶんだけ） */
+  const out=[], h=(w-1)>>1;
+  for(let i=0;i<arr.length;i++){
+    let s=0,n=0;
+    for(let j=i-h;j<=i+h;j++){ if(j<0||j>=arr.length) continue; const v=arr[j]; if(v==null) continue; s+=v; n++; }
+    out.push(n? Math.round(s/n*10)/10 : null);
+  }
+  return out;
+}
+/* かたむき（最小二乗）＝1日あたり どれだけ 伸びたか。null は とばす */
+function fnSlope(pairs){
+  const p=pairs.filter(o=>o[1]!=null&&!isNaN(o[1]));
+  const n=p.length; if(n<3) return null;
+  const mx=fnAvg(p.map(o=>o[0])), my=fnAvg(p.map(o=>o[1]));
+  let num=0, den=0;
+  p.forEach(o=>{ num+=(o[0]-mx)*(o[1]-my); den+=(o[0]-mx)*(o[0]-mx); });
+  return den? num/den : null;
+}
+/* 相関（ピアソン）。どちらも 値が ある日だけ。3日未満なら null */
+function fnCorr(xs,ys){
+  const p=[]; for(let i=0;i<xs.length;i++){ if(xs[i]==null||ys[i]==null) continue; p.push([xs[i],ys[i]]); }
+  if(p.length<5) return null;
+  const mx=fnAvg(p.map(o=>o[0])), my=fnAvg(p.map(o=>o[1]));
+  let n=0,dx=0,dy=0;
+  p.forEach(o=>{ n+=(o[0]-mx)*(o[1]-my); dx+=(o[0]-mx)**2; dy+=(o[1]-my)**2; });
+  if(dx<=0||dy<=0) return null;
+  return { r: n/Math.sqrt(dx*dy), n: p.length };
+}
+const FN_KANJI = /[一-鿿々]/;
+function fnChars(s){ return [...String(s||'')]; }
+function fnKanjiKinds(s){ const set=new Set(); fnChars(s).forEach(c=>{ if(FN_KANJI.test(c)) set.add(c); }); return set; }
+function fnSentences(s){
+  return String(s||'').split(/[。．！？!?\n]+/).map(x=>x.trim()).filter(Boolean);
+}
+
+/* =====================================================================
+   記録のなおし（単位ちがい）
+   ---------------------------------------------------------------------
+   🔴 じっさいに あった こと：
+      「研究の下調べ 30分」を、ページ数の らんに 30 と 入れてしまった日が ある。
+      すると その日だけ 山が つきぬけて、7日ならしも 前半/後半の 比べも 全部 ずれる。
+   🔴 元の 記録は ぜったいに 書きかえない。集計する ときだけ 読みかえる。
+      そして「なおした」ことを レポートに かならず 書く（だまって 直すのが いちばん まずい）。
+   かたち： CONFIG.fixes = [{ d:'2026-07-29', n:'らくらくノート', v:2, note:'30分を ページに 読みかえ' }]
+      v が null なら その行は 集計から 外す。
+   ===================================================================== */
+function fixKey(d,n){ return d + '\u0000' + n; }
+function fixMap(config){
+  const m = new Map();
+  ((config&&config.fixes)||[]).forEach(f=>{
+    if(!f || !f.d || !f.n) return;
+    m.set(fixKey(f.d, f.n), f);
+  });
+  return m;
+}
+/* まん中の 値（0は かぞえない）。ふだんの 1日ぶんの 目安 */
+function fnMedPos(a){ const v=a.filter(x=>typeof x==='number'&&x>0); return v.length? fnMed(v):0; }
+
+/* =====================================================================
+   本体
+   ===================================================================== */
+function finaleStats(reports, config){
+  const R = reports || {};
+  const C = config || {};
+  const start = C.vacStart, end = C.vacEnd;
+  const all = fnRange(start, end);
+  const has = d => !!R[d];
+  const recDates = all.filter(has);
+
+  /* ---------- ① つづけた（継続） ----------
+     🔴 「はじめた日」より前は 抜けあつかいに しない。
+        （7/21から の 夏休みでも、記録を 7/23に 始めたなら 数えるのは そこから） */
+  const firstRec = recDates[0] || '';
+  const span = firstRec ? all.filter(d=>d>=firstRec) : [];
+  let streakMax=0, cur=0, streakEndAt='';
+  span.forEach(d=>{ if(has(d)){ cur++; if(cur>streakMax){streakMax=cur; streakEndAt=d;} } else cur=0; });
+  let streakNow=0;
+  for(let i=span.length-1;i>=0;i--){ if(has(span[i])) streakNow++; else break; }
+  const missing = span.filter(d=>!has(d));
+  const beforeStart = firstRec ? all.filter(d=>d<firstRec).length : 0;
+
+  /* ---------- ② 日ごとの 生の数 ---------- */
+  const FIXES = fixMap(C);
+  const fixedList = [];
+  const rows = all.map(d=>{
+    const r = R[d];
+    if(!r) return { date:d, rec:false, study:0, studyItems:[], studyRaw:[], ex:0, pool:0, move:0,
+                    game:0, anime:0, screen:0, type:null, narai:0, chars:0, sent:0, kanji:new Set(), hour:null };
+    const studyRaw=(r.study||[]).map(s=>({name:String(s.name||''), n:Number(s.pages)||0, unit:String(s.unit||'')}));
+    /* 記録の なおしを あてる（元は さわらない） */
+    const studyItems=[];
+    studyRaw.forEach(it=>{
+      const f = FIXES.get(fixKey(d, it.name));
+      if(!f){ studyItems.push(it); return; }
+      if(f.v==null){ fixedList.push({date:d, name:it.name, from:it.n, to:null, note:f.note||''}); return; }
+      const nv = Number(f.v)||0;
+      fixedList.push({date:d, name:it.name, from:it.n, to:nv, note:f.note||''});
+      studyItems.push({name:it.name, n:nv, unit:it.unit});
+    });
+    const ex=sumMin(exArr(r)), pool=poolMin(r);
+    const game=sumMin(playArr(r)), anime=sumMin(animeArr(r));
+    const ref=String(r.reflection||'');
+    let hour=null;
+    if(r.updatedAt){ const t=new Date(r.updatedAt); if(!isNaN(t)) hour = t.getHours() + t.getMinutes()/60; }
+    const tScore = (r.typing && r.typing.score!=='' && r.typing.score!=null) ? Number(r.typing.score) : null;
+    return { date:d, rec:true,
+             study:fnSum(studyItems.map(s=>s.n)), studyItems, studyRaw,
+             ex, pool, move:ex+pool, game, anime, screen:game+anime,
+             type:(tScore!=null && !isNaN(tScore))?tScore:null,
+             narai:(r.narai&&String(r.narai.text||'').trim())?1:0,
+             chars:fnChars(ref).length, sent:fnSentences(ref).length,
+             kanji:fnKanjiKinds(ref), text:ref, hour };
+  });
+  const recRows = rows.filter(o=>o.rec);
+  const half = Math.ceil(recRows.length/2);
+  const H1 = recRows.slice(0,half), H2 = recRows.slice(half);
+  const cmp = (key)=>{
+    const a=fnAvg(H1.map(o=>o[key])), b=fnAvg(H2.map(o=>o[key]));
+    return { first:Math.round(a*10)/10, second:Math.round(b*10)/10,
+             diff:Math.round((b-a)*10)/10,
+             pct: a>0 ? Math.round((b-a)/a*100) : null };
+  };
+
+  /* ---------- ③ やること別 ---------- */
+  const goals = (C.goals||[]);
+  const nameSet = new Set();
+  recRows.forEach(o=>o.studyItems.forEach(s=>{ if(s.name) nameSet.add(s.name); }));
+  goals.forEach(g=>{ if(g && g.name) nameSet.add(g.name); });
+  const byName = [...nameSet].map(name=>{
+    const g = goals.find(x=>x&&x.name===name) || {};
+    const daily = rows.map(o=> o.rec ? fnSum(o.studyItems.filter(s=>s.name===name).map(s=>s.n)) : null );
+    const done  = fnSum(daily.map(v=>v||0));
+    const days  = daily.filter(v=>v>0).length;
+    const goalTotal = (g.total!=='' && g.total!=null && Number(g.total)>0) ? Number(g.total) : null;
+    const unit = g.unit || (recRows.flatMap(o=>o.studyItems).find(s=>s.name===name&&s.unit)||{}).unit || '';
+    const dv = daily.filter(v=>v!=null);
+    const dh = Math.ceil(dv.length/2);
+    const pace1 = fnAvg(dv.slice(0,dh)), pace2 = fnAvg(dv.slice(dh));
+    return { name, unit, done, days,
+             rate: recRows.length? Math.round(days/recRows.length*100) : 0,
+             goalTotal, pct: goalTotal? Math.min(999,Math.round(done/goalTotal*100)) : null,
+             left: goalTotal? Math.max(0, goalTotal-done) : null,
+             daily,
+             pace:{ first:Math.round(pace1*10)/10, second:Math.round(pace2*10)/10,
+                    pct: pace1>0? Math.round((pace2-pace1)/pace1*100) : null },
+             desc: g.desc||'', emoji: g.emoji||'📖' };
+  }).sort((a,b)=> (b.done||0)-(a.done||0));
+
+  /* ---------- ③b 単位ちがい さがし ----------
+     やること別の「ふだんの 1日ぶん」（0を のぞいた 中央値）から 大きく はなれた日を ひろう。
+     🔴 かってに 直さない。候補として 出すだけ。直すのは 人（設定画面）。 */
+  const suspects = [];
+  {
+    const byNameRaw = new Map();
+    recRows.forEach(o=>o.studyRaw.forEach(it=>{
+      if(!it.name) return;
+      if(!byNameRaw.has(it.name)) byNameRaw.set(it.name, []);
+      byNameRaw.get(it.name).push({date:o.date, n:it.n, unit:it.unit});
+    }));
+    /* 🔴 1〜2回しか 出てこない やること（例：自由研究の 下調べ）は
+          自分の 中央値と くらべても 意味が ない（その値 自身が 中央値に なる）。
+          そういう ときは **ほかの やること ぜんぶの 中央値**と くらべる。 */
+    const allVals = [];
+    recRows.forEach(o=>o.studyRaw.forEach(it=>{ if(it.n>0) allVals.push(it.n); }));
+    const globalMed = fnMedPos(allVals);
+    byNameRaw.forEach((list,name)=>{
+      const own = fnMedPos(list.map(x=>x.n));
+      const enough = (list.length >= 4 && own > 0);
+      const med = enough ? own : (globalMed || own);
+      const basis = enough ? 'own' : 'all';
+      if(med<=0) return;
+      list.forEach(x=>{
+        if(FIXES.has(fixKey(x.date,name))) return;          /* もう 直してある */
+        if(x.n < 10) return;                                /* 小さい数は そもそも あやしくない */
+        if(x.n < med*5) return;                             /* ふだんの 5ばい 未満は 見のがす */
+        suspects.push({ date:x.date, name, value:x.n,
+                        median: Math.round(med*10)/10, basis, unit:x.unit||'',
+                        days: list.length,
+                        suggest: Math.max(1, Math.round(med)),
+                        share: (function(){ const tot=fnSum(list.map(y=>y.n)); return tot? Math.round(x.n/tot*100):0; })() });
+      });
+    });
+    suspects.sort((a,b)=> b.value/b.median - a.value/a.median);
+  }
+
+  /* ---------- ④ 曜日のムラ ---------- */
+  const wk = [0,1,2,3,4,5,6].map(w=>{
+    const t = recRows.filter(o=> parseYmd(o.date).getDay()===w );
+    return { w, label:WEEK[w], n:t.length,
+             study:Math.round(fnAvg(t.map(o=>o.study))*10)/10,
+             move: Math.round(fnAvg(t.map(o=>o.move))),
+             screen:Math.round(fnAvg(t.map(o=>o.screen))),
+             chars:Math.round(fnAvg(t.map(o=>o.chars))) };
+  });
+
+  /* ---------- ⑤ タイピング ---------- */
+  const tp = rows.map((o,i)=>[i,o.type]);
+  const tvals = rows.map(o=>o.type).filter(v=>v!=null);
+  const typing = {
+    count:tvals.length,
+    first:tvals.length?tvals[0]:null,
+    best:tvals.length?Math.max(...tvals):null,
+    last:tvals.length?tvals[tvals.length-1]:null,
+    avg:Math.round(fnAvg(tvals)),
+    slope:(()=>{ const s=fnSlope(tp); return s==null?null:Math.round(s*100)/100; })(),
+    gainPct:(tvals.length>=2 && tvals[0]>0)? Math.round((Math.max(...tvals)-tvals[0])/tvals[0]*100) : null,
+    daily: rows.map(o=>o.type)
+  };
+
+  /* ---------- ⑥ からだ（運動・プール） ---------- */
+  let gapMax=0, gapCur=0;
+  recRows.forEach(o=>{ if(o.move>0){ gapCur=0; } else { gapCur++; if(gapCur>gapMax) gapMax=gapCur; } });
+  /* 🔴 プールに 入らない日は ほとんど 天気（8月は 雨が 多い）。
+        「プール0＝運動していない」と 読ませない ために、うんどうだけの 数も 出す。 */
+  let exGapMax=0, exGapCur=0;
+  recRows.forEach(o=>{ if(o.ex>0){ exGapCur=0; } else { exGapCur++; if(exGapCur>exGapMax) exGapMax=exGapCur; } });
+  const move = {
+    exMin:fnSum(recRows.map(o=>o.ex)), poolMin:fnSum(recRows.map(o=>o.pool)),
+    exDays:recRows.filter(o=>o.ex>0).length, poolDays:recRows.filter(o=>o.pool>0).length,
+    activeDays:recRows.filter(o=>o.move>0).length,
+    activeRate: recRows.length? Math.round(recRows.filter(o=>o.move>0).length/recRows.length*100) : 0,
+    exRate: recRows.length? Math.round(recRows.filter(o=>o.ex>0).length/recRows.length*100) : 0,
+    poolRate: recRows.length? Math.round(recRows.filter(o=>o.pool>0).length/recRows.length*100) : 0,
+    longestGap:gapMax, exGap:exGapMax,
+    /* 月ごとの プール（天気の うつりかわりを 見るため） */
+    poolByMonth:(function(){ const m={}; recRows.forEach(o=>{ const k=o.date.slice(0,7);
+      if(!m[k]) m[k]={n:0,days:0,min:0}; m[k].n++; if(o.pool>0){ m[k].days++; m[k].min+=o.pool; } });
+      return Object.keys(m).sort().map(k=>({ month:k, days:m[k].days, of:m[k].n, min:m[k].min,
+        rate: m[k].n? Math.round(m[k].days/m[k].n*100):0 })); })(),
+    avg:Math.round(fnAvg(recRows.map(o=>o.move))),
+    cmp:cmp('move'),
+    daily: rows.map(o=>o.rec?o.move:null),
+    dailyEx: rows.map(o=>o.rec?o.ex:null),
+    dailyPool: rows.map(o=>o.rec?o.pool:null)
+  };
+
+  /* ---------- ⑦ 画面の時間 と 勉強 ---------- */
+  const screen = {
+    gameMin:fnSum(recRows.map(o=>o.game)), animeMin:fnSum(recRows.map(o=>o.anime)),
+    total:fnSum(recRows.map(o=>o.screen)),
+    avg:Math.round(fnAvg(recRows.map(o=>o.screen))),
+    cmp:cmp('screen'),
+    daily: rows.map(o=>o.rec?o.screen:null),
+    dailyGame: rows.map(o=>o.rec?o.game:null),
+    dailyAnime: rows.map(o=>o.rec?o.anime:null),
+    corrStudy: fnCorr(rows.map(o=>o.rec?o.screen:null), rows.map(o=>o.rec?o.study:null)),
+    corrMove:  fnCorr(rows.map(o=>o.rec?o.screen:null), rows.map(o=>o.rec?o.move:null)),
+    /* 多い日／少ない日 で 勉強量が どう ちがうか（相関より 読みやすい） */
+    split:(()=>{
+      const v=recRows.filter(o=>o.screen>0).map(o=>o.screen);
+      if(v.length<6) return null;
+      const md=fnMed(v);
+      const hi=recRows.filter(o=>o.screen> md), lo=recRows.filter(o=>o.screen<=md);
+      return { median:Math.round(md),
+               hiStudy:Math.round(fnAvg(hi.map(o=>o.study))*10)/10, hiN:hi.length,
+               loStudy:Math.round(fnAvg(lo.map(o=>o.study))*10)/10, loN:lo.length };
+    })()
+  };
+
+  /* ---------- ⑧ 作文 ---------- */
+  const wrote = recRows.filter(o=>o.chars>0);
+  const kanjiAll = new Set(); recRows.forEach(o=>o.kanji.forEach(c=>kanjiAll.add(c)));
+  const kanjiH1 = new Set(); H1.forEach(o=>o.kanji.forEach(c=>kanjiH1.add(c)));
+  const kanjiH2 = new Set(); H2.forEach(o=>o.kanji.forEach(c=>kanjiH2.add(c)));
+  const best = wrote.slice().sort((a,b)=>b.chars-a.chars)[0] || null;
+  const writing = {
+    days:wrote.length,
+    totalChars:fnSum(recRows.map(o=>o.chars)),
+    avg:Math.round(fnAvg(wrote.map(o=>o.chars))),
+    max: best? best.chars : 0, maxDate: best? best.date : '',
+    min: wrote.length? Math.min(...wrote.map(o=>o.chars)) : 0,
+    cmp:cmp('chars'),
+    slope:(()=>{ const s=fnSlope(rows.map((o,i)=>[i, o.rec&&o.chars>0?o.chars:null])); return s==null?null:Math.round(s*100)/100; })(),
+    sentAvg: Math.round(fnAvg(wrote.map(o=>o.sent? o.chars/o.sent : 0))*10)/10,
+    sentCmp: (()=>{ const f=fnAvg(H1.filter(o=>o.sent).map(o=>o.sent)), s=fnAvg(H2.filter(o=>o.sent).map(o=>o.sent));
+                    return { first:Math.round(f*10)/10, second:Math.round(s*10)/10 }; })(),
+    kanjiKinds:kanjiAll.size, kanjiFirst:kanjiH1.size, kanjiSecond:kanjiH2.size,
+    kanjiList:[...kanjiAll],
+    shortDays: wrote.filter(o=>o.chars<20).length,     /* みじかい日（20字未満） */
+    longDays:  wrote.filter(o=>o.chars>=60).length,
+    daily: rows.map(o=>o.rec?o.chars:null),
+    ma7: fnMA(rows.map(o=>o.rec?o.chars:null),7),
+    top5: wrote.slice().sort((a,b)=>b.chars-a.chars).slice(0,5).map(o=>({date:o.date,chars:o.chars,text:o.text}))
+  };
+
+  /* ---------- ⑨ 記録した時刻（生活リズム） ---------- */
+  const hrs = recRows.map(o=>o.hour).filter(v=>v!=null);
+  const clock = {
+    n:hrs.length,
+    median:hrs.length? Math.round(fnMed(hrs)*10)/10 : null,
+    first: H1.map(o=>o.hour).filter(v=>v!=null).length? Math.round(fnMed(H1.map(o=>o.hour).filter(v=>v!=null))*10)/10 : null,
+    second:H2.map(o=>o.hour).filter(v=>v!=null).length? Math.round(fnMed(H2.map(o=>o.hour).filter(v=>v!=null))*10)/10 : null,
+    lateDays: hrs.filter(h=>h>=21).length,
+    earlyDays: hrs.filter(h=>h<16).length,
+    hist:(()=>{ const a=new Array(24).fill(0); hrs.forEach(h=>a[Math.floor(h)]++); return a; })(),
+    daily: rows.map(o=>o.rec?o.hour:null)
+  };
+
+  /* ---------- ⑩ 勉強量の推移 ---------- */
+  const study = {
+    total:fnSum(recRows.map(o=>o.study)),
+    avg:Math.round(fnAvg(recRows.map(o=>o.study))*10)/10,
+    zeroDays:recRows.filter(o=>o.study<=0).length,
+    daily: rows.map(o=>o.rec?o.study:null),
+    ma7: fnMA(rows.map(o=>o.rec?o.study:null),7),
+    cum:(()=>{ let s=0; return rows.map(o=>{ if(o.rec) s+=o.study; return s; }); })(),
+    cmp:cmp('study'),
+    slope:(()=>{ const s=fnSlope(rows.map((o,i)=>[i,o.rec?o.study:null])); return s==null?null:Math.round(s*100)/100; })(),
+    byName
+  };
+
+  const out = {
+    range:{ start, end, totalDays:all.length, dates:all,
+            labels: all.map(d=>{ const t=parseYmd(d); return (t.getMonth()+1)+'/'+t.getDate(); }) },
+    days:{ recorded:recRows.length, spanDays:span.length,
+           rate: span.length? Math.round(recRows.length/span.length*100):0,
+           first:recDates[0]||'', last:recDates[recDates.length-1]||'',
+           beforeStart,
+           streakMax, streakEndAt, streakNow, missing, missingN:missing.length },
+    fixes:{ applied:fixedList, n:fixedList.length, suspects, suspectN:suspects.length },
+    rows, study, typing, move, screen, writing, clock, weekday:wk,
+    narai:{ days:recRows.filter(o=>o.narai).length },
+    _half:{ n1:H1.length, n2:H2.length,
+            d1:[H1[0]&&H1[0].date, H1[H1.length-1]&&H1[H1.length-1].date],
+            d2:[H2[0]&&H2[0].date, H2[H2.length-1]&&H2[H2.length-1].date] }
+  };
+  out.findings = finaleFindings(out);
+  return out;
+}
+
+/* =====================================================================
+   気づき（ルールで 出す。AIとは 別に、数字だけで 言えることを 先に出す）
+   level: 'good' ほめる / 'watch' 気に なる / 'info' 見かた
+   ===================================================================== */
+function finaleFindings(S){
+  const F=[];
+  const add=(level,title,body,how)=>F.push({level,title,body,how:how||''});
+  /* pin ＝ 数字の 前提が 変わる 話。紙が 足りなくても ぜったいに 落とさない */
+  const pin=(level,title,body,how)=>F.push({level,title,body,how:how||'',pin:true});
+  const md = d => d? (parseYmd(d).getMonth()+1)+'月'+parseYmd(d).getDate()+'日' : '';
+
+  /* 記録の なおし・単位ちがい（いちばん 先に 出す。数字の 前提が 変わるので） */
+  if(S.fixes && S.fixes.n) pin('info','集計のときに 読みかえた記録があります',
+    S.fixes.applied.map(f=>`${md(f.date)} ${f.name}：${f.from} → ${f.to==null?'集計から除外':f.to}${f.note?`（${f.note}）`:''}`).join('　'),
+    '元の記録は書きかえていません。集計するときだけ読みかえています。');
+  if(S.fixes && S.fixes.suspectN) pin('watch','単位がちがう入力かもしれない記録があります',
+    S.fixes.suspects.slice(0,3).map(x=>`${md(x.date)} ${x.name}：${x.value}${x.unit}`
+      + `（${x.basis==='own' ? 'この教材のふだんは '+x.median+x.unit : 'ほかの教材はふだん '+x.median+x.unit+'・この教材は'+x.days+'日だけの記録'}）`).join('　')
+    + (S.fixes.suspectN>3?` ほか${S.fixes.suspectN-3}件`:''),
+    'たとえば「30分」を ページ数のらんに 30と入力すると、その日だけ極端に大きくなり、推移のグラフも前半・後半の比較もずれます。'
+    + '設定画面の「記録のなおし」で読みかえを登録すると、この数字を正しく直せます。');
+
+  /* 継続 */
+  if(S.days.rate>=95) add('good','記録がほぼ切れていない',
+    `${S.days.first?md(S.days.first)+'から ':''}${S.days.spanDays}日のうち${S.days.recorded}日（${S.days.rate}%）。最長で${S.days.streakMax}日連続。`,
+    '毎日の記録そのものが習慣化の証拠。中身の量より、まずここが続いたことを評価してよい所です。');
+  else if(S.days.missingN>0) add('watch','記録が抜けた日がある',
+    `${S.days.missingN}日ぶん記録がありません（${S.days.missing.slice(0,5).map(md).join('・')}${S.days.missingN>5?' ほか':''}）。`,
+    '抜けた日が連続しているなら「行事・旅行」など外的要因、散っているなら「面倒になる時間帯」がある可能性。');
+
+  /* 勉強量の前後半 */
+  const sc=S.study.cmp;
+  if(sc.pct!=null && sc.pct<=-25) add('watch','後半で学習量が落ちている',
+    `1日あたり 前半${sc.first} → 後半${sc.second}（${sc.pct}%）。`,
+    '「宿題が終わった」のか「息切れ」なのかで対応が変わります。下のやること別の表で、どの教材が止まったかを見てください。');
+  else if(sc.pct!=null && sc.pct>=20) add('good','後半のほうが学習量が多い',
+    `1日あたり 前半${sc.first} → 後半${sc.second}（+${sc.pct}%）。`,
+    '終盤に伸びるのは珍しい形。ペースを自分で上げられた、と見てよいです。');
+
+  /* やること別・未達 */
+  (S.study.byName||[]).forEach(g=>{
+    if(g.goalTotal==null) return;
+    if(g.pct>=100) add('good',`${g.name} は目標を達成`,
+      `${g.done}/${g.goalTotal}${g.unit}（${g.pct}%）。取り組んだ日数 ${g.days}日。`,'');
+    else if(g.pct<70) add('watch',`${g.name} が目標に届いていない`,
+      `${g.done}/${g.goalTotal}${g.unit}（${g.pct}%・残り${g.left}${g.unit}）。取り組んだ日は ${g.days}日／${S.days.recorded}日。`,
+      g.pace.pct!=null && g.pace.pct<=-30
+        ? `後半に失速しています（1日 ${g.pace.first}→${g.pace.second}${g.unit}）。量より「触らない日」が増えたことが原因の形です。`
+        : '「1日の量が足りない」のか「やらない日が多い」のかは、取り組んだ日数で見分けられます。');
+    else if(g.pace.pct!=null && g.pace.pct<=-40) add('watch',`${g.name} は達成したがペースが落ちた`,
+      `1日 ${g.pace.first}→${g.pace.second}${g.unit}（${g.pace.pct}%）。`,'');
+  });
+
+  /* からだ　🔴 プールに 入らない日は ほとんど 天気。運動不足と 読ませない */
+  const POOL_NOTE = 'プールは天候に左右されます。入らなかった日＝運動していない日 ではありません。';
+  if(S.move.activeRate>=80) add('good','体を動かさない日がほとんどない',
+    `${S.move.activeDays}日／${S.days.recorded}日（${S.move.activeRate}%）。うんどう ${S.move.exDays}日（${S.move.exRate}%）・プール ${S.move.poolDays}日（${S.move.poolRate}%）。`,
+    POOL_NOTE);
+  else if(S.move.activeRate<50) add('watch','体を動かした日が半分を切る',
+    `${S.move.activeDays}日／${S.days.recorded}日（${S.move.activeRate}%）。うんどう ${S.move.exRate}%・プール ${S.move.poolRate}%。どちらも0の日が最長 ${S.move.longestGap}日。`,
+    POOL_NOTE + ' プールを外した「うんどう」だけで見て、それでも少ないかどうかを確認してください。暑さで外に出られない時期もあります。');
+  if(S.move.cmp.pct!=null && S.move.cmp.pct<=-40) add('watch','後半になって体を動かす時間が減った',
+    `1日あたり ${S.move.cmp.first}分 → ${S.move.cmp.second}分。`,
+    POOL_NOTE + ' 8月は雨天が続くとプールが丸ごと落ちるので、この減りは天候のぶんを含みます。うんどうだけの推移（3ページ目のグラフの緑）で見直してください。');
+  /* 月ごとの プール＝ほぼ 天気の 記録 */
+  if((S.move.poolByMonth||[]).length>=2){
+    const pm=S.move.poolByMonth;
+    const t=pm.map(m=>`${Number(m.month.slice(5))}月 ${m.days}日／${m.of}日（${m.rate}%）`).join('　');
+    const drop = pm[pm.length-1].rate < pm[0].rate - 25;
+    if(drop) add('info','プールの日数は 月で 大きく変わった',
+      `${t}。`,
+      'プールは天気しだいなので、この差は本人の意欲ではなく 天候の記録として見てください。'
+      + '雨の日が続いた月は、その分だけ「動いた時間」の合計も下がります。');
+  }
+
+  /* 画面 */
+  if(S.screen.split){
+    const sp=S.screen.split, d=Math.round((sp.loStudy-sp.hiStudy)*10)/10;
+    if(d>0 && sp.loStudy>0 && (d/sp.loStudy)>=0.2)
+      add('watch','画面の時間が長い日は 学習量が落ちている',
+        `ゲーム・アニメが ${sp.median}分より 長い日（${sp.hiN}日）の学習量は 平均${sp.hiStudy}、短い日（${sp.loN}日）は 平均${sp.loStudy}。`,
+        '「ゲームをやめさせる」より「先に勉強を終える順番にする」ほうが効きやすい形です。因果ではなく傾向として見てください。');
+    else if(d<=0)
+      add('good','画面の時間と 学習量は 打ち消し合っていない',
+        `長い日 平均${sp.hiStudy}／短い日 平均${sp.loStudy}。`,
+        'ゲームの時間が勉強を削っている形にはなっていません。時間の総量ではなく、順番が守れているとみられます。');
+  }
+  if(S.screen.avg>=180) add('watch','画面の時間が1日あたり長い',
+    `平均 ${S.screen.avg}分／日（ゲーム${S.screen.gameMin}分・アニメ${S.screen.animeMin}分）。`,
+    '夏休みは長くなりがちです。2学期の平日の上限を、今のうちに数字で決めておくと揉めません。');
+
+  /* 作文 */
+  const wc=S.writing.cmp;
+  if(wc.pct!=null && wc.pct>=25) add('good','ふりかえりの文章が長くなった',
+    `1日あたり 前半${wc.first}字 → 後半${wc.second}字（+${wc.pct}%）。`,
+    '字数は「書くのが苦にならなくなった」の目安。中身の質は 下の代表作で見てください。');
+  else if(wc.pct!=null && wc.pct<=-20) add('watch','ふりかえりの文章が短くなった',
+    `1日あたり 前半${wc.first}字 → 後半${wc.second}字（${wc.pct}%）。`,
+    '飽きか、書くことが尽きたか。書く前に「何を書くか」を1つ決めてから書かせると戻ります。');
+  if(S.writing.kanjiSecond>S.writing.kanjiFirst) add('good','使う漢字の種類が増えた',
+    `前半 ${S.writing.kanjiFirst}種類 → 後半 ${S.writing.kanjiSecond}種類（全期間で ${S.writing.kanjiKinds}種類）。`,
+    'ひらがなで書けるところを漢字で書こうとした回数が増えた、ということ。習った漢字が「使える漢字」になりつつあります。');
+  if(S.writing.shortDays>=Math.max(3,Math.round(S.writing.days*0.3))) add('watch','ひとことで終わった日が多い',
+    `20字未満の日が ${S.writing.shortDays}日／${S.writing.days}日。`,
+    '「たのしかった」だけで終わる日。“何が・どうして”を1つ足すだけで倍になります。');
+
+  /* リズム */
+  if(S.clock.first!=null && S.clock.second!=null){
+    const dh=Math.round((S.clock.second-S.clock.first)*10)/10;
+    const fmt=h=>{ const H=Math.floor(h), M=Math.round((h-H)*60); return H+':'+String(M).padStart(2,'0'); };
+    if(dh>=1.5) add('watch','記録する時間が 後半になるほど 遅くなった',
+      `記録した時刻の中央値が 前半 ${fmt(S.clock.first)} → 後半 ${fmt(S.clock.second)}（${dh>0?'+':''}${dh}時間）。`,
+      '「その日の作業が後ろにずれた」目安になります。2学期の起床時刻に直結するので、8月末の数日で戻しておくのがおすすめです。');
+    else if(Math.abs(dh)<1) add('good','記録する時間が 最後まで ぶれていない',
+      `中央値 前半 ${fmt(S.clock.first)} ／ 後半 ${fmt(S.clock.second)}。`,
+      '生活のリズムが崩れていない目安。2学期への切り替えは軽く済みそうです。');
+  }
+  if(S.clock.lateDays>=Math.max(3,Math.round(S.days.recorded*0.25)))
+    add('watch','21時以降に記録した日が多い',`${S.clock.lateDays}日。`,
+      '記録そのものが遅いだけの日もありますが、続くと就寝時刻に効きます。');
+
+  /* タイピング */
+  if(S.typing.gainPct!=null && S.typing.gainPct>=20) add('good','タイピングのスコアが伸びた',
+    `はじめ ${S.typing.first} → 自己ベスト ${S.typing.best}（+${S.typing.gainPct}%）。記録した日 ${S.typing.count}日。`,
+    '同じ条件で測っているので、伸びはそのまま実力の伸びと見て構いません。');
+
+  /* 曜日 */
+  const wkStudy=S.weekday.filter(w=>w.n>0);
+  if(wkStudy.length>=5){
+    const lo=wkStudy.slice().sort((a,b)=>a.study-b.study)[0];
+    const hi=wkStudy.slice().sort((a,b)=>b.study-a.study)[0];
+    if(hi.study>0 && lo.study < hi.study*0.5)
+      add('info','曜日でムラがある',
+        `いちばん多いのは ${hi.label}よう日（平均${hi.study}）、少ないのは ${lo.label}よう日（平均${lo.study}）。`,
+        '習い事や外出の曜日と重なっていないか確認を。ムラ自体は悪くありませんが、2学期の宿題の配分に使えます。');
+  }
+
+  return F;
+}
+
+/* =====================================================================
+   紙もの 3つ（しょうじょう／ぼうけんの きろく／記録レポート）
+   ・どれも「白いA4」を そのまま 画面に 出す ＝ 印刷したものと 同じ
+   ・グラフは responsive:false（mmの 紙の中でも くずれない）
+   ===================================================================== */
+const SH_W = 680;                       /* 紙の 中身の はば（180mm ≒ 680px） */
+let sheetCharts = [];
+function killSheetCharts(){ sheetCharts.forEach(c=>{try{c.destroy()}catch(e){}}); sheetCharts=[]; }
+
+function shDate(d){ if(!d) return ''; const t=parseYmd(d); return (t.getMonth()+1)+'月'+t.getDate()+'日'; }
+function shDateW(d){ if(!d) return ''; const t=parseYmd(d); return (t.getMonth()+1)+'/'+t.getDate()+'('+WEEK[t.getDay()]+')'; }
+function shHM(min){ const h=Math.floor(min/60), m=Math.round(min%60);
+  return h? (h+'時間'+(m?m+'分':'')) : (m+'分'); }
+function shClock(h){ if(h==null) return '—'; const H=Math.floor(h), M=Math.round((h-H)*60);
+  return H+':'+String(M).padStart(2,'0'); }
+function shNum(v){ return (Math.round(v*10)/10).toLocaleString('ja-JP'); }
+/* やることの 単位が ぜんぶ 同じなら その単位、ちがえば 空 */
+function shUnit(S){
+  const u=[...new Set((S.study.byName||[]).filter(g=>g.done>0).map(g=>g.unit||''))].filter(Boolean);
+  return u.length===1 ? u[0] : '';
+}
+function shArrow(pct){
+  if(pct==null) return {cls:'fl', mark:'→', txt:'—'};
+  if(pct>=10)  return {cls:'up', mark:'▲', txt:'+'+pct+'%'};
+  if(pct<=-10) return {cls:'dn', mark:'▼', txt:pct+'%'};
+  return {cls:'fl', mark:'→', txt:(pct>0?'+':'')+pct+'%'};
+}
+
+/* =====================================================================
+   ① しょうじょう
+   ===================================================================== */
+function sheetShou(S, name){
+  const u = shUnit(S);
+  const studyDays = S.rows.filter(o=>o.rec&&o.study>0).length;
+  const moveAll = S.move.exMin + S.move.poolMin;
+  const t = parseYmd(S.days.last || S.range.end);
+  const cells = [
+    ['つづけた 日', S.days.recorded, '日'],
+    ['べんきょう', shNum(S.study.total), (u||'かい')],
+    ['うごいた 時間', Math.round(moveAll/60), '時間'],
+    ['書いた 文字', S.writing.totalChars.toLocaleString('ja-JP'), '字'],
+    ['タイピング さいこう', (S.typing.best!=null?S.typing.best:'—'), 'てん']
+  ];
+  return `
+<div class="sheet shou"><div class="shou-in">
+  <div class="shou-ttl">しょうじょう</div>
+  <div class="shou-sub">S U M M E R　Q U E S T　2 0 2 6</div>
+  <div class="shou-name">${esc(name)}<i>どの</i></div>
+  <div class="shou-body">
+    あなたは この なつやすみの あいだ<br>
+    <em>${S.days.recorded}日</em> つづけて じぶんの きろくを つけ<br>
+    ${S.days.streakMax>=S.days.recorded
+      ? 'ただの 一日も 休むこと なく'
+      : 'いちばん 長いときは <em>'+S.days.streakMax+'日</em> つづけて'}<br>
+    さいごの日まで やりぬきました。<br>
+    その ねばりづよさを たたえ ここに しょうじょうを おくります。
+  </div>
+  <div class="shou-nums">
+    <div class="hd">きみが つみあげた もの</div>
+    <div class="shou-grid">
+      ${cells.map(c=>`<div><span class="v">${c[1]}<i>${c[2]}</i></span><span class="l">${c[0]}</span></div>`).join('')}
+    </div>
+  </div>
+  <div class="shou-foot">
+    <div class="shou-date">${t.getFullYear()}年 ${t.getMonth()+1}月 ${t.getDate()}日</div>
+    <div style="display:flex;align-items:flex-end">
+      <div class="shou-sign"><span>DAILY MISSION SYSTEM</span><b>SUMMER QUEST</b></div>
+      <div class="shou-seal">夏の<br>ぼうけん</div>
+    </div>
+  </div>
+</div></div>`;
+}
+
+/* =====================================================================
+   ② ぼうけんの きろく（本人用）
+   🔴 できなかったことは 1行も 書かない
+   ===================================================================== */
+function sheetKid(S, name, fin){
+  const u = shUnit(S);
+  const moveAll = S.move.exMin + S.move.poolMin;
+  const studyDays = S.rows.filter(o=>o.rec&&o.study>0).length;
+
+  /* --- 40マス カレンダー --- */
+  const first = parseYmd(S.range.dates[0]);
+  const pad = first.getDay();
+  let cal = '<div class="kcal">' + WEEK.map(w=>`<div class="hd">${w}</div>`).join('')
+          + new Array(pad).fill('<div></div>').join('');
+  S.rows.forEach(o=>{
+    const d = parseYmd(o.date);
+    const big = o.rec && (o.study>0 && o.move>0 && o.chars>0);
+    cal += `<div class="c ${o.rec?('on'+(big?' big':'')):'pre'}"><b>${d.getDate()}</b>${o.rec?'<u>〇</u>':''}</div>`;
+  });
+  cal += '</div>';
+
+  /* --- やること別（できた ぶんだけ 出す） --- */
+  const goals = (S.study.byName||[]).filter(g=>g.done>0);
+  const goalHtml = goals.map(g=>{
+    const pct = g.goalTotal? Math.min(100,Math.round(g.done/g.goalTotal*100)) : null;
+    return `<tr><td class="l">${esc(g.emoji||'📖')} ${esc(g.name)}</td>
+      <td><b>${shNum(g.done)}</b>${esc(g.unit||'')}</td>
+      <td>${g.days}日</td>
+      <td class="bar"><i style="width:${pct!=null?Math.max(4,pct*0.70):0}px"></i><u>${pct!=null?pct+'%':'—'}</u></td></tr>`;
+  }).join('');
+
+  /* --- いちばん よく書けた ふりかえり --- */
+  const bd = (fin&&fin.best&&fin.best.date) ? fin.best.date : S.writing.maxDate;
+  const brow = S.rows.find(o=>o.date===bd);
+  const bwhy = (fin&&fin.best&&fin.best.why) ? fin.best.why : '';
+
+  /* --- 使った漢字 --- */
+  const kanji = (S.writing.kanjiList||[]).slice(0,80);
+
+  const letter = (fin&&fin.letter) ? fin.letter : '';
+  const fam    = (fin&&fin.family&&fin.family.text) ? fin.family : null;
+
+  return `
+<div class="sheet kid" data-fit="1">
+  <div class="kid-head">
+    <div class="who"><span>なまえ</span><b>${esc(name)}</b></div>
+    <b>ぼうけんの きろく</b>
+    <span>${shDate(S.days.first)} 〜 ${shDate(S.days.last)}　SUMMER QUEST 2026</span>
+  </div>
+
+  <div class="kid-kpis">
+    <div class="kid-kpi c1"><div class="v">${S.days.recorded}<i>日</i></div><div class="l">つづけた 日</div></div>
+    <div class="kid-kpi c2"><div class="v">${shNum(S.study.total)}<i>${esc(u||'かい')}</i></div><div class="l">べんきょう</div></div>
+    <div class="kid-kpi c3"><div class="v">${Math.round(moveAll/60)}<i>時間</i></div><div class="l">うごいた 時間</div></div>
+    <div class="kid-kpi c4"><div class="v">${S.writing.totalChars.toLocaleString('ja-JP')}<i>字</i></div><div class="l">書いた 文字</div></div>
+  </div>
+
+  <h4>🗓 きみが 〇を つけた 日</h4>
+  ${cal}
+  <p class="tiny muted">こい〇＝べんきょう・うんどう・ふりかえり が そろった日（${S.rows.filter(o=>o.rec&&o.study>0&&o.move>0&&o.chars>0).length}日）</p>
+
+  <h4>📚 やった ぶん</h4>
+  <table class="rt"><thead><tr><th class="l">やったこと</th><th>ぜんぶで</th><th>やった日</th><th>もくひょう</th></tr></thead>
+  <tbody>${goalHtml||'<tr><td class="l" colspan="4">—</td></tr>'}</tbody></table>
+
+  <h4>📈 べんきょうの つみあげ</h4>
+  <div class="chart"><canvas id="c_kStudy" width="${SH_W}" height="160"></canvas></div>
+  <p class="tiny muted">やるたびに 山が 高く なっていくよ。さいごは ${shNum(S.study.total)}${esc(u||'かい')}！</p>
+</div>
+
+<div class="sheet kid">
+  <h4>⌨️ タイピングの せいちょう</h4>
+  <div class="chart"><canvas id="c_kType" width="${SH_W}" height="165"></canvas></div>
+  <div class="kpis k3">
+    <div class="kpi"><div class="l">はじめの スコア</div><div class="v">${S.typing.first!=null?S.typing.first:'—'}</div></div>
+    <div class="kpi"><div class="l">じこ ベスト</div><div class="v" style="color:#0b3fa8">${S.typing.best!=null?S.typing.best:'—'}</div></div>
+    <div class="kpi"><div class="l">のびた ぶん</div><div class="v" style="color:#0e9f6e">${S.typing.gainPct!=null?'+'+S.typing.gainPct+'%':'—'}</div></div>
+  </div>
+
+  ${brow ? `<h4>✍️ いちばん よく 書けた ふりかえり</h4>
+  <div class="quote"><div class="d">${shDateW(brow.date)}　${brow.chars}字</div>
+    <div class="x">${esc(brow.text||'')}</div>
+    ${bwhy?`<div class="why">▶ ${esc(bwhy)}</div>`:''}</div>` : ''}
+
+  ${kanji.length? `<h4>㊗ この なつに つかった 漢字　<span style="font-size:9pt;font-weight:400;color:#64748b">${S.writing.kanjiKinds}しゅるい</span></h4>
+  <div class="klist">${kanji.map(c=>`<span>${esc(c)}</span>`).join('')}</div>` : ''}
+</div>
+
+<div class="sheet kid flow">
+  ${letter? `<h4>💌 AIコーチから きみへ</h4>
+  <div class="letter">${esc(letter)}<div class="from">SUMMER QUEST AIコーチ より</div></div>` : ''}
+
+  ${fam? `<h4>💝 おうちの人から</h4>
+  <div class="letter fam">${esc(fam.text)}<div class="from">${esc(fam.from||'おうちの人')} より</div></div>` : ''}
+</div>`;
+}
+
+function drawKidCharts(S){
+  if(typeof Chart==='undefined') return;
+  const L = S.range.labels;
+  const grid={color:'#e2e8f0'}, tick={color:'#64748b',font:{family:'Noto Sans JP',size:9},maxRotation:0,autoSkip:true,maxTicksLimit:14};
+  const base=(ex={})=>Object.assign({responsive:false,maintainAspectRatio:false,devicePixelRatio:2,
+    animation:false, plugins:{legend:{display:false}},
+    scales:{x:{grid,ticks:tick},y:{grid,ticks:tick,beginAtZero:true}}}, ex);
+
+  const cs=document.getElementById('c_kStudy');
+  if(cs) sheetCharts.push(new Chart(cs,{type:'line',data:{labels:L,datasets:[
+    {label:'つみあげ',data:S.study.cum,borderColor:'#0b3fa8',
+     backgroundColor:(c)=>{ const a=c.chart.ctx.createLinearGradient(0,0,0,180);
+       a.addColorStop(0,'rgba(11,63,168,.34)'); a.addColorStop(1,'rgba(103,211,232,.10)'); return a; },
+     fill:true,tension:.28,pointRadius:0,borderWidth:3}
+  ]},options:base()}));
+
+  const ct=document.getElementById('c_kType');
+  if(ct) sheetCharts.push(new Chart(ct,{type:'line',data:{labels:L,datasets:[
+    {data:S.typing.daily,borderColor:'#0891b2',backgroundColor:'rgba(8,145,178,.14)',
+     fill:true,tension:.3,pointRadius:2.5,pointBackgroundColor:'#0891b2',borderWidth:2.5,spanGaps:true}
+  ]},options:base()}));
+}
+
+/* =====================================================================
+   ③ なつやすみ 記録レポート（親用）
+   ・4まい。1まい目に「気づいたこと」＝いそがしい人は ここだけ
+   ・グラフには かならず「見かた」を つける
+   ===================================================================== */
+function sheetParent(S, name, fin){
+  const u = shUnit(S);
+  const made = new Date();
+  const foot = (n)=>`<div class="rp-foot"><span>SUMMER QUEST 記録レポート　${esc(name)}　${shDate(S.days.first)}〜${shDate(S.days.last)}</span><span>${n} / 6</span></div>`;
+  const head = (t,s)=>`<div class="rp-head"><div class="t"><b>${t}</b><span>${s}</span></div>
+     <div class="n"><b>${esc(name)}</b>${made.getFullYear()}年${made.getMonth()+1}月${made.getDate()}日 作成</div></div>`;
+
+  /* ---------- 1まい目：概要と 気づき ---------- */
+  /* 1ページに おさまる ぶんだけ 出す（あふれると 印刷が くずれる）。
+     中身は ぜんぶ 2ページ目いこうの グラフ・表に 出ているので 落としても 情報は 欠けない。 */
+  const pinned = S.findings.filter(f=>f.pin);
+  const rest = S.findings.filter(f=>!f.pin);
+  const _g = rest.filter(f=>f.level==='good');
+  const _w = rest.filter(f=>f.level==='watch');
+  const _i = rest.filter(f=>f.level==='info');
+  /* 🔴 「気になる」だけで 紙が うまると、できていた ことが 1つも 残らない。
+        先に 上限を つけて、ほめる ぶんが かならず 残るように する。 */
+  const watch= _w.slice(0,4), good = _g.slice(0,3), info = _i.slice(0,2);
+  const cut  = (_w.length-watch.length)+(_g.length-good.length)+(_i.length-info.length);
+  const fCard = f=>`<div class="find ${f.level}" data-fitdrop="1">
+    <span class="tag">${f.level==='good'?'できていた':(f.level==='watch'?'気になる':'参考')}</span>
+    <b>${esc(f.title)}</b><div class="bd">${esc(f.body)}</div>
+    ${f.how?`<div class="hw">▶ ${esc(f.how)}</div>`:''}</div>`;
+
+  const goalDone = (S.study.byName||[]).filter(g=>g.goalTotal!=null);
+  const goalPct = goalDone.length
+    ? Math.round(goalDone.reduce((a,g)=>a+Math.min(100,g.pct),0)/goalDone.length) : null;
+
+  const p1 = `<div class="sheet" data-fit="1">
+  ${head('なつやすみ 記録レポート','SUMMER QUEST 2026 ／ 本人の記録（自己申告）にもとづく集計')}
+  ${pinned.length?`<div style="margin-bottom:10px">${pinned.map(f=>`<div class="find ${f.level}">
+    <span class="tag">${f.level==='good'?'できていた':(f.level==='watch'?'要確認':'まえおき')}</span>
+    <b>${esc(f.title)}</b><div class="bd">${esc(f.body)}</div>
+    ${f.how?`<div class="hw">▶ ${esc(f.how)}</div>`:''}</div>`).join('')}</div>`:''}
+  <p class="tiny muted" style="margin-bottom:10px">
+    このレポートは、本人が毎日アプリに入力した記録を そのまま集計したものです。テストの点や成績ではありません。
+    「どれだけ続いたか」「どこで崩れたか」を数字で見て、2学期の声かけに使うことを目的にしています。
+    最後のページに、この数字の限界も書いてあります。</p>
+
+  <h4>1. 全体のようす</h4>
+  <div class="kpis k5">
+    <div class="kpi"><div class="l">記録した日数</div><div class="v">${S.days.recorded}<i>日</i></div><div class="s">対象 ${S.days.spanDays}日</div></div>
+    <div class="kpi"><div class="l">記録率</div><div class="v">${S.days.rate}<i>%</i></div><div class="s">最長連続 ${S.days.streakMax}日</div></div>
+    <div class="kpi"><div class="l">学習の総量</div><div class="v">${shNum(S.study.total)}<i>${esc(u||'')}</i></div><div class="s">1日平均 ${S.study.avg}</div></div>
+    <div class="kpi"><div class="l">目標の達成率</div><div class="v">${goalPct!=null?goalPct:'—'}<i>%</i></div><div class="s">目標つき ${goalDone.length}件の平均</div></div>
+    <div class="kpi"><div class="l">運動した日</div><div class="v">${S.move.activeRate}<i>%</i></div><div class="s">${S.move.activeDays}日／${S.days.recorded}日</div></div>
+  </div>
+  <div class="kpis k5">
+    <div class="kpi"><div class="l">画面の時間</div><div class="v">${S.screen.avg}<i>分/日</i></div><div class="s">合計 ${shHM(S.screen.total)}</div></div>
+    <div class="kpi"><div class="l">ふりかえり字数</div><div class="v">${S.writing.avg}<i>字/日</i></div><div class="s">合計 ${S.writing.totalChars.toLocaleString('ja-JP')}字</div></div>
+    <div class="kpi"><div class="l">使った漢字</div><div class="v">${S.writing.kanjiKinds}<i>種</i></div><div class="s">前半${S.writing.kanjiFirst}→後半${S.writing.kanjiSecond}</div></div>
+    <div class="kpi"><div class="l">タイピング</div><div class="v">${S.typing.best!=null?S.typing.best:'—'}</div><div class="s">初回 ${S.typing.first!=null?S.typing.first:'—'} ／ ${S.typing.count}日</div></div>
+    <div class="kpi"><div class="l">記録した時刻</div><div class="v">${shClock(S.clock.median)}</div><div class="s">中央値（21時以降 ${S.clock.lateDays}日）</div></div>
+  </div>
+  <div class="howto"><b>見かた：</b>「記録率」は 中身の多さではなく <b>続いたかどうか</b>だけを見た数字です。
+    小学校低学年では ここが いちばん残る力なので、量より先に この数字を見てください。
+    「学習の総量」は 単位のちがう教材を足しているので、<b>合計そのものより 推移（2ページ目いこう）</b>を見るほうが正確です。</div>
+
+  <h4>2. 気になること</h4>
+  ${watch.map(fCard).join('')}
+  ${info.map(fCard).join('')}
+  ${good.length?`<h4 style="border-left-color:#15803d">3. できていたこと</h4>
+  <div class="find good"><span class="tag">できていた</span>
+    <ul style="margin:2px 0 0 16px;padding:0">
+    ${good.map(f=>`<li style="margin-bottom:3px" data-fitdrop2="1"><b style="display:inline">${esc(f.title)}</b>
+      <span class="bd">${esc(f.body)}</span></li>`).join('')}
+    </ul></div>`:''}
+  <p class="tiny muted" data-fitnote="1" data-cut="${cut}" ${cut?'':'style="display:none"'}>※ このほか ${cut}件の気づきがありましたが、紙面の都合で省略しています（内容は2ページ目以降のグラフと表に含まれます）。</p>
+  ${foot(1)}</div>`;
+
+  /* ---------- 2まい目：学習 ---------- */
+  const sc = S.study.cmp, sa = shArrow(sc.pct);
+  const rows2 = (S.study.byName||[]).filter(g=>g.done>0||g.goalTotal!=null).map(g=>{
+    const pa = shArrow(g.pace.pct);
+    const cls = g.goalTotal==null ? '' : (g.pct>=100?'ok':(g.pct<70?'warn':''));
+    return `<tr class="${cls}">
+      <td class="l">${esc(g.name)}${g.desc?`<br><span class="tiny muted">${esc(g.desc)}</span>`:''}</td>
+      <td>${g.goalTotal!=null?g.goalTotal+esc(g.unit||''):'—'}</td>
+      <td>${shNum(g.done)}${esc(g.unit||'')}</td>
+      <td class="bar"><i style="width:${g.pct!=null?Math.max(3,Math.min(70,g.pct*0.70)):0}px"></i><u>${g.pct!=null?g.pct+'%':'—'}</u></td>
+      <td>${g.days}日<br><span class="tiny muted">${g.rate}%</span></td>
+      <td>${g.pace.first} → ${g.pace.second}<br><span class="tiny" style="color:${pa.cls==='dn'?'#c2410c':(pa.cls==='up'?'#15803d':'#64748b')}">${pa.mark} ${pa.txt}</span></td>
+    </tr>`;
+  }).join('');
+
+  const p2 = `<div class="sheet">
+  ${head('学習の量と 続きかた','2ページ目 ／ どれだけやったか・どこで落ちたか')}
+
+  <h4>4. 学習量の推移</h4>
+  <div class="chart"><canvas id="c_pStudy" width="${SH_W}" height="205"></canvas></div>
+  <div class="howto"><b>見かた：</b>薄い棒が その日の量、太い線が <b>7日ならし（前後3日の平均）</b>です。
+    棒は日によって跳ねるので、<b>線の高さがどう動いたか</b>だけを追ってください。
+    線が右下がりなら「息切れ」、途中でへこんで戻っていれば「一時的な予定の影響」と読めます。</div>
+  <div class="halves">
+    <div class="h"><div class="l">前半 ${S._half.n1}日（${shDate(S._half.d1[0])}〜）</div><div class="v">${sc.first}</div></div>
+    <div class="ar ${sa.cls}">${sa.mark}<b>${sa.txt}</b></div>
+    <div class="h"><div class="l">後半 ${S._half.n2}日（${shDate(S._half.d2[0])}〜）</div><div class="v">${sc.second}</div></div>
+  </div>
+  <p class="tiny muted">記録のある日を 半分ずつに分けて、1日あたりの平均を比べたものです。${S.study.zeroDays>0?`学習量が0だった日は ${S.study.zeroDays}日。`:''}</p>
+
+  <h4>5. やること別の達成状況</h4>
+  <table class="rt"><thead><tr>
+    <th class="l">やること</th><th>目標</th><th>実績</th><th>達成率</th><th>取り組んだ日</th><th>1日あたり 前半→後半</th>
+  </tr></thead><tbody>${rows2||'<tr><td class="l" colspan="6">—</td></tr>'}</tbody></table>
+  <div class="howto"><b>見かた：</b>達成率が低いとき、原因は2つに分かれます。
+    <b>①「取り組んだ日」が少ない</b>＝ そもそも手をつけない日が多かった → 声かけのタイミングの問題。
+    <b>②「1日あたり」が少ない</b>＝ 毎日やってはいたが量が足りない → 1回の分量設定の問題。
+    右の2列を見比べると どちらかが分かります。<b>「前半→後半」が大きく下がっている教材は、途中で放置された教材</b>です。</div>
+
+  ${foot(2)}</div>`;
+
+  /* ---------- 3まい目：生活とからだ ---------- */
+  const ma = shArrow(S.move.cmp.pct);
+  const sp = S.screen.split;
+  const ch = (S.clock.first!=null&&S.clock.second!=null) ? Math.round((S.clock.second-S.clock.first)*10)/10 : null;
+
+  const p3 = `<div class="sheet">
+  ${head('曜日のムラと からだ','3ページ目 ／ 曜日でどう変わったか・どれだけ動いたか')}
+
+  <h4>6. 曜日ごとのムラ</h4>
+  <div class="chart"><canvas id="c_pWeek" width="${SH_W}" height="155"></canvas></div>
+  <div class="howto"><b>見かた：</b>特定の曜日だけ落ちている場合、習い事・外出・家族の予定と重なっていることがほとんどです。
+    2学期の宿題も同じ曜日に落ちる可能性が高いので、<b>その曜日だけ量を減らす</b>ほうが続きます。
+    棒は2本あり、青が学習量（左目盛り）、緑が運動の分（右目盛り）です。</div>
+
+  <h4>7. 体を動かした時間</h4>
+  <div class="chart"><canvas id="c_pMove" width="${SH_W}" height="180"></canvas></div>
+  <div class="kpis k5">
+    <div class="kpi"><div class="l">うんどう 実施率</div><div class="v">${S.move.exRate}<i>%</i></div><div class="s">${S.move.exDays}日／${shHM(S.move.exMin)}</div></div>
+    <div class="kpi"><div class="l">プール 実施率</div><div class="v">${S.move.poolRate}<i>%</i></div><div class="s">${S.move.poolDays}日／${shHM(S.move.poolMin)}</div></div>
+    <div class="kpi"><div class="l">どちらか した日</div><div class="v">${S.move.activeRate}<i>%</i></div><div class="s">${S.move.activeDays}日／${S.days.recorded}日</div></div>
+    <div class="kpi"><div class="l">1日平均</div><div class="v">${S.move.avg}<i>分</i></div><div class="s">前半${S.move.cmp.first}→後半${S.move.cmp.second}</div></div>
+    <div class="kpi"><div class="l">うんどう0の最長</div><div class="v">${S.move.exGap}<i>日</i></div><div class="s">両方0は ${S.move.longestGap}日</div></div>
+  </div>
+  ${(S.move.poolByMonth||[]).length>=2?`<table class="rt"><thead><tr>
+    <th class="l">月</th>${S.move.poolByMonth.map(m=>`<th>${Number(m.month.slice(5))}月</th>`).join('')}</tr></thead>
+    <tbody><tr><td class="l">プールに入った日</td>${S.move.poolByMonth.map(m=>`<td>${m.days}日／${m.of}日<br><span class="tiny muted">${m.rate}%</span></td>`).join('')}</tr>
+    <tr><td class="l">プールの時間</td>${S.move.poolByMonth.map(m=>`<td>${shHM(m.min)}</td>`).join('')}</tr></tbody></table>`:''}
+  <div class="howto" style="border-left-color:#0891b2;background:#f0fbfe">
+    <b>🔴 プールは 天気の記録です。</b>プールに入らなかった日は、そのほとんどが <b>雨や天候不良の日</b>です。
+    <b>「プール0＝運動していない」とは読まないでください。</b>本人の意欲を見るなら、
+    プールを外した <b>「うんどう実施率」（${S.move.exRate}%）</b>のほうを見てください。<br>
+    <b>その他の見かた：</b>合計時間より「<b>うんどう0が何日続いたか</b>」（${S.move.exGap}日）。
+    低学年は1〜2日空くのは普通ですが、3日以上続くと戻すのに同じだけかかります。
+    プールは夏だけの活動なので、<b>9月以降はこの分（${shHM(S.move.poolMin)}）がそのまま抜けます</b>。代わりの時間を決めておくと落ち込みません。</div>
+  ${foot(3)}</div>
+
+  <div class="sheet">
+  ${head('画面の時間と 生活のリズム','4ページ目 ／ ゲーム・アニメ／記録した時刻')}
+
+  <h4>8. 画面の時間（ゲーム・アニメ）と 学習量</h4>
+  <div class="chart"><canvas id="c_pScreen" width="${SH_W}" height="200"></canvas></div>
+  ${sp?`<div class="halves">
+    <div class="h"><div class="l">画面が長い日（${sp.median}分より上・${sp.hiN}日）</div><div class="v">${sp.hiStudy}</div></div>
+    <div class="ar ${sp.loStudy>sp.hiStudy?'dn':'fl'}">${sp.loStudy>sp.hiStudy?'▼':'→'}<b>学習量</b></div>
+    <div class="h"><div class="l">画面が短い日（${sp.hiN?sp.median+'分以下':''}・${sp.loN}日）</div><div class="v">${sp.loStudy}</div></div>
+  </div>`:''}
+  <div class="howto"><b>見かた：</b>2本の線は 別々の目盛りです（左＝画面の分、右＝学習量）。
+    <b>読むべきは「上下が逆に動いているか」</b>だけ。逆に動く日が多ければ、時間の取り合いが起きています。
+    ${S.screen.corrStudy?`参考値として 相関は r=${(Math.round(S.screen.corrStudy.r*100)/100)}（n=${S.screen.corrStudy.n}）。−0.3より小さければ「長い日は学習が減る」傾向、0前後なら関係は見られません。`:''}
+    <b>これは因果ではありません</b>（外出した日は両方減る、など別の理由でも動きます）。</div>
+
+  <h4>9. 記録した時刻＝生活リズム</h4>
+  <div class="chart"><canvas id="c_pClock" width="${SH_W}" height="170"></canvas></div>
+  <div class="halves">
+    <div class="h"><div class="l">前半の中央値</div><div class="v">${shClock(S.clock.first)}</div></div>
+    <div class="ar ${ch!=null&&ch>=1?'dn':'fl'}">${ch!=null&&ch>=1?'▼':'→'}<b>${ch!=null?(ch>0?'+':'')+ch+'時間':'—'}</b></div>
+    <div class="h"><div class="l">後半の中央値</div><div class="v">${shClock(S.clock.second)}</div></div>
+  </div>
+  <div class="howto"><b>見かた：</b>その日の記録を「何時に入力したか」です。多くの場合、
+    <b>その日のやることが終わった時刻とほぼ同じ</b>になります。
+    夏休みの後半にかけて 1〜2時間 後ろにずれるのはよくあることですが、
+    <b>ずれたまま9月に入ると 朝が起きられません</b>。8月の最後の数日で 1時間ずつ前に戻すのが現実的です。
+    ${S.clock.lateDays?`21時以降だった日は ${S.clock.lateDays}日ありました。`:''}</div>
+  ${foot(4)}</div>`;
+
+  /* ---------- 4まい目：ことばの力 と まとめ ---------- */
+  const wa = shArrow(S.writing.cmp.pct);
+  const bd = (fin&&fin.best&&fin.best.date) ? fin.best.date : S.writing.maxDate;
+  const brow = S.rows.find(o=>o.date===bd);
+  const note = fin&&fin.parentNote ? fin.parentNote : null;
+
+  const p4 = `<div class="sheet">
+  ${head('ことばの力（作文の 推移）','5ページ目 ／ 字数・一文の長さ・使った漢字')}
+
+  <h4>10. ふりかえり（作文）の推移</h4>
+  <div class="chart"><canvas id="c_pWrite" width="${SH_W}" height="195"></canvas></div>
+  <div class="halves">
+    <div class="h"><div class="l">前半 1日あたり</div><div class="v">${S.writing.cmp.first}<span style="font-size:9pt">字</span></div></div>
+    <div class="ar ${wa.cls}">${wa.mark}<b>${wa.txt}</b></div>
+    <div class="h"><div class="l">後半 1日あたり</div><div class="v">${S.writing.cmp.second}<span style="font-size:9pt">字</span></div></div>
+  </div>
+  <div class="kpis k5">
+    <div class="kpi"><div class="l">書いた日</div><div class="v">${S.writing.days}<i>日</i></div></div>
+    <div class="kpi"><div class="l">いちばん長い日</div><div class="v">${S.writing.max}<i>字</i></div><div class="s">${shDate(S.writing.maxDate)}</div></div>
+    <div class="kpi"><div class="l">一文の長さ</div><div class="v">${S.writing.sentAvg}<i>字</i></div><div class="s">前半${S.writing.sentCmp.first}→後半${S.writing.sentCmp.second}文</div></div>
+    <div class="kpi"><div class="l">20字未満の日</div><div class="v">${S.writing.shortDays}<i>日</i></div><div class="s">60字以上 ${S.writing.longDays}日</div></div>
+    <div class="kpi"><div class="l">使った漢字</div><div class="v">${S.writing.kanjiKinds}<i>種</i></div><div class="s">前半${S.writing.kanjiFirst}→後半${S.writing.kanjiSecond}</div></div>
+  </div>
+  <div class="howto"><b>見かた：</b>字数は「書くことへの抵抗が減ったか」の目安で、<b>文章の上手さではありません</b>。
+    見るべきは3つ。<b>①字数が増えたか</b>（書くのが苦でなくなった）
+    <b>②20字未満の日が減ったか</b>（「たのしかった」で終わらせなくなった）
+    <b>③使った漢字の種類が増えたか</b>（習った字を <u>使える字</u> にできている）。
+    このうち③が いちばん 2学期の国語に直結します。</div>
+
+  ${foot(5)}</div>
+
+  <div class="sheet flow">
+  ${head('この夏の代表作 と 所見','6ページ目 ／ 作文の実物・AIの所見・この数字の限界')}
+
+  ${brow?`<h4>11. この夏の代表作</h4>
+  <div class="quote"><div class="d">${shDateW(brow.date)}　${brow.chars}字${(fin&&fin.best&&fin.best.date)?'（AIが選出）':'（最も長かった日）'}</div>
+    <div class="x">${esc(brow.text||'')}</div>
+    ${(fin&&fin.best&&fin.best.why)?`<div class="why">▶ ${esc(fin.best.why)}</div>`:''}</div>`:''}
+
+  ${note?`<h4>12. 所見（AIによる要約）</h4>
+  ${note.summary?`<p>${esc(note.summary)}</p>`:''}
+  ${Array.isArray(note.advice)&&note.advice.length?`<ul style="margin:4px 0 8px 18px;padding:0">
+    ${note.advice.map(a=>`<li style="margin-bottom:4px">${esc(a)}</li>`).join('')}</ul>`:''}
+  <p class="tiny muted">※ AIが記録の数字と文章から書いたものです。参考としてお読みください。</p>`:''}
+
+  <h4>${note?'13':'12'}. この数字の 読みかたの ちゅうい</h4>
+  <div class="howto" style="border-left-color:#b3261e;background:#fff5f5">
+    <b>① 自己申告です。</b>ページ数も時間も 本人の入力です。実際より多い日も 少ない日もあります。<br>
+    <b>② 単位が混ざっています。</b>「ページ」と「まい」など 別の単位を足した合計があります。合計の絶対値ではなく 推移で見てください。<br>
+    <b>③ 因果ではありません。</b>2つの数字が同じ向きに動いていても、原因がもう1つ別にあることがあります。<br>
+    <b>④ 記録がない日＝やっていない日 とは限りません。</b>入力を忘れただけの日も含まれます。<br>
+    <b>⑤ 学力の測定ではありません。</b>これは「続いたかどうか」と「取り組みの量」の記録です。<br>
+    <b>⑥ プールは天候の記録です。</b>入らなかった日は ほぼ天気によるもので、本人の意欲とは関係ありません。
+  </div>
+  ${(S.fixes&&S.fixes.n)?`<h4 style="border-left-color:#c2410c">${note?'14':'13'}. 集計のときに 読みかえた記録</h4>
+  <table class="rt"><thead><tr><th>日づけ</th><th class="l">やること</th><th>入力</th><th>集計に使った値</th><th class="l">理由</th></tr></thead>
+  <tbody>${S.fixes.applied.map(f=>`<tr><td>${shDate(f.date)}</td><td class="l">${esc(f.name)}</td>
+    <td>${f.from}</td><td><b>${f.to==null?'除外':f.to}</b></td><td class="l">${esc(f.note||'—')}</td></tr>`).join('')}</tbody></table>
+  <p class="tiny muted">単位のちがう入力（例：「30分」をページ数の欄に30と入力）が混ざると、その日だけ極端に大きくなり、
+    推移のグラフも前半・後半の比較もずれます。上の記録は集計時にだけ読みかえています。
+    <b>アプリに入っている元の記録は書きかえていません。</b></p>`:''}
+
+  <p class="tiny muted" style="margin-top:8px">
+    集計対象：${shDate(S.days.first)}〜${shDate(S.days.last)}（${S.days.spanDays}日／記録 ${S.days.recorded}日）。
+    ${(S.fixes&&S.fixes.n)?`読みかえた記録 ${S.fixes.n}件。`:''}
+    ${S.days.beforeStart?`※ ${shDate(S.range.start)}から${shDate(S.days.first)}の前日までの ${S.days.beforeStart}日は 記録開始前のため 集計から外しています。`:''}
+    作成：SUMMER QUEST（家庭学習記録アプリ）。</p>
+  ${foot(6)}</div>`;
+
+  return p1+p2+p3+p4;
+}
+
+function drawParentCharts(S){
+  if(typeof Chart==='undefined') return;
+  const L=S.range.labels;
+  const grid={color:'#e5e9ef'}, tick={color:'#64748b',font:{family:'Noto Sans JP',size:9},maxRotation:0,autoSkip:true,maxTicksLimit:14};
+  const base=(ex={})=>Object.assign({responsive:false,maintainAspectRatio:false,devicePixelRatio:2,animation:false,
+    plugins:{legend:{labels:{color:'#334155',font:{family:'Noto Sans JP',size:9},boxWidth:12,boxHeight:8}}},
+    scales:{x:{grid,ticks:tick},y:{grid,ticks:tick,beginAtZero:true}}}, ex);
+  const g=id=>document.getElementById(id);
+
+  if(g('c_pStudy')) sheetCharts.push(new Chart(g('c_pStudy'),{data:{labels:L,datasets:[
+    {type:'bar',label:'その日の学習量',data:S.study.daily,backgroundColor:'#c7dcf5',borderRadius:2},
+    {type:'line',label:'7日ならし',data:S.study.ma7,borderColor:'#1d4ed8',borderWidth:2.6,tension:.3,pointRadius:0,spanGaps:true}
+  ]},options:base()}));
+
+  if(g('c_pWeek')) sheetCharts.push(new Chart(g('c_pWeek'),{type:'bar',
+    data:{labels:S.weekday.map(w=>w.label+'よう'),datasets:[
+      {label:'学習量（平均）',data:S.weekday.map(w=>w.study),backgroundColor:'#1d4ed8',borderRadius:3},
+      {label:'運動（分・平均）',data:S.weekday.map(w=>w.move),backgroundColor:'#0e9f6e',borderRadius:3,yAxisID:'y1'}
+    ]},options:base({scales:{x:{grid,ticks:tick},
+      y:{position:'left',grid,ticks:tick,beginAtZero:true},
+      y1:{position:'right',grid:{drawOnChartArea:false},ticks:tick,beginAtZero:true}}})}));
+
+  if(g('c_pMove')) sheetCharts.push(new Chart(g('c_pMove'),{type:'bar',data:{labels:L,datasets:[
+    {label:'うんどう(分)',data:S.move.dailyEx,backgroundColor:'#0e9f6e',stack:'m',borderRadius:2},
+    {label:'プール(分)',data:S.move.dailyPool,backgroundColor:'#67d3e8',stack:'m',borderRadius:2}
+  ]},options:base({scales:{x:{stacked:true,grid,ticks:tick},y:{stacked:true,grid,ticks:tick,beginAtZero:true}}})}));
+
+  if(g('c_pScreen')) sheetCharts.push(new Chart(g('c_pScreen'),{data:{labels:L,datasets:[
+    {type:'bar',label:'画面の時間(分)',data:S.screen.daily,backgroundColor:'#fed7aa',borderRadius:2,yAxisID:'y'},
+    {type:'line',label:'学習量',data:S.study.daily,borderColor:'#1d4ed8',borderWidth:2,tension:.25,pointRadius:0,yAxisID:'y1',spanGaps:true}
+  ]},options:base({scales:{x:{grid,ticks:tick},
+    y:{position:'left',grid,ticks:tick,beginAtZero:true,title:{display:true,text:'分',color:'#64748b',font:{size:9}}},
+    y1:{position:'right',grid:{drawOnChartArea:false},ticks:tick,beginAtZero:true,title:{display:true,text:'学習量',color:'#64748b',font:{size:9}}}}})}));
+
+  if(g('c_pClock')) sheetCharts.push(new Chart(g('c_pClock'),{type:'line',data:{labels:L,datasets:[
+    {label:'記録した時刻',data:S.clock.daily,borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.10)',
+     fill:true,tension:.25,pointRadius:2,pointBackgroundColor:'#7c3aed',borderWidth:2,spanGaps:true}
+  ]},options:base({scales:{x:{grid,ticks:tick},
+    y:{grid,ticks:Object.assign({},tick,{callback:v=>Math.floor(v)+':00',stepSize:2}),
+       min:Math.max(0,Math.floor((Math.min(...S.clock.daily.filter(v=>v!=null),24))-1)),
+       max:Math.min(24,Math.ceil((Math.max(...S.clock.daily.filter(v=>v!=null),0))+1)),beginAtZero:false}}})}));
+
+  if(g('c_pWrite')) sheetCharts.push(new Chart(g('c_pWrite'),{data:{labels:L,datasets:[
+    {type:'bar',label:'ふりかえりの字数',data:S.writing.daily,backgroundColor:'#ddd6fe',borderRadius:2},
+    {type:'line',label:'7日ならし',data:S.writing.ma7,borderColor:'#7c3aed',borderWidth:2.6,tension:.3,pointRadius:0,spanGaps:true}
+  ]},options:base()}));
+}
+
+/* =====================================================================
+   紙が A4に おさまるまで 少しずつ 詰める（グラフを 描く 前に よぶ）
+   ---------------------------------------------------------------------
+   🔴 出る 中身の 量は データ次第で 変わる（気づきの 数・やることの 数・AIの 文の 長さ）。
+      決めうちの 上限では いつか あふれる。あふれた 紙は 印刷で ぶつ切りに なる。
+   ① [data-fitdrop] を 後ろから 外す（外した ぶんは 件数を 書く。だまって 消さない）
+   ② それでも 高いなら グラフの 高さを 少しずつ 下げる（中身は 消えない）
+   ===================================================================== */
+function fitSheets(root){
+  /* 🔴 .sheet は min-height:297mm なので scrollHeight は 1123px より 下がらない。
+        しきい値を 1123px「より 大きい」に しないと、おさまっているのに 削りつづける。 */
+  const lim = Math.round(297/25.4*96);         /* A4 たて＝1123px（96dpi） */
+  const host = root || document;
+  host.querySelectorAll('.sheet[data-fit]').forEach(sh=>{
+    const note = sh.querySelector('[data-fitnote]');
+    let cut = note ? (Number(note.dataset.cut)||0) : 0;
+    const say = ()=>{ if(!note) return; note.style.display='';
+      note.textContent = '※ このほか ' + cut + '件の気づきがありましたが、紙面の都合で省略しています'
+                       + '（内容は2ページ目以降のグラフと表に含まれます）。'; };
+    /* ① 気づきのカードを 後ろから（1つは 残す） */
+    let guard = 60;
+    while(sh.scrollHeight > lim && guard-- > 0){
+      const d = sh.querySelectorAll('[data-fitdrop]');
+      if(d.length <= 1) break;
+      d[d.length-1].remove(); cut++; say();
+    }
+    /* ② できていたことの 箇条書きを 後ろから（1つは 残す） */
+    guard = 40;
+    while(sh.scrollHeight > lim && guard-- > 0){
+      const d = sh.querySelectorAll('[data-fitdrop2]');
+      if(d.length <= 1) break;
+      d[d.length-1].remove(); cut++; say();
+    }
+    /* ③ グラフを 少しずつ 低く */
+    let step = 0;
+    while(sh.scrollHeight > lim && step++ < 10){
+      const cvs = sh.querySelectorAll('.chart canvas');
+      if(!cvs.length) break;
+      let moved = false;
+      cvs.forEach(c=>{
+        const h = Number(c.getAttribute('height')) || 160;
+        if(h > 110){ c.setAttribute('height', String(Math.round(h*0.93))); moved = true; }
+      });
+      if(!moved) break;
+    }
+    /* ④ それでも 入らないなら「ながれる紙」に する。
+       🔴 中身を これ以上 消すより、2枚に わたって 印刷される ほうが まし。
+          （切り取られると 何が 消えたか 分からない） */
+    if(sh.scrollHeight > lim) sh.classList.add('flow');
+  });
+}
+
+/* =====================================================================
+   FINALE：エンディング と 紙もの（v1.11.0）
+   ---------------------------------------------------------------------
+   ・8/31（＝夏休みの さいごの日）の 記録が 出たら、TOPに 金の ボタンが 出る
+   ・押すと エンディング（星→カレンダー40日→数字→AIの手紙）
+   ・そこから しょうじょう／ぼうけんの きろく（本人用）へ
+   ・親用レポートは せってい画面から（子アカでは 出ない）
+   🔴 AIは 1回だけ よぶ。結果は meta/finale に しまって 作りなおさない
+   ===================================================================== */
+const SQ_FINALE_URL = 'https://asia-northeast1-carflow-9d500.cloudfunctions.net/sqFinale';
+let FINALE = null;          // {letter, best:{date,why}, parentNote:{summary,advice}, madeAt}
+let finaleBusy = false;
+let _endTimers = [];
+let _starsOn = false;
+
+/* ---------- しまう・とりだす ---------- */
+Store.getFinale = async function(){
+  if(this.mode==='firebase'){
+    try{ const {doc,getDoc}=this.fns; const s=await withTimeout(getDoc(doc(this.fdb,'meta','finale')),8000);
+      if(s.exists()){ const m=s.data(); LS.set('sq_finale',JSON.stringify(m)); return m; } }
+    catch(e){ console.warn('しめくくりの よみこみは 端末を つかいます',e); }
+  }
+  try{ const t=LS.get('sq_finale'); return t?JSON.parse(t):null; }catch(e){ return null; }
+};
+Store.setFinale = async function(obj){
+  LS.set('sq_finale',JSON.stringify(obj));
+  if(this.mode==='firebase'){
+    try{ const {doc,setDoc}=this.fns; withTimeout(setDoc(doc(this.fdb,'meta','finale'),obj),8000)
+      .catch(e=>console.warn('しめくくりの 同期は あとで',e)); }catch(e){ console.warn(e); }
+  }
+  return true;
+};
+
+/* ---------- いま しめくくれるか ---------- */
+function finaleReady(){
+  const last = CONFIG.vacEnd;
+  return !!REPORTS[last];                 /* さいごの日の 記録が あるか */
+}
+function finaleName(){ return (META && META.name) ? META.name : CHILD_ID; }
+
+/* ---------- 集計（1回 作って 使いまわす） ---------- */
+let _statsCache = null, _statsKey = '';
+function finaleS(){
+  const key = Object.keys(REPORTS).length + '|' + CONFIG.vacStart + '|' + CONFIG.vacEnd
+            + '|' + JSON.stringify(CONFIG.fixes||[]) + '|' + JSON.stringify((CONFIG.goals||[]).map(g=>[g.name,g.unit,g.total]));
+  if(_statsKey !== key){ _statsCache = finaleStats(REPORTS, CONFIG); _statsKey = key; }
+  return _statsCache;
+}
+function finaleClearCache(){ _statsKey=''; _statsCache=null; }
+
+/* AIに わたす「数字の ことば」 */
+function finaleLines(S){
+  const u = shUnit(S);
+  const L = [];
+  L.push(`記録：${S.days.recorded}日／${S.days.spanDays}日（${S.days.rate}%）・最長連続 ${S.days.streakMax}日`);
+  L.push(`学習の総量：${shNum(S.study.total)}${u}（1日平均 ${S.study.avg}／前半 ${S.study.cmp.first} → 後半 ${S.study.cmp.second}）`);
+  (S.study.byName||[]).forEach(g=>{
+    if(!g.done && g.goalTotal==null) return;
+    L.push(`やること「${g.name}」：${shNum(g.done)}${g.unit}`
+      + (g.goalTotal!=null?`／目標 ${g.goalTotal}${g.unit}（${g.pct}%）`:'')
+      + `・取り組んだ日 ${g.days}日（${g.rate}%）・1日あたり 前半 ${g.pace.first} → 後半 ${g.pace.second}`);
+  });
+  L.push(`うんどう：${S.move.exDays}日（${S.move.exRate}%）・合計 ${S.move.exMin}分／うんどう0が最長 ${S.move.exGap}日`);
+  L.push(`プール：${S.move.poolDays}日（${S.move.poolRate}%）・合計 ${S.move.poolMin}分　※入らない日はほぼ天候`);
+  (S.move.poolByMonth||[]).forEach(m=>L.push(`　プール ${Number(m.month.slice(5))}月：${m.days}日／${m.of}日（${m.rate}%）`));
+  L.push(`ゲーム・アニメ：1日平均 ${S.screen.avg}分（ゲーム ${S.screen.gameMin}分・アニメ ${S.screen.animeMin}分／前半 ${S.screen.cmp.first} → 後半 ${S.screen.cmp.second}）`);
+  if(S.screen.split) L.push(`画面が長い日（${S.screen.split.median}分超・${S.screen.split.hiN}日）の学習量 ${S.screen.split.hiStudy}／短い日（${S.screen.split.loN}日）${S.screen.split.loStudy}`);
+  L.push(`タイピング：初回 ${S.typing.first} → 自己ベスト ${S.typing.best}（記録 ${S.typing.count}日${S.typing.gainPct!=null?'／+'+S.typing.gainPct+'%':''}）`);
+  L.push(`ふりかえり：書いた日 ${S.writing.days}日・合計 ${S.writing.totalChars}字・1日平均 ${S.writing.avg}字（前半 ${S.writing.cmp.first} → 後半 ${S.writing.cmp.second}）`);
+  L.push(`　20字未満の日 ${S.writing.shortDays}日／60字以上の日 ${S.writing.longDays}日・一文の平均 ${S.writing.sentAvg}字`);
+  L.push(`　使った漢字の種類 ${S.writing.kanjiKinds}種（前半 ${S.writing.kanjiFirst} → 後半 ${S.writing.kanjiSecond}）`);
+  L.push(`記録した時刻の中央値：${shClock(S.clock.median)}（前半 ${shClock(S.clock.first)} → 後半 ${shClock(S.clock.second)}／21時以降 ${S.clock.lateDays}日）`);
+  L.push(`習い事のあった日：${S.narai.days}日`);
+  const wk = S.weekday.filter(w=>w.n>0);
+  if(wk.length) L.push('曜日別の学習量（平均）：' + wk.map(w=>`${w.label}${w.study}`).join('／'));
+  if(S.fixes && S.fixes.n) S.fixes.applied.forEach(f=>
+    L.push(`※ ${f.date} の「${f.name}」は 入力 ${f.from} を 集計では ${f.to==null?'除外':f.to} として扱っています（${f.note||'単位ちがいのため'}）`));
+  return L;
+}
+
+/* ---------- AIを よぶ（1回だけ） ---------- */
+async function finaleAsk(force){
+  if(finaleBusy) return FINALE;
+  if(FINALE && !force) return FINALE;
+  finaleBusy = true;
+  try{
+    const S = finaleS();
+    const body = {
+      token: SQ_REPLY_TOKEN,
+      name: finaleName(),
+      first: S.days.first, last: S.days.last,
+      spanDays: S.days.spanDays, recorded: S.days.recorded,
+      rate: S.days.rate, streakMax: S.days.streakMax,
+      lines: finaleLines(S),
+      findings: S.findings.map(f=>({level:f.level, title:f.title, body:f.body})),
+      reflections: S.rows.filter(o=>o.rec && o.chars>0).map(o=>({date:o.date, chars:o.chars, text:o.text}))
+    };
+    const r = await withTimeout(fetch(SQ_FINALE_URL,{
+      method:'POST', headers:{'Content-Type':'application/json','X-SQ-Token':SQ_REPLY_TOKEN},
+      body: JSON.stringify(body)
+    }), 180000);
+    if(!r.ok){ const t=await r.text().catch(()=>''); throw new Error('AI '+r.status+' '+t.slice(0,120)); }
+    const j = await r.json();
+    FINALE = { letter:j.letter||'', best:j.best||null, parentNote:j.parentNote||null,
+               madeAt:new Date().toISOString() };
+    await Store.setFinale(FINALE);
+    return FINALE;
+  }catch(e){
+    console.warn('しめくくりの AIに つながりませんでした',e);
+    return null;
+  }finally{ finaleBusy = false; }
+}
+
+/* =====================================================================
+   TOPの 金のボタン
+   ===================================================================== */
+function goldButtonHtml(){
+  if(!finaleReady()) return '';
+  const S = finaleS();
+  return `
+  <div class="goldwrap">
+    <div class="goldsub">なつやすみ ${S.days.recorded}日ぶんの きろくが そろいました</div>
+    <button class="gold" id="btnEnd">ぼうけんを おわる<span class="jp">さいごの 日</span></button>
+  </div>`;
+}
+function wireGold(){
+  const b = document.getElementById('btnEnd');
+  if(b) b.onclick = ()=>startEnding();
+}
+
+/* =====================================================================
+   星空（エンディングの あいだだけ 動く）
+   ===================================================================== */
+function starsStart(){
+  const c = document.getElementById('starsF'); if(!c || _starsOn) return;
+  _starsOn = true;
+  const x = c.getContext('2d'); let st=[];
+  const rs = ()=>{ c.width=innerWidth; c.height=innerHeight;
+    st=Array.from({length:110},()=>({x:Math.random()*c.width,y:Math.random()*c.height,
+      r:Math.random()*1.3+.2,a:Math.random(),s:Math.random()*.015+.004})); };
+  rs(); c._rs = rs; addEventListener('resize', rs);
+  (function loop(){
+    if(!_starsOn) return;
+    x.clearRect(0,0,c.width,c.height);
+    st.forEach(p=>{ p.a+=p.s; const o=(Math.sin(p.a)+1)/2*.7+.15;
+      x.fillStyle='rgba(200,225,255,'+o+')'; x.beginPath(); x.arc(p.x,p.y,p.r,0,7); x.fill(); });
+    requestAnimationFrame(loop);
+  })();
+}
+function starsStop(){ _starsOn=false; const c=document.getElementById('starsF');
+  if(c && c._rs) removeEventListener('resize', c._rs); }
+
+/* =====================================================================
+   エンディング
+   ===================================================================== */
+function endClear(){ _endTimers.forEach(clearTimeout); _endTimers=[]; }
+const _T = (f,ms)=>_endTimers.push(setTimeout(f,ms));
+
+function startEnding(){
+  const S = finaleS();
+  const E = document.getElementById('ending');
+  E.innerHTML = endingHtml(S);
+  E.classList.add('on');
+  document.body.style.overflow='hidden';
+  starsStart();
+  document.getElementById('endSkip').onclick = closeEnding;
+  document.getElementById('endAgain').onclick = ()=>{ endClear(); startEnding(); };
+  document.getElementById('endKid').onclick   = ()=>{ closeEnding(); switchView('sheets'); };
+  document.getElementById('endShou').onclick  = ()=>{ closeEnding(); openSheets('shou'); };
+  runEnding(S);
+  /* AIの 手紙は 裏で とりに いく（まだ 無ければ） */
+  if(!FINALE){
+    const wait = document.getElementById('endLetterWait');
+    if(wait) wait.style.display='';
+    finaleAsk().then(f=>{
+      const box = document.getElementById('endLetter');
+      if(!box) return;
+      if(f && f.letter){
+        box.innerHTML = `<div class="eletter">${esc(f.letter)}<div class="from">SUMMER QUEST AIコーチ より</div></div>`;
+      }else{
+        box.innerHTML = `<div class="eletter warnbox">手紙が うまく とどきませんでした。<br>
+          インターネットに つないで、もういちど ひらいて みてね。</div>`;
+      }
+    });
+  }
+}
+function closeEnding(){
+  endClear(); starsStop();
+  const E=document.getElementById('ending');
+  E.classList.remove('on'); E.innerHTML='';
+  document.body.style.overflow='';
+}
+
+function endingHtml(S){
+  const fam = CONFIG.familyMsg && String(CONFIG.familyMsg.text||'').trim() ? CONFIG.familyMsg : null;
+  const moveAll = S.move.exMin + S.move.poolMin;
+  const u = shUnit(S);
+  const stats = [
+    {n:S.days.recorded, l:'つづけた 日', gold:true},
+    {n:S.move.poolDays, l:'プールに 入った 日'},
+    {n:S.writing.days,  l:'かいた ふりかえり'},
+    {n:S.writing.totalChars, s:'字', l:'かいた 字の 数'},
+    {n:(S.typing.best!=null?S.typing.best:0), l:'タイピング さいこう'},
+    {n:moveAll, s:'分', l:'うんどうした 時間'}
+  ];
+  /* 月ごとの カレンダー（夏休みの 期間ぜんぶ） */
+  const months = [];
+  S.range.dates.forEach(d=>{ const k=d.slice(0,7); if(months.indexOf(k)<0) months.push(k); });
+  const MN=['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+  const WD=['日','月','火','水','木','金','土'];
+  const calHtml = months.map(k=>{
+    const y=+k.slice(0,4), m=+k.slice(5)-1;
+    const first=new Date(y,m,1), last=new Date(y,m+1,0);
+    let g = WD.map((w,i)=>`<div class="wd${i===0?' u':(i===6?' s':'')}">${w}</div>`).join('');
+    for(let i=0;i<first.getDay();i++) g+='<div></div>';
+    for(let d=1;d<=last.getDate();d++){
+      const key=ymd(new Date(y,m,d));
+      const inR = key>=S.range.start && key<=S.range.end;
+      g += `<div class="cell${inR?' act':''}"${inR?` data-d="${key}"`:''}><span>${d}</span>`
+         + (inR?'<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45"/></svg>':'') + '</div>';
+    }
+    return `<div class="cal"><div class="m">${MN[m]}</div><div class="grid7">${g}</div></div>`;
+  }).join('');
+
+  return `
+  <button class="skip" id="endSkip">とじる</button>
+  <div class="ewrap">
+    <div class="etitle fade" id="et1">
+      <div class="sub">SUMMER QUEST 2026</div>
+      <div class="main">ぼうけんの きろく</div>
+      <div class="days">${(function(){const a=parseYmd(S.days.first),b=parseYmd(S.days.last);
+        return (a.getMonth()+1)+' / '+a.getDate()+' &nbsp;—&nbsp; '+(b.getMonth()+1)+' / '+b.getDate()
+             + ' &nbsp;・&nbsp; '+S.days.recorded+' DAYS';})()}</div>
+    </div>
+
+    <div class="calbox fade" id="et2">
+      <div class="calhead">
+        <div class="cntl">つづけた 日</div>
+        <div class="cnt"><span id="endCnt">0</span> <span style="font-size:16px;color:var(--silver-dim)">/ ${S.days.recorded}</span></div>
+      </div>
+      <div class="cals">${calHtml}</div>
+      <div class="allclear" id="endAc">
+        <div class="big">${S.days.missingN===0
+          ? S.days.recorded+'日、1日も 休まなかった'
+          : S.days.recorded+'日、きろくを つづけた'}</div>
+        <div class="sm">${shDate(S.days.first)}から ${shDate(S.days.last)}まで<br>
+          ${S.days.missingN===0 ? 'きろくが とぎれた 日は ありません'
+                                : 'いちばん 長いときは '+S.days.streakMax+'日 つづきました'}</div>
+      </div>
+    </div>
+
+    <div class="stats fade" id="et3">
+      ${stats.map(o=>`<div class="stat${o.gold?' gold':''}"><div class="n" data-to="${o.n}">0${o.s?`<small>${o.s}</small>`:''}</div><div class="l">${o.l}</div></div>`).join('')}
+    </div>
+
+    <div class="fade" id="et4">
+      <div class="ehead">💌 AIコーチから きみへ</div>
+      <div id="endLetter">${FINALE&&FINALE.letter
+        ? `<div class="eletter">${esc(FINALE.letter)}<div class="from">SUMMER QUEST AIコーチ より</div></div>`
+        : `<div class="eletter waitbox" id="endLetterWait">40日ぶんを 読んでいます…<br>
+             <span style="font-size:12px;opacity:.7">すこし 時間が かかります（30秒くらい）</span></div>`}</div>
+
+      ${fam?`<div class="ehead" style="margin-top:26px">💝 おうちの人から</div>
+        <div class="eletter fam">${esc(fam.text)}<div class="from">${esc(fam.from||'おうちの人')} より</div></div>`:''}
+
+      <div class="ebtns">
+        <button class="btn gold2" id="endShou">🏅 しょうじょうを 見る</button>
+        <button class="btn" id="endKid">📔 ぼうけんの きろくを 見る</button>
+      </div>
+      <div class="again"><button id="endAgain">もういちど 見る</button></div>
+    </div>
+  </div>`;
+}
+
+function runEnding(S){
+  endClear();
+  const E=document.getElementById('ending');
+  const cells = {};
+  E.querySelectorAll('.cell[data-d]').forEach(c=>cells[c.dataset.d]=c);
+  const days = S.rows.filter(o=>o.rec).map(o=>o.date);
+  _T(()=>document.getElementById('et1').classList.add('in'), 120);
+  _T(()=>document.getElementById('et2').classList.add('in'), 900);
+  let t=1900;
+  days.forEach((k,i)=>{
+    const isLast = (i===days.length-1);
+    const step = isLast ? 700 : Math.max(52, 150-i*2.6);
+    _T(()=>{
+      const c=cells[k]; if(!c) return;
+      c.classList.add('done','pop'); if(isLast) c.classList.add('last');
+      const n=document.getElementById('endCnt'); if(n) n.textContent=i+1;
+      setTimeout(()=>c.classList.remove('pop'),520);
+    }, t);
+    t += step;
+  });
+  _T(()=>{ const a=document.getElementById('endAc'); if(a) a.classList.add('in'); }, t+250);
+  _T(()=>{ const e=document.getElementById('et3'); if(e){ e.classList.add('in'); endCountUp(); } }, t+1200);
+  _T(()=>{ const e=document.getElementById('et4'); if(e) e.classList.add('in'); }, t+2400);
+}
+function endCountUp(){
+  document.querySelectorAll('#ending .stat .n').forEach(n=>{
+    const to=+n.dataset.to, small=n.querySelector('small');
+    const dur=1100, t0=performance.now();
+    (function tick(now){
+      const p=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-p,3);
+      n.textContent=Math.round(to*e).toLocaleString('ja-JP');
+      if(small) n.appendChild(small);
+      if(p<1) requestAnimationFrame(tick);
+    })(t0);
+  });
+}
+
+/* =====================================================================
+   紙もの（画面 ＝ 印刷したもの）
+   ===================================================================== */
+let sheetKind = 'kid';
+function openSheets(kind){ sheetKind = kind||'kid'; switchView('sheets'); }
+
+function renderSheets(){
+  const el=$('#view-sheets');
+  const S=finaleS(), nm=finaleName();
+  const bar = `<div class="sheetbar noprint">
+      <h2>${sheetKind==='shou'?'🏅 しょうじょう':'📔 ぼうけんの きろく'}</h2>
+      <span class="sp"></span>
+      <button class="btn ghost small" id="shTab1">🏅 しょうじょう</button>
+      <button class="btn ghost small" id="shTab2">📔 ぼうけんの きろく</button>
+      <button class="btn small" id="shPrint">🖨 いんさつ</button>
+      <button class="btn ghost small" id="shBack">← もどる</button>
+    </div>`;
+  killSheetCharts();
+  if(sheetKind==='shou'){
+    el.innerHTML = bar + `<div class="sheetwrap" id="shHost">${sheetShou(S,nm)}</div>`;
+    fitSheets(document.getElementById('shHost'));
+  }else{
+    el.innerHTML = bar + `<div class="sheetwrap" id="shHost">${sheetKid(S,nm,finaleForSheets())}</div>`;
+    const host=document.getElementById('shHost');
+    fitSheets(host); drawKidCharts(S);
+  }
+  $('#shTab1').onclick=()=>{ sheetKind='shou'; renderSheets(); };
+  $('#shTab2').onclick=()=>{ sheetKind='kid';  renderSheets(); };
+  $('#shPrint').onclick=printSheets;
+  $('#shBack').onclick=()=>switchView('home');
+}
+
+/* 紙に わたす AIの ぶん（おうちの人の メッセージも 足す） */
+function finaleForSheets(){
+  const f = Object.assign({}, FINALE||{});
+  const fam = CONFIG.familyMsg;
+  if(fam && String(fam.text||'').trim()) f.family = fam;
+  return f;
+}
+
+function renderPReport(){
+  const el=$('#view-preport');
+  const S=finaleS(), nm=finaleName();
+  killSheetCharts();
+  el.innerHTML = `<div class="sheetbar noprint">
+      <h2>📊 なつやすみ 記録レポート（保護者用）</h2>
+      <span class="sp"></span>
+      ${FINALE&&FINALE.parentNote?'':'<button class="btn ghost small" id="prAsk">🤖 AIの所見をつくる</button>'}
+      <button class="btn small" id="prPrint">🖨 いんさつ</button>
+      <button class="btn ghost small" id="prBack">← せっていに もどる</button>
+    </div>
+    <div class="sheetwrap" id="prHost">${sheetParent(S,nm,finaleForSheets())}</div>`;
+  const host=document.getElementById('prHost');
+  fitSheets(host); drawParentCharts(S);
+  $('#prPrint').onclick=printSheets;
+  $('#prBack').onclick=()=>switchView('settings');
+  const ask=$('#prAsk');
+  if(ask) ask.onclick=async()=>{
+    ask.disabled=true; ask.textContent='40日ぶんを 読んでいます…';
+    const f=await finaleAsk();
+    if(f) renderPReport(); else { ask.disabled=false; ask.textContent='🤖 もういちど ためす'; toast('AIに つながりませんでした'); }
+  };
+}
+
+function printSheets(){
+  document.body.classList.add('print-mode');
+  const done=()=>{ document.body.classList.remove('print-mode'); window.removeEventListener('afterprint',done); };
+  window.addEventListener('afterprint',done);
+  setTimeout(()=>{ try{ window.print(); }catch(e){} setTimeout(done,1200); }, 60);
+}
+
+/* =====================================================================
+   せってい：おうちの人からの メッセージ ／ 記録のなおし
+   ===================================================================== */
+function finaleSettingsHtml(){
+  const S = finaleS();
+  const fam = CONFIG.familyMsg||{text:'',from:''};
+  const fixes = CONFIG.fixes||[];
+  const sus = (S.fixes&&S.fixes.suspects)||[];
+  return `
+  <div class="panel"><h2><span class="tag">REPORT</span>なつやすみ 記録レポート（保護者用）</h2>
+    <div class="small-note" style="margin:0 0 12px">
+      40日ぶんの 記録を まとめた A4 6ページの レポートです。学校の先生に お見せしても 大丈夫なように、
+      各グラフに「見かた」と「この数字の限界」を つけてあります。画面に出るものが そのまま印刷されます。
+      ${finaleReady()?'':'<br><b style="color:var(--warn)">※ '+CONFIG.vacEnd+' の記録がまだ入っていません。途中でも見られますが、数字は未確定です。</b>'}
+    </div>
+    <div class="row">
+      <button class="btn" id="btnPReport">📊 レポートを ひらく</button>
+      <button class="btn ghost" id="btnKidReport">📔 本人用を ひらく</button>
+      <button class="btn ghost" id="btnShou">🏅 しょうじょう</button>
+    </div>
+    <div class="small-note" style="margin-top:10px">
+      ${FINALE&&FINALE.madeAt
+        ? 'AIの 手紙・所見：作成ずみ（'+new Date(FINALE.madeAt).toLocaleString('ja-JP')+'）'
+        : 'AIの 手紙・所見：まだ 作っていません（レポート画面の「AIの所見をつくる」から）'}
+      ${FINALE&&FINALE.madeAt?'<button class="btn ghost small" id="btnFinaleRedo" style="margin-left:8px">作りなおす</button>':''}
+    </div>
+  </div>
+
+  <div class="panel"><h2><span class="tag">MESSAGE</span>おうちの人からの メッセージ</h2>
+    <div class="small-note" style="margin:0 0 12px">
+      エンディングと「ぼうけんの きろく」の さいごに 出ます。
+      <b>先に 書いておいてください</b>（当日 その場で 書くと あわてます）。
+    </div>
+    <div class="field"><label>メッセージ</label>
+      <textarea id="setFamText" rows="6" lang="ja" placeholder="びゃくれん へ&#10;&#10;毎日 かかさず 書いていたね。…">${esc(fam.text||'')}</textarea></div>
+    <div class="field"><label>だれから</label>
+      <input type="text" lang="ja" id="setFamFrom" value="${esc(fam.from||'')}" placeholder="おとうさん"/></div>
+    <div class="small-note">お子さんが 読みます。漢字は ひかえめに。</div>
+  </div>
+
+  <div class="panel"><h2><span class="tag">FIX</span>記録の なおし（単位ちがい）</h2>
+    <div class="small-note" style="margin:0 0 12px">
+      「30分の 調べもの」を ページ数の らんに <b>30</b> と 入れてしまう ような ときの ためのものです。
+      そのままだと <b>その日だけ グラフが つきぬけて、前半・後半の 比べも ずれます</b>。<br>
+      ここで「集計するときは この数で 読む」を 決められます。
+      <b>元の 記録は 書きかえません。</b>レポートには「読みかえた」ことを かならず 出します。
+    </div>
+    ${sus.length?`<div class="fixsus">
+      <div class="fixsus-h">⚠ 単位が ちがうかも しれない 記録が ${sus.length}件 あります</div>
+      ${sus.slice(0,8).map((x,i)=>`<div class="fixsus-r">
+        <span class="d">${shDate(x.date)}</span>
+        <span class="n">${esc(x.name)}</span>
+        <span class="v">${x.value}${esc(x.unit)}<em>${x.basis==='own'
+          ? 'ふだんは '+x.median+esc(x.unit)
+          : 'ほかの やることは ふつう '+x.median+esc(x.unit)+'（これは '+x.days+'日だけの記録）'}</em></span>
+        <button class="btn ghost small fixadd" data-d="${x.date}" data-n="${esc(x.name)}" data-v="${x.suggest}">→ ${x.suggest} として 読む</button>
+      </div>`).join('')}
+    </div>`:'<div class="small-note" style="opacity:.7">いまのところ、あやしい記録は 見つかっていません。</div>'}
+    <div id="fixList" style="margin-top:12px"></div>
+    <button class="addbtn" id="addFix" style="margin-top:4px">＋ なおしを 追加</button>
+  </div>`;
+}
+
+function fixRowHtml(f){
+  return `<div class="row fix-edit" style="align-items:flex-end;gap:6px">
+    <div class="field" style="margin:0;flex:0 0 118px"><label>日づけ</label>
+      <input type="text" class="f-d" value="${esc(f.d||'')}" placeholder="2026-07-29"/></div>
+    <div class="field" style="margin:0;flex:1"><label>やること</label>
+      <input type="text" lang="ja" class="f-n" value="${esc(f.n||'')}" placeholder="研究の下調べ"/></div>
+    <div class="field" style="margin:0;flex:0 0 92px"><label>読みかえる数</label>
+      <input type="text" class="f-v" value="${f.v==null?'':esc(String(f.v))}" placeholder="2"/></div>
+    <div class="field" style="margin:0;flex:1"><label>理由（レポートに出ます）</label>
+      <input type="text" lang="ja" class="f-note" value="${esc(f.note||'')}" placeholder="30分の調べものを ページ相当に読みかえ"/></div>
+    <button class="delbtn f-del" title="消す">✕</button>
+  </div>`;
+}
+
+function wireFinaleSettings(){
+  const list = document.getElementById('fixList');
+  if(!list) return;
+  const add = (f)=>{ const d=document.createElement('div'); d.innerHTML=fixRowHtml(f||{});
+    const row=d.firstElementChild; list.appendChild(row);
+    row.querySelector('.f-del').onclick=()=>row.remove(); };
+  (CONFIG.fixes||[]).forEach(add);
+  const ab=document.getElementById('addFix'); if(ab) ab.onclick=()=>add({});
+  document.querySelectorAll('.fixadd').forEach(b=>{
+    b.onclick=()=>{ add({d:b.dataset.d, n:b.dataset.n, v:b.dataset.v, note:'単位ちがい（自動で見つけたもの）'});
+      b.disabled=true; b.textContent='下に 足しました'; toast('下の「なおし」に 足しました。設定を保存してください'); };
+  });
+  const p=document.getElementById('btnPReport'); if(p) p.onclick=()=>switchView('preport');
+  const k=document.getElementById('btnKidReport'); if(k) k.onclick=()=>openSheets('kid');
+  const s=document.getElementById('btnShou'); if(s) s.onclick=()=>openSheets('shou');
+  const r=document.getElementById('btnFinaleRedo');
+  if(r) r.onclick=async()=>{
+    if(!window.confirm('AIの 手紙と 所見を 作りなおします。いまのものは 消えます。よろしいですか？')) return;
+    r.disabled=true; r.textContent='作っています…';
+    const f=await finaleAsk(true);
+    toast(f?'作りなおしました':'AIに つながりませんでした');
+    renderSettings();
+  };
+}
+
+/* 設定を 保存する ときに 呼ぶ（CONFIG に 入れる） */
+function collectFinaleSettings(){
+  const t=document.getElementById('setFamText'), fr=document.getElementById('setFamFrom');
+  if(t) CONFIG.familyMsg = { text:t.value.trim(), from:(fr?fr.value.trim():'') };
+  const rows=[...document.querySelectorAll('#fixList .fix-edit')];
+  CONFIG.fixes = rows.map(r=>{
+    const d=r.querySelector('.f-d').value.trim();
+    const n=r.querySelector('.f-n').value.trim();
+    const vs=r.querySelector('.f-v').value.trim();
+    const note=r.querySelector('.f-note').value.trim();
+    if(!d || !n) return null;
+    return { d, n, v:(vs===''?null:Number(vs)), note };
+  }).filter(Boolean);
+  finaleClearCache();
+}
+
+/* ===================== v1.11.0 ここまで ===================== */
 
 /* =====================================================================
    日付ユーティリティ
@@ -1236,6 +3132,7 @@ async function startApp(){
   const now=todayDate(); calYear=now.getFullYear(); calMonth=now.getMonth();
   await Store.init();
   await refresh();
+  try{ FINALE = await Store.getFinale(); }catch(e){ FINALE = null; }   // v1.11.0
   // ナビ
   document.querySelectorAll('.nav button').forEach(b=>{
     b.addEventListener('click',()=>switchView(b.dataset.view));
@@ -1251,6 +3148,9 @@ async function refresh(){
   const cc = await Store.getConfig();   // 親が設定した やること・期間 をクラウドから反映（子端末にも届く）
   if(cc){
     if(Array.isArray(cc.goals)) CONFIG.goals = cc.goals;
+    if(cc.familyMsg) CONFIG.familyMsg = cc.familyMsg;              // v1.11.0
+    if(Array.isArray(cc.fixes)) CONFIG.fixes = cc.fixes;           // v1.11.0
+    if(typeof finaleClearCache==='function') finaleClearCache();   // v1.11.0
     ['vacStart','vacEnd','typingName','typingUrl','typingRule'].forEach(k=>{ if(cc[k]!=null && cc[k]!=='') CONFIG[k]=cc[k]; });
     saveConfig();
   }
@@ -1351,13 +3251,16 @@ function switchView(v){
   }
   if(typeof closeCamera==='function') closeCamera();   // 画面を かえたら カメラは 止める
   if(v==='settings' && ROLE!=='parent') v='home';  // 子アカは設定に入れない
-  ['home','report','summary','settings'].forEach(x=>{
+  if(v==='preport'  && ROLE!=='parent') v='home';  // v1.11.0 保護者用レポートも 親だけ
+  ['home','report','summary','settings','sheets','preport'].forEach(x=>{
     $('#view-'+x).classList.toggle('hidden', x!==v);
   });
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active', b.dataset.view===v));
   if(v==='home') renderHome();
   if(v==='summary') renderSummary();
   if(v==='settings') renderSettings();
+  if(v==='sheets') renderSheets();       // v1.11.0
+  if(v==='preport') renderPReport();     // v1.11.0
   if(v!=='report') enterView($('#view-'+v));
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -1450,6 +3353,7 @@ async function renderHome(){
       </div>
     </div>
 
+    ${goldButtonHtml()}
     ${todoPanel}
     ${carePanel}
 
@@ -1470,6 +3374,7 @@ async function renderHome(){
   `;
   $('#prevM').onclick=()=>{ calMonth--; if(calMonth<0){calMonth=11;calYear--;} calSlide='r'; renderHome(); };
   $('#nextM').onclick=()=>{ calMonth++; if(calMonth>11){calMonth=0;calYear++;} calSlide='l'; renderHome(); };
+  wireGold();       // v1.11.0 金のボタン
   drawCalendar();
   // ホームの数字カウントアップ＆やることバーを0から伸ばす
   document.querySelectorAll('#view-home .hero .num').forEach(el=>{
@@ -1891,6 +3796,7 @@ async function saveReportForm(){
     updatedAt:new Date().toISOString()
   };
   await Store.save(editingDate,data);
+  if(typeof finaleClearCache==='function') finaleClearCache();   // v1.11.0
   clearDraft(editingDate);   // 保存できたので 書きかけは もういらない
   baseRaw=null;              // ここから先は「未保存」あつかいしない
   await refresh();
@@ -2300,6 +4206,8 @@ function renderSettings(){
       <div class="field"><label>authDomain <span class="hint">なくてもOK</span></label><input type="text" id="fbAuth" value="${esc(f.authDomain)}"/></div>
     </div>
 
+    ${finaleSettingsHtml()}
+
     <div class="panel"><h2><span class="tag">BACKUP</span>バックアップ</h2>
       <div class="small-note" style="margin:0 0 12px">大切な 記録を ファイルに 書き出して 保存できます。パソコンを 変える ときにも 安心。</div>
       <div class="row">
@@ -2327,6 +4235,7 @@ function renderSettings(){
   }
   (CONFIG.goals||[]).forEach(goalRow);
   $('#addGoal').onclick=()=>goalRow();
+  wireFinaleSettings();     // v1.11.0 メッセージ・記録のなおし・レポートのボタン
   $('#saveSettings').onclick=async()=>{
     CONFIG.vacStart=$('#setStart').value.trim()||DEFAULT_CONFIG.vacStart;
     CONFIG.vacEnd=$('#setEnd').value.trim()||DEFAULT_CONFIG.vacEnd;
@@ -2345,8 +4254,10 @@ function renderSettings(){
     saveConfig();
     Store.mode='local'; Store.ready=false; await Store.init();
     // やること・期間・タイピングを クラウドへ（子端末にも 反映される）
+    collectFinaleSettings();   // v1.11.0 おうちの人のメッセージ／記録のなおし
     await Store.setConfig({ goals:CONFIG.goals, vacStart:CONFIG.vacStart, vacEnd:CONFIG.vacEnd,
-      typingName:CONFIG.typingName, typingUrl:CONFIG.typingUrl, typingRule:CONFIG.typingRule });
+      typingName:CONFIG.typingName, typingUrl:CONFIG.typingUrl, typingRule:CONFIG.typingRule,
+      familyMsg:CONFIG.familyMsg||null, fixes:CONFIG.fixes||[] });
     await refresh();
     toast('設定を 保存しました');
     renderSettings();
