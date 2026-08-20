@@ -724,6 +724,10 @@ input:focus,textarea:focus,select:focus{background:#0a1120;box-shadow:0 0 0 1px 
 .fixsus-r button{ margin-left:auto }
 .fix-edit{ margin-bottom:6px }
 
+.fixdone{ border:1px solid rgba(0,229,255,.3); background:rgba(0,229,255,.05);
+  border-radius:12px; padding:10px 12px; margin-top:10px }
+.fixdone .fixsus-r{ border-top-color:rgba(0,229,255,.18) }
+
 /* =====================================================================
    紙もの（しょうじょう／ぼうけんの きろく／記録レポート）
    ・画面でも「白いA4」で 見せる ＝ 印刷したものと 同じ
@@ -768,21 +772,23 @@ input:focus,textarea:focus,select:focus{background:#0a1120;box-shadow:0 0 0 1px 
 .howto b{ color:#0f172a }
 
 /* ---- 数字のタイル ---- */
-.kpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:7px; margin:8px 0 4px }
-.kpis.k3{ grid-template-columns:repeat(3,1fr) }
-.kpis.k5{ grid-template-columns:repeat(5,1fr) }
-.kpi{ border:1px solid #dbe2ea; border-radius:8px; padding:7px 8px; background:#fbfcfe }
-.kpi .l{ font-size:8pt; color:#64748b; letter-spacing:.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-.kpi .v{ font-size:17pt; font-weight:800; color:#0f172a; line-height:1.15; font-variant-numeric:tabular-nums }
-.kpi .v i{ font-size:9pt; font-style:normal; font-weight:600; color:#64748b; margin-left:2px }
-.kpi .s{ font-size:8pt; color:#64748b }
+.shkpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:7px; margin:8px 0 4px }
+.shkpis.k3{ grid-template-columns:repeat(3,1fr) }
+.shkpis.k5{ grid-template-columns:repeat(5,1fr) }
+.shkpi{ border:1px solid #dbe2ea; border-radius:8px; padding:7px 8px; background:#fbfcfe }
+.shkpi .l{ font-size:8pt; color:#64748b; letter-spacing:.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.shkpi .v{ font-size:17pt; font-weight:800; color:#0f172a; line-height:1.15; font-variant-numeric:tabular-nums }
+.shkpi .v i{ font-size:9pt; font-style:normal; font-weight:600; color:#64748b; margin-left:2px }
+.shkpi .s{ font-size:8pt; color:#64748b }
 
 /* ---- 気づき ---- */
 .find{ border:1px solid #dbe2ea; border-radius:8px; padding:8px 10px; margin:0 0 7px; background:#fff }
 .find.good{ border-left:5px solid #15803d; background:#f4fbf6 }
 .find.watch{ border-left:5px solid #c2410c; background:#fff8f3 }
 .find.info{ border-left:5px solid #475569; background:#f8fafc }
-.find b{ display:block; font-size:10.5pt; color:#0f172a; margin-bottom:2px }
+.find > b{ display:block; font-size:10.5pt; color:#0f172a; margin-bottom:2px }
+/* 🔴 本文の 中の <b> まで block に すると、文が そこで 改行されて バラバラに 見える */
+.find .bd b, .find .hw b, .find li b{ display:inline }
 .find .bd{ font-size:9.2pt }
 .find .hw{ font-size:8.6pt; color:#475569; margin-top:3px; padding-top:3px; border-top:1px dashed #cbd5e1 }
 .find .tag{ float:right; font-size:7.5pt; font-weight:700; letter-spacing:.06em; padding:1px 6px; border-radius:99px }
@@ -793,6 +799,7 @@ input:focus,textarea:focus,select:focus{background:#0a1120;box-shadow:0 0 0 1px 
 /* ---- 表 ---- */
 .rt{ width:100%; border-collapse:collapse; font-size:9pt; margin:4px 0 6px }
 .rt th,.rt td{ border:1px solid #d7dee7; padding:4px 6px; text-align:right; font-variant-numeric:tabular-nums }
+.rt td.nw,.rt th.nw{ white-space:nowrap }
 .rt th{ background:#eef2f7; color:#334155; font-weight:700; text-align:center; font-size:8.5pt }
 .rt td.l,.rt th.l{ text-align:left }
 .rt .bar{ position:relative; padding:0; width:74px }
@@ -932,8 +939,8 @@ input:focus,textarea:focus,select:focus{background:#0a1120;box-shadow:0 0 0 1px 
 }
 
 /* 5列のときは 数字を すこし 小さく（「25時間45分」が 折り返さないように） */
-.kpis.k5 .kpi .v{ font-size:14pt; white-space:nowrap }
-.kpi .v{ white-space:nowrap }
+.shkpis.k5 .shkpi .v{ font-size:14pt; white-space:nowrap }
+.shkpi .v{ white-space:nowrap }
 
 /* さいごの ページだけ 「ながれる紙」＝ 中身の 長さで 伸びてよい。
    （AIの 文の 長さは その時 まで 分からないので、切るのでは なく 伸ばす） */
@@ -948,6 +955,16 @@ input:focus,textarea:focus,select:focus{background:#0a1120;box-shadow:0 0 0 1px 
   body.print-mode .sheet.flow h4{ break-after:avoid; page-break-after:avoid }
   body.print-mode .sheet.flow .rp-foot{ position:static; margin-top:10mm }
 }
+
+/* 「その場で なおす」ボタン（画面だけ・紙には 出ない） */
+.fixbtn,.unfixbtn{ border:1px solid #94a3b8; background:#fff; color:#1d4ed8;
+  border-radius:99px; padding:2px 10px; font:600 8.5pt 'Noto Sans JP'; cursor:pointer;
+  margin:1px 3px 1px 0; white-space:nowrap }
+.fixbtn:hover,.unfixbtn:hover{ background:#1d4ed8; color:#fff; border-color:#1d4ed8 }
+.fixbtn.del{ color:#c2410c } .fixbtn.del:hover{ background:#c2410c; border-color:#c2410c; color:#fff }
+.unfixbtn{ color:#64748b } .unfixbtn:hover{ background:#64748b; border-color:#64748b }
+.fixbtn[disabled]{ opacity:.5; cursor:default }
+@media print{ .sheet .noprint{ display:none !important } }
 
 /* ============ v1.11.0 ここまで ============ */
 </style>
@@ -2030,13 +2047,13 @@ function sheetKid(S, name, fin){
   <p class="tiny muted">やるたびに 山が 高く なっていくよ。さいごは ${shNum(S.study.total)}${esc(u||'かい')}！</p>
 </div>
 
-<div class="sheet kid">
+<div class="sheet kid flow">
   <h4>⌨️ タイピングの せいちょう</h4>
   <div class="chart"><canvas id="c_kType" width="${SH_W}" height="165"></canvas></div>
-  <div class="kpis k3">
-    <div class="kpi"><div class="l">はじめの スコア</div><div class="v">${S.typing.first!=null?S.typing.first:'—'}</div></div>
-    <div class="kpi"><div class="l">じこ ベスト</div><div class="v" style="color:#0b3fa8">${S.typing.best!=null?S.typing.best:'—'}</div></div>
-    <div class="kpi"><div class="l">のびた ぶん</div><div class="v" style="color:#0e9f6e">${S.typing.gainPct!=null?'+'+S.typing.gainPct+'%':'—'}</div></div>
+  <div class="shkpis k3">
+    <div class="shkpi"><div class="l">はじめの スコア</div><div class="v">${S.typing.first!=null?S.typing.first:'—'}</div></div>
+    <div class="shkpi"><div class="l">じこ ベスト</div><div class="v" style="color:#0b3fa8">${S.typing.best!=null?S.typing.best:'—'}</div></div>
+    <div class="shkpi"><div class="l">のびた ぶん</div><div class="v" style="color:#0e9f6e">${S.typing.gainPct!=null?'+'+S.typing.gainPct+'%':'—'}</div></div>
   </div>
 
   ${brow ? `<h4>✍️ いちばん よく 書けた ふりかえり</h4>
@@ -2046,14 +2063,16 @@ function sheetKid(S, name, fin){
 
   ${kanji.length? `<h4>㊗ この なつに つかった 漢字　<span style="font-size:9pt;font-weight:400;color:#64748b">${S.writing.kanjiKinds}しゅるい</span></h4>
   <div class="klist">${kanji.map(c=>`<span>${esc(c)}</span>`).join('')}</div>` : ''}
-</div>
 
-<div class="sheet kid flow">
   ${letter? `<h4>💌 AIコーチから きみへ</h4>
   <div class="letter">${esc(letter)}<div class="from">SUMMER QUEST AIコーチ より</div></div>` : ''}
 
   ${fam? `<h4>💝 おうちの人から</h4>
   <div class="letter fam">${esc(fam.text)}<div class="from">${esc(fam.from||'おうちの人')} より</div></div>` : ''}
+
+  ${(letter||fam) ? '' : `<div class="howto" style="border-left-color:#0891b2;background:#f0fbfe;margin-top:12px">
+    💌 <b>AIコーチからの さいごの手紙</b>と 💝 <b>おうちの人からのメッセージ</b>は、ここに 出ます。
+    <span class="tiny">（手紙は さいごの日に とどきます。おうちの人からの メッセージは せってい画面で 先に 書いておけます）</span></div>`}
 </div>`;
 }
 
@@ -2095,8 +2114,7 @@ function sheetParent(S, name, fin){
   /* ---------- 1まい目：概要と 気づき ---------- */
   /* 1ページに おさまる ぶんだけ 出す（あふれると 印刷が くずれる）。
      中身は ぜんぶ 2ページ目いこうの グラフ・表に 出ているので 落としても 情報は 欠けない。 */
-  const pinned = S.findings.filter(f=>f.pin);
-  const rest = S.findings.filter(f=>!f.pin);
+  const rest = S.findings.filter(f=>!f.pin);   /* pin（単位ちがい）は fixPanel が 受け持つ */
   const _g = rest.filter(f=>f.level==='good');
   const _w = rest.filter(f=>f.level==='watch');
   const _i = rest.filter(f=>f.level==='info');
@@ -2115,29 +2133,26 @@ function sheetParent(S, name, fin){
 
   const p1 = `<div class="sheet" data-fit="1">
   ${head('なつやすみ 記録レポート','SUMMER QUEST 2026 ／ 本人の記録（自己申告）にもとづく集計')}
-  ${pinned.length?`<div style="margin-bottom:10px">${pinned.map(f=>`<div class="find ${f.level}">
-    <span class="tag">${f.level==='good'?'できていた':(f.level==='watch'?'要確認':'まえおき')}</span>
-    <b>${esc(f.title)}</b><div class="bd">${esc(f.body)}</div>
-    ${f.how?`<div class="hw">▶ ${esc(f.how)}</div>`:''}</div>`).join('')}</div>`:''}
+  ${fixPanel(S)}
   <p class="tiny muted" style="margin-bottom:10px">
     このレポートは、本人が毎日アプリに入力した記録を そのまま集計したものです。テストの点や成績ではありません。
     「どれだけ続いたか」「どこで崩れたか」を数字で見て、2学期の声かけに使うことを目的にしています。
     最後のページに、この数字の限界も書いてあります。</p>
 
   <h4>1. 全体のようす</h4>
-  <div class="kpis k5">
-    <div class="kpi"><div class="l">記録した日数</div><div class="v">${S.days.recorded}<i>日</i></div><div class="s">対象 ${S.days.spanDays}日</div></div>
-    <div class="kpi"><div class="l">記録率</div><div class="v">${S.days.rate}<i>%</i></div><div class="s">最長連続 ${S.days.streakMax}日</div></div>
-    <div class="kpi"><div class="l">学習の総量</div><div class="v">${shNum(S.study.total)}<i>${esc(u||'')}</i></div><div class="s">1日平均 ${S.study.avg}</div></div>
-    <div class="kpi"><div class="l">目標の達成率</div><div class="v">${goalPct!=null?goalPct:'—'}<i>%</i></div><div class="s">目標つき ${goalDone.length}件の平均</div></div>
-    <div class="kpi"><div class="l">運動した日</div><div class="v">${S.move.activeRate}<i>%</i></div><div class="s">${S.move.activeDays}日／${S.days.recorded}日</div></div>
+  <div class="shkpis k5">
+    <div class="shkpi"><div class="l">記録した日数</div><div class="v">${S.days.recorded}<i>日</i></div><div class="s">対象 ${S.days.spanDays}日</div></div>
+    <div class="shkpi"><div class="l">記録率</div><div class="v">${S.days.rate}<i>%</i></div><div class="s">最長連続 ${S.days.streakMax}日</div></div>
+    <div class="shkpi"><div class="l">学習の総量</div><div class="v">${shNum(S.study.total)}<i>${esc(u||'')}</i></div><div class="s">1日平均 ${S.study.avg}</div></div>
+    <div class="shkpi"><div class="l">目標の達成率</div><div class="v">${goalPct!=null?goalPct:'—'}<i>%</i></div><div class="s">目標つき ${goalDone.length}件の平均</div></div>
+    <div class="shkpi"><div class="l">運動した日</div><div class="v">${S.move.activeRate}<i>%</i></div><div class="s">${S.move.activeDays}日／${S.days.recorded}日</div></div>
   </div>
-  <div class="kpis k5">
-    <div class="kpi"><div class="l">画面の時間</div><div class="v">${S.screen.avg}<i>分/日</i></div><div class="s">合計 ${shHM(S.screen.total)}</div></div>
-    <div class="kpi"><div class="l">ふりかえり字数</div><div class="v">${S.writing.avg}<i>字/日</i></div><div class="s">合計 ${S.writing.totalChars.toLocaleString('ja-JP')}字</div></div>
-    <div class="kpi"><div class="l">使った漢字</div><div class="v">${S.writing.kanjiKinds}<i>種</i></div><div class="s">前半${S.writing.kanjiFirst}→後半${S.writing.kanjiSecond}</div></div>
-    <div class="kpi"><div class="l">タイピング</div><div class="v">${S.typing.best!=null?S.typing.best:'—'}</div><div class="s">初回 ${S.typing.first!=null?S.typing.first:'—'} ／ ${S.typing.count}日</div></div>
-    <div class="kpi"><div class="l">記録した時刻</div><div class="v">${shClock(S.clock.median)}</div><div class="s">中央値（21時以降 ${S.clock.lateDays}日）</div></div>
+  <div class="shkpis k5">
+    <div class="shkpi"><div class="l">画面の時間</div><div class="v">${S.screen.avg}<i>分/日</i></div><div class="s">合計 ${shHM(S.screen.total)}</div></div>
+    <div class="shkpi"><div class="l">ふりかえり字数</div><div class="v">${S.writing.avg}<i>字/日</i></div><div class="s">合計 ${S.writing.totalChars.toLocaleString('ja-JP')}字</div></div>
+    <div class="shkpi"><div class="l">使った漢字</div><div class="v">${S.writing.kanjiKinds}<i>種</i></div><div class="s">前半${S.writing.kanjiFirst}→後半${S.writing.kanjiSecond}</div></div>
+    <div class="shkpi"><div class="l">タイピング</div><div class="v">${S.typing.best!=null?S.typing.best:'—'}</div><div class="s">初回 ${S.typing.first!=null?S.typing.first:'—'} ／ ${S.typing.count}日</div></div>
+    <div class="shkpi"><div class="l">記録した時刻</div><div class="v">${shClock(S.clock.median)}</div><div class="s">中央値（21時以降 ${S.clock.lateDays}日）</div></div>
   </div>
   <div class="howto"><b>見かた：</b>「記録率」は 中身の多さではなく <b>続いたかどうか</b>だけを見た数字です。
     小学校低学年では ここが いちばん残る力なので、量より先に この数字を見てください。
@@ -2212,12 +2227,12 @@ function sheetParent(S, name, fin){
 
   <h4>7. 体を動かした時間</h4>
   <div class="chart"><canvas id="c_pMove" width="${SH_W}" height="180"></canvas></div>
-  <div class="kpis k5">
-    <div class="kpi"><div class="l">うんどう 実施率</div><div class="v">${S.move.exRate}<i>%</i></div><div class="s">${S.move.exDays}日／${shHM(S.move.exMin)}</div></div>
-    <div class="kpi"><div class="l">プール 実施率</div><div class="v">${S.move.poolRate}<i>%</i></div><div class="s">${S.move.poolDays}日／${shHM(S.move.poolMin)}</div></div>
-    <div class="kpi"><div class="l">どちらか した日</div><div class="v">${S.move.activeRate}<i>%</i></div><div class="s">${S.move.activeDays}日／${S.days.recorded}日</div></div>
-    <div class="kpi"><div class="l">1日平均</div><div class="v">${S.move.avg}<i>分</i></div><div class="s">前半${S.move.cmp.first}→後半${S.move.cmp.second}</div></div>
-    <div class="kpi"><div class="l">うんどう0の最長</div><div class="v">${S.move.exGap}<i>日</i></div><div class="s">両方0は ${S.move.longestGap}日</div></div>
+  <div class="shkpis k5">
+    <div class="shkpi"><div class="l">うんどう 実施率</div><div class="v">${S.move.exRate}<i>%</i></div><div class="s">${S.move.exDays}日／${shHM(S.move.exMin)}</div></div>
+    <div class="shkpi"><div class="l">プール 実施率</div><div class="v">${S.move.poolRate}<i>%</i></div><div class="s">${S.move.poolDays}日／${shHM(S.move.poolMin)}</div></div>
+    <div class="shkpi"><div class="l">どちらか した日</div><div class="v">${S.move.activeRate}<i>%</i></div><div class="s">${S.move.activeDays}日／${S.days.recorded}日</div></div>
+    <div class="shkpi"><div class="l">1日平均</div><div class="v">${S.move.avg}<i>分</i></div><div class="s">前半${S.move.cmp.first}→後半${S.move.cmp.second}</div></div>
+    <div class="shkpi"><div class="l">うんどう0の最長</div><div class="v">${S.move.exGap}<i>日</i></div><div class="s">両方0は ${S.move.longestGap}日</div></div>
   </div>
   ${(S.move.poolByMonth||[]).length>=2?`<table class="rt"><thead><tr>
     <th class="l">月</th>${S.move.poolByMonth.map(m=>`<th>${Number(m.month.slice(5))}月</th>`).join('')}</tr></thead>
@@ -2277,12 +2292,12 @@ function sheetParent(S, name, fin){
     <div class="ar ${wa.cls}">${wa.mark}<b>${wa.txt}</b></div>
     <div class="h"><div class="l">後半 1日あたり</div><div class="v">${S.writing.cmp.second}<span style="font-size:9pt">字</span></div></div>
   </div>
-  <div class="kpis k5">
-    <div class="kpi"><div class="l">書いた日</div><div class="v">${S.writing.days}<i>日</i></div></div>
-    <div class="kpi"><div class="l">いちばん長い日</div><div class="v">${S.writing.max}<i>字</i></div><div class="s">${shDate(S.writing.maxDate)}</div></div>
-    <div class="kpi"><div class="l">一文の長さ</div><div class="v">${S.writing.sentAvg}<i>字</i></div><div class="s">前半${S.writing.sentCmp.first}→後半${S.writing.sentCmp.second}文</div></div>
-    <div class="kpi"><div class="l">20字未満の日</div><div class="v">${S.writing.shortDays}<i>日</i></div><div class="s">60字以上 ${S.writing.longDays}日</div></div>
-    <div class="kpi"><div class="l">使った漢字</div><div class="v">${S.writing.kanjiKinds}<i>種</i></div><div class="s">前半${S.writing.kanjiFirst}→後半${S.writing.kanjiSecond}</div></div>
+  <div class="shkpis k5">
+    <div class="shkpi"><div class="l">書いた日</div><div class="v">${S.writing.days}<i>日</i></div></div>
+    <div class="shkpi"><div class="l">いちばん長い日</div><div class="v">${S.writing.max}<i>字</i></div><div class="s">${shDate(S.writing.maxDate)}</div></div>
+    <div class="shkpi"><div class="l">一文の長さ</div><div class="v">${S.writing.sentAvg}<i>字</i></div><div class="s">前半${S.writing.sentCmp.first}→後半${S.writing.sentCmp.second}文</div></div>
+    <div class="shkpi"><div class="l">20字未満の日</div><div class="v">${S.writing.shortDays}<i>日</i></div><div class="s">60字以上 ${S.writing.longDays}日</div></div>
+    <div class="shkpi"><div class="l">使った漢字</div><div class="v">${S.writing.kanjiKinds}<i>種</i></div><div class="s">前半${S.writing.kanjiFirst}→後半${S.writing.kanjiSecond}</div></div>
   </div>
   <div class="howto"><b>見かた：</b>字数は「書くことへの抵抗が減ったか」の目安で、<b>文章の上手さではありません</b>。
     見るべきは3つ。<b>①字数が増えたか</b>（書くのが苦でなくなった）
@@ -2317,7 +2332,7 @@ function sheetParent(S, name, fin){
   </div>
   ${(S.fixes&&S.fixes.n)?`<h4 style="border-left-color:#c2410c">${note?'14':'13'}. 集計のときに 読みかえた記録</h4>
   <table class="rt"><thead><tr><th>日づけ</th><th class="l">やること</th><th>入力</th><th>集計に使った値</th><th class="l">理由</th></tr></thead>
-  <tbody>${S.fixes.applied.map(f=>`<tr><td>${shDate(f.date)}</td><td class="l">${esc(f.name)}</td>
+  <tbody>${S.fixes.applied.map(f=>`<tr><td class="nw">${shDate(f.date)}</td><td class="l nw">${esc(f.name)}</td>
     <td>${f.from}</td><td><b>${f.to==null?'除外':f.to}</b></td><td class="l">${esc(f.note||'—')}</td></tr>`).join('')}</tbody></table>
   <p class="tiny muted">単位のちがう入力（例：「30分」をページ数の欄に30と入力）が混ざると、その日だけ極端に大きくなり、
     推移のグラフも前半・後半の比較もずれます。上の記録は集計時にだけ読みかえています。
@@ -2431,6 +2446,64 @@ function fitSheets(root){
           （切り取られると 何が 消えたか 分からない） */
     if(sh.scrollHeight > lim) sh.classList.add('flow');
   });
+}
+
+
+/* =====================================================================
+   単位ちがいの「その場で なおす」パネル
+   ---------------------------------------------------------------------
+   🔴 ここが 大事：**気づいた その場で 1タップで 直せる**こと。
+      前は「せってい画面を さがして → 足して → 設定を保存する を おす」の 3手が 必要で、
+      レポートには 警告だけ 出て 数字は まちがったまま だった。
+   ⚠ ボタンは .noprint（紙には 出ない）。紙に のこるのは 「読みかえた」記録の 表だけ。
+   ===================================================================== */
+function fixPanel(S){
+  const F = S.fixes || {applied:[], suspects:[], n:0, suspectN:0};
+  if(!F.n && !F.suspectN) return '';
+  let h = '<div style="margin-bottom:10px">';
+
+  if(F.suspectN){
+    h += `<div class="find watch"><span class="tag">要確認</span>
+      <b>単位がちがう入力かもしれない記録があります</b>
+      <div class="bd">たとえば「30分」をページ数の欄に <b>30</b> と入力すると、その日だけ極端に大きくなり、
+        <b>推移のグラフも 前半・後半の比較も ずれます</b>。</div>
+      <table class="rt" style="margin-top:6px"><thead><tr>
+        <th>日づけ</th><th class="l">やること</th><th>入力</th><th class="l">ふだんは</th><th class="l noprint">なおす</th>
+      </tr></thead><tbody>
+      ${F.suspects.slice(0,8).map(x=>`<tr>
+        <td class="nw">${shDate(x.date)}</td>
+        <td class="l nw">${esc(x.name)}</td>
+        <td class="nw"><b style="color:#c2410c">${x.value}${esc(x.unit)}</b></td>
+        <td class="l"><span class="tiny">${x.basis==='own'
+          ? 'この教材は ふだん '+x.median+esc(x.unit)
+          : 'ほかの教材は ふだん '+x.median+esc(x.unit)+'（これは '+x.days+'日だけの記録）'}</span></td>
+        <td class="l noprint"><button class="fixbtn" data-fd="${esc(x.date)}" data-fn="${esc(x.name)}"
+          data-fv="${x.suggest}">→ ${x.suggest}${esc(x.unit)} として 読む</button>
+          <button class="fixbtn del" data-fd="${esc(x.date)}" data-fn="${esc(x.name)}" data-fv="">除外する</button></td>
+      </tr>`).join('')}
+      </tbody></table>
+      <div class="hw">押すと <b>この場で 集計しなおします</b>（元の記録は書きかえません）。
+        直したことは このレポートに必ず残ります。あとから「もどす」で 元に戻せます。</div>
+    </div>`;
+  }
+
+  if(F.n){
+    h += `<div class="find info"><span class="tag">まえおき</span>
+      <b>集計のときに 読みかえた記録があります</b>
+      <table class="rt" style="margin-top:6px"><thead><tr>
+        <th>日づけ</th><th class="l">やること</th><th>入力</th><th>集計に使った値</th><th class="l">理由</th><th class="l noprint">　</th>
+      </tr></thead><tbody>
+      ${F.applied.map(f=>`<tr>
+        <td class="nw">${shDate(f.date)}</td><td class="l nw">${esc(f.name)}</td>
+        <td>${f.from}</td><td><b>${f.to==null?'除外':f.to}</b></td>
+        <td class="l"><span class="tiny">${esc(f.note||'—')}</span></td>
+        <td class="l noprint"><button class="unfixbtn" data-fd="${esc(f.date)}" data-fn="${esc(f.name)}">↺ もどす</button></td>
+      </tr>`).join('')}
+      </tbody></table>
+      <div class="hw">元の記録は書きかえていません。<b>集計するときだけ</b>読みかえています。</div>
+    </div>`;
+  }
+  return h + '</div>';
 }
 
 /* =====================================================================
@@ -2784,6 +2857,54 @@ function finaleForSheets(){
   return f;
 }
 
+/* =====================================================================
+   記録の なおし ＝ その場で 1タップ
+   ---------------------------------------------------------------------
+   🔴 前は「せってい画面を さがして → 行を 足して → 設定を保存する を おす」の 3手が 必要だった。
+      レポートには 警告だけ 出て、数字は まちがったまま。それでは 意味が ない。
+      気づいた その場（レポート・せってい）で 押したら すぐ 効いて、すぐ クラウドにも 行く。
+   ===================================================================== */
+async function fixSave(){
+  saveConfig();
+  finaleClearCache();
+  try{
+    await Store.setConfig({ goals:CONFIG.goals, vacStart:CONFIG.vacStart, vacEnd:CONFIG.vacEnd,
+      typingName:CONFIG.typingName, typingUrl:CONFIG.typingUrl, typingRule:CONFIG.typingRule,
+      familyMsg:CONFIG.familyMsg||null, fixes:CONFIG.fixes||[] });
+  }catch(e){ console.warn('なおしの 同期は あとで', e); }
+}
+async function fixAdd(date, name, value, note){
+  CONFIG.fixes = (CONFIG.fixes||[]).filter(f=> !(f && f.d===date && f.n===name) );
+  CONFIG.fixes.push({ d:date, n:name,
+    v:(value===''||value==null) ? null : Number(value),
+    note: note || (value===''||value==null ? '単位ちがいのため 集計から 除外'
+                                           : '単位ちがい：入力を '+value+' として 読みかえ') });
+  await fixSave();
+  toast(value===''||value==null ? '集計から 外しました' : (value+' として 読みかえました'));
+}
+async function fixRemove(date, name){
+  CONFIG.fixes = (CONFIG.fixes||[]).filter(f=> !(f && f.d===date && f.n===name) );
+  await fixSave();
+  toast('もとに もどしました');
+}
+/* 紙の 中の ボタンを つなぐ（レポートを 描きなおすたびに 呼ぶ） */
+function wireFixButtons(root, redraw){
+  root.querySelectorAll('.fixbtn').forEach(b=>{
+    b.onclick = async ()=>{
+      root.querySelectorAll('.fixbtn,.unfixbtn').forEach(x=>x.disabled=true);
+      await fixAdd(b.dataset.fd, b.dataset.fn, b.dataset.fv);
+      redraw();
+    };
+  });
+  root.querySelectorAll('.unfixbtn').forEach(b=>{
+    b.onclick = async ()=>{
+      root.querySelectorAll('.fixbtn,.unfixbtn').forEach(x=>x.disabled=true);
+      await fixRemove(b.dataset.fd, b.dataset.fn);
+      redraw();
+    };
+  });
+}
+
 function renderPReport(){
   const el=$('#view-preport');
   const S=finaleS(), nm=finaleName();
@@ -2798,6 +2919,7 @@ function renderPReport(){
     <div class="sheetwrap" id="prHost">${sheetParent(S,nm,finaleForSheets())}</div>`;
   const host=document.getElementById('prHost');
   fitSheets(host); drawParentCharts(S);
+  wireFixButtons(host, renderPReport);          // v1.11.0 その場で なおす
   $('#prPrint').onclick=printSheets;
   $('#prBack').onclick=()=>switchView('settings');
   const ask=$('#prAsk');
@@ -2873,8 +2995,20 @@ function finaleSettingsHtml(){
         <button class="btn ghost small fixadd" data-d="${x.date}" data-n="${esc(x.name)}" data-v="${x.suggest}">→ ${x.suggest} として 読む</button>
       </div>`).join('')}
     </div>`:'<div class="small-note" style="opacity:.7">いまのところ、あやしい記録は 見つかっていません。</div>'}
-    <div id="fixList" style="margin-top:12px"></div>
-    <button class="addbtn" id="addFix" style="margin-top:4px">＋ なおしを 追加</button>
+    ${fixes.length?`<div class="fixdone">
+      <div class="fixsus-h" style="color:var(--accent)">✅ いま 読みかえている 記録（${fixes.length}件）</div>
+      ${fixes.map(f=>`<div class="fixsus-r">
+        <span class="d">${shDate(f.d)}</span>
+        <span class="n">${esc(f.n)}</span>
+        <span class="v" style="color:var(--accent)">${f.v==null?'集計から 除外':f.v+' として 読む'}</span>
+        <button class="btn ghost small unfixbtn" data-fd="${esc(f.d)}" data-fn="${esc(f.n)}">↺ もどす</button>
+      </div>`).join('')}
+    </div>`:''}
+    <details style="margin-top:10px"><summary class="small-note" style="cursor:pointer">手で 直す（上級）</summary>
+      <div id="fixList" style="margin-top:8px"></div>
+      <button class="addbtn" id="addFix" style="margin-top:4px">＋ なおしを 追加</button>
+      <div class="small-note">ここを 変えたら、下の「💾 設定を 保存する」を おしてください。</div>
+    </details>
   </div>`;
 }
 
@@ -2901,12 +3035,19 @@ function wireFinaleSettings(){
   (CONFIG.fixes||[]).forEach(add);
   const ab=document.getElementById('addFix'); if(ab) ab.onclick=()=>add({});
   document.querySelectorAll('.fixadd').forEach(b=>{
-    b.onclick=()=>{ add({d:b.dataset.d, n:b.dataset.n, v:b.dataset.v, note:'単位ちがい（自動で見つけたもの）'});
-      b.disabled=true; b.textContent='下に 足しました'; toast('下の「なおし」に 足しました。設定を保存してください'); };
+    b.onclick=async()=>{
+      b.disabled=true; b.textContent='なおしています…';
+      /* 🔴 その場で 効かせる（「設定を保存する」を おし忘れて 数字が まちがったまま、を 防ぐ） */
+      await fixAdd(b.dataset.d, b.dataset.n, b.dataset.v);
+      renderSettings();
+    };
   });
   const p=document.getElementById('btnPReport'); if(p) p.onclick=()=>switchView('preport');
   const k=document.getElementById('btnKidReport'); if(k) k.onclick=()=>openSheets('kid');
   const s=document.getElementById('btnShou'); if(s) s.onclick=()=>openSheets('shou');
+  document.querySelectorAll('#view-settings .unfixbtn').forEach(b=>{
+    b.onclick=async()=>{ b.disabled=true; await fixRemove(b.dataset.fd, b.dataset.fn); renderSettings(); };
+  });
   const r=document.getElementById('btnFinaleRedo');
   if(r) r.onclick=async()=>{
     if(!window.confirm('AIの 手紙と 所見を 作りなおします。いまのものは 消えます。よろしいですか？')) return;
