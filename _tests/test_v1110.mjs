@@ -12,10 +12,7 @@
 import fs from 'fs';
 import { chromium } from 'playwright';
 
-import path from 'path';
-import { fileURLToPath } from 'url';
-const HERE = path.dirname(fileURLToPath(import.meta.url));
-const FILE = path.join(HERE, '..', 'index.html');
+const FILE = '/tmp/sq/index_v1110.html';
 const SRC  = fs.readFileSync(FILE, 'utf8');
 let ok=0, ng=0;
 const t=(n,c,x)=>{ c?(ok++,console.log('  OK  '+n))
@@ -107,13 +104,13 @@ function makeReports(opts){
   return R;
 }
 
-const browser = await chromium.launch(process.env.SQ_CHROME ? { executablePath: process.env.SQ_CHROME } : {});
+const browser = await chromium.launch({ executablePath:'/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
 const page = await browser.newPage({ viewport:{width:1280,height:900} });
 const errs=[]; page.on('pageerror',e=>errs.push(String(e)));
 page.on('console',m=>{ if(m.type()==='error' && !/ERR_|Failed to load resource/.test(m.text())) errs.push('console: '+m.text()); });
 /* CDN は 使えないので 手元の chart.js。Firebase は 落として ローカルモードに する */
 await page.route(/cdn\.jsdelivr\.net.*chart/, r=>r.fulfill({contentType:'application/javascript',
-  body: fs.readFileSync(process.env.SQ_CHARTJS || 'node_modules/chart.js/dist/chart.umd.js','utf8')}));
+  body: fs.readFileSync('/tmp/sq/node_modules/chart.js/dist/chart.umd.js','utf8')}));
 await page.route(/fonts\.(googleapis|gstatic)\.com/, r=>r.fulfill({contentType:'text/css', body:''}));
 await page.route(/gstatic\.com\/firebasejs/, r=>r.abort());
 await page.route(/holidays|jsdelivr\.net\/gh/, r=>r.abort());
@@ -126,7 +123,7 @@ async function boot(reports, role, cfg){
     localStorage.setItem('sq_role', role);
     localStorage.setItem('sq_config', JSON.stringify(cfg));
   }, {reports, role, cfg});
-  await page.goto('file://'+FILE.replace(/\\/g,'/'), {waitUntil:'load'});
+  await page.goto('file://'+FILE, {waitUntil:'load'});
   await page.waitForFunction(()=>typeof window.switchView==='function', {timeout:20000});
   await page.waitForTimeout(700);
 }

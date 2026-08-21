@@ -1768,6 +1768,7 @@ function finaleStats(reports, config){
    気づき（ルールで 出す。AIとは 別に、数字だけで 言えることを 先に出す）
    level: 'good' ほめる / 'watch' 気に なる / 'info' 見かた
    ===================================================================== */
+function shNumF(v){ return (Math.round((Number(v)||0)*10)/10).toLocaleString('ja-JP'); }
 function finaleFindings(S){
   const F=[];
   const add=(level,title,body,how)=>F.push({level,title,body,how:how||''});
@@ -1805,7 +1806,26 @@ function finaleFindings(S){
 
   /* やること別・未達 */
   (S.study.byName||[]).forEach(g=>{
-    if(g.goalTotal==null) return;
+    /* 🔴 総数を 決めていない やること（あとから 足した ドリルなど）も 見る。
+          達成率は 出せないが、「やらなく なった」ことは 出せる。
+          ここを 素通りさせると、追加で やっている ドリルが 止まっても だれも 気づけない。 */
+    if(g.goalTotal==null){
+      if(g.days < 4) return;                       /* たまにしか 出てこない ものは ほうっておく */
+      if(g.pace.pct!=null && g.pace.pct<=-40)
+        add('watch',`${g.name} が 後半で ほとんど 止まっている`,
+          `1日あたり ${g.pace.first} → ${g.pace.second}${g.unit}（${g.pace.pct}%）。`
+          + `取り組んだ日は ${g.days}日／${S.days.recorded}日。合計 ${shNumF(g.done)}${g.unit}。`,
+          'この教材は 総数（ゴール）を決めていないので 達成率は出せませんが、'
+          + '「やっていた → やらなくなった」ことは はっきり出ています。'
+          + '終わったのか、途中で放置したのかを 本人に確認してください。'
+          + '続けるものなら、設定で総数を入れると 次からは 達成率で追えます。');
+      else if(g.rate>=70)
+        add('good',`${g.name} を 最後まで 続けた`,
+          `取り組んだ日 ${g.days}日／${S.days.recorded}日（${g.rate}%）・合計 ${shNumF(g.done)}${g.unit}。`
+          + `1日あたり 前半 ${g.pace.first} → 後半 ${g.pace.second}。`,
+          '総数を決めていない教材なので達成率は出ませんが、続いたこと自体が結果です。');
+      return;
+    }
     if(g.pct>=100) add('good',`${g.name} は目標を達成`,
       `${g.done}/${g.goalTotal}${g.unit}（${g.pct}%）。取り組んだ日数 ${g.days}日。`,'');
     else if(g.pct<70) add('watch',`${g.name} が目標に届いていない`,
@@ -2005,7 +2025,9 @@ function sheetKid(S, name, fin){
     return `<tr><td class="l">${esc(g.emoji||'📖')} ${esc(g.name)}</td>
       <td><b>${shNum(g.done)}</b>${esc(g.unit||'')}</td>
       <td>${g.days}日</td>
-      <td class="bar"><i style="width:${pct!=null?Math.max(4,pct*0.70):0}px"></i><u>${pct!=null?pct+'%':'—'}</u></td></tr>`;
+      ${pct!=null
+        ? `<td class="bar"><i style="width:${Math.max(4,pct*0.70)}px"></i><u>${pct}%</u></td>`
+        : `<td><span class="tiny muted">じゆう</span></td>`}</tr>`;
   }).join('');
 
   /* --- いちばん よく書けた ふりかえり --- */
@@ -2177,9 +2199,12 @@ function sheetParent(S, name, fin){
     const cls = g.goalTotal==null ? '' : (g.pct>=100?'ok':(g.pct<70?'warn':''));
     return `<tr class="${cls}">
       <td class="l">${esc(g.name)}${g.desc?`<br><span class="tiny muted">${esc(g.desc)}</span>`:''}</td>
-      <td>${g.goalTotal!=null?g.goalTotal+esc(g.unit||''):'—'}</td>
+      <td>${g.goalTotal!=null?g.goalTotal+esc(g.unit||'')
+            :'<span class="tiny muted">決めていない</span>'}</td>
       <td>${shNum(g.done)}${esc(g.unit||'')}</td>
-      <td class="bar"><i style="width:${g.pct!=null?Math.max(3,Math.min(70,g.pct*0.70)):0}px"></i><u>${g.pct!=null?g.pct+'%':'—'}</u></td>
+      ${g.pct!=null
+        ? `<td class="bar"><i style="width:${Math.max(3,Math.min(70,g.pct*0.70))}px"></i><u>${g.pct}%</u></td>`
+        : `<td><span class="tiny muted">—</span></td>`}
       <td>${g.days}日<br><span class="tiny muted">${g.rate}%</span></td>
       <td>${g.pace.first} → ${g.pace.second}<br><span class="tiny" style="color:${pa.cls==='dn'?'#c2410c':(pa.cls==='up'?'#15803d':'#64748b')}">${pa.mark} ${pa.txt}</span></td>
     </tr>`;
@@ -2207,7 +2232,9 @@ function sheetParent(S, name, fin){
   <div class="howto"><b>見かた：</b>達成率が低いとき、原因は2つに分かれます。
     <b>①「取り組んだ日」が少ない</b>＝ そもそも手をつけない日が多かった → 声かけのタイミングの問題。
     <b>②「1日あたり」が少ない</b>＝ 毎日やってはいたが量が足りない → 1回の分量設定の問題。
-    右の2列を見比べると どちらかが分かります。<b>「前半→後半」が大きく下がっている教材は、途中で放置された教材</b>です。</div>
+    右の2列を見比べると どちらかが分かります。<b>「前半→後半」が大きく下がっている教材は、途中で放置された教材</b>です。<br>
+    目標が<b>「決めていない」</b>の教材（あとから足したドリルなど）は、全体量が決まっていないので達成率だけ出していません。
+    <b>実績・取り組んだ日・前半→後半、および他のページの合計や推移には すべて入っています。</b></div>
 
   ${foot(2)}</div>`;
 

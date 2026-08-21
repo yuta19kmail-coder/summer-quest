@@ -1,15 +1,7 @@
 /* 集計エンジンを 合成データで たしかめる */
 import fs from 'fs';
 
-/* index.html の 中から v1.11.0 の 集計エンジンだけ 切り出して ためす */
-import path from 'path';
-import { fileURLToPath } from 'url';
-const HERE = path.dirname(fileURLToPath(import.meta.url));
-const HTML = fs.readFileSync(path.join(HERE,'..','index.html'),'utf8');
-const A = HTML.indexOf('/* ===================== v1.11.0 ここから');
-const B = HTML.indexOf('/* =====================================================================\n   紙もの 3つ');
-if(A<0||B<0){ console.error('v1.11.0 の かたまりが 見つかりません'); process.exit(1); }
-const src = HTML.slice(A, B);
+const src = fs.readFileSync('/tmp/sq/engine.js','utf8');
 
 /* index.html 側にある 道具を そろえる（本物と同じ実装） */
 const prelude = `
